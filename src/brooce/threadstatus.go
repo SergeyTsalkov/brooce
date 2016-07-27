@@ -1,9 +1,12 @@
 package main
 
 import (
+	"log"
 	"os/exec"
 	"sync"
 	"time"
+
+	"brooce/config"
 )
 
 var statusLock = sync.Mutex{}
@@ -27,9 +30,11 @@ func announceStatusWaiting(threadid int) {
 }
 
 func suicider() {
-	if !config.Suicide.Enabled {
+	if !config.Config.Suicide.Enabled {
 		return
 	}
+
+	log.Println("After", config.Config.Suicide.Time, "seconds of inactivity, we will run:", config.Config.Suicide.Command)
 
 	for {
 		time.Sleep(time.Minute)
@@ -41,18 +46,18 @@ func checkSuicide() {
 	statusLock.Lock()
 	defer statusLock.Unlock()
 
-	if !config.Suicide.Enabled {
+	if !config.Config.Suicide.Enabled {
 		return
 	}
 
 	statusChangeAgo := time.Since(lastStatusChangeTime)
 	countWorking := len(workingThreads)
 
-	if countWorking > 0 || int(statusChangeAgo.Seconds()) < config.Suicide.Time {
+	if countWorking > 0 || int(statusChangeAgo.Seconds()) < config.Config.Suicide.Time {
 		return
 	}
 
 	logger.Printf("Suicide threshold reached! %v working threads; last event %v ago! Running: %v",
-		countWorking, statusChangeAgo, config.Suicide.Command)
-	exec.Command("bash", "-c", config.Suicide.Command).Run()
+		countWorking, statusChangeAgo, config.Config.Suicide.Command)
+	exec.Command("bash", "-c", config.Config.Suicide.Command).Run()
 }

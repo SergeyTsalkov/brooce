@@ -2,22 +2,56 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"brooce/config"
+	loggerlib "brooce/logger"
+	"brooce/myip"
 	tasklib "brooce/task"
 
 	redis "gopkg.in/redis.v3"
 )
 
+var redisClient *redis.Client
+var myProcName string
+var logger = loggerlib.Logger
 var queueWg = new(sync.WaitGroup)
 
 var redisHeader = "brooce"
 var heartbeatKey = redisHeader + ":workerprocs"
 
+func setup() {
+	setup_redis()
+	setup_procname()
+}
+
+func setup_redis() {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:         config.Config.Redis.Host,
+		Password:     config.Config.Redis.Password,
+		MaxRetries:   10,
+		PoolSize:     10,
+		DialTimeout:  30 * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		PoolTimeout:  30 * time.Second,
+	})
+}
+
+func setup_procname() {
+	ip := myip.PublicIPv4()
+	if ip == "" {
+		logger.Fatalln("Unable to determine our IPv4 address!")
+	}
+
+	myProcName = fmt.Sprintf("%v-%v", ip, os.Getpid())
+}
+
 func main() {
-	init_config()
+	setup()
 
 	// need to send a single heartbeat FOR SURE before we grab a job!
 	heartbeat()
@@ -26,15 +60,11 @@ func main() {
 	go cronner()
 	go suicider()
 
-	if config.Queues == nil {
-		logger.Fatalln("The queues hash was not configured in the ~/.brooce config file!")
-	}
-
 	threadid := 1
 
 	strQueueList := []string{}
 
-	for queue, ct := range config.Queues {
+	for queue, ct := range config.Config.Queues {
 		for i := 0; i < ct; i++ {
 			queueWg.Add(1)
 			go runner(queue, threadid)
