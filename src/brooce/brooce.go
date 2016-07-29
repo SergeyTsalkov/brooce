@@ -11,6 +11,7 @@ import (
 	loggerlib "brooce/logger"
 	"brooce/myip"
 	tasklib "brooce/task"
+	"brooce/web"
 
 	redis "gopkg.in/redis.v3"
 )
@@ -26,6 +27,15 @@ var heartbeatKey = redisHeader + ":workerprocs"
 func setup() {
 	setup_redis()
 	setup_procname()
+
+	web.Start()
+
+	// need to send a single heartbeat FOR SURE before we grab a job!
+	heartbeat()
+	go heartbeater()
+	go jobpruner()
+	go cronner()
+	go suicider()
 }
 
 func setup_redis() {
@@ -52,13 +62,6 @@ func setup_procname() {
 
 func main() {
 	setup()
-
-	// need to send a single heartbeat FOR SURE before we grab a job!
-	heartbeat()
-	go heartbeater()
-	go jobpruner()
-	go cronner()
-	go suicider()
 
 	threadid := 1
 
