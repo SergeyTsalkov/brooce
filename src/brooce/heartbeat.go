@@ -1,19 +1,22 @@
 package main
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 func heartbeater() {
 	for {
-		err := heartbeat()
-		if err != nil {
-			logger.Println("heartbeat error:", err)
-		}
-
+		heartbeat()
 		time.Sleep(time.Minute)
 	}
 }
 
-func heartbeat() error {
+func heartbeat() {
 	key := heartbeatKey + ":" + myProcName
-	return redisClient.Set(key, "1", 15*time.Minute).Err()
+	err := redisClient.Set(key, "1", 15*time.Minute).Err()
+	if err != nil {
+		log.Println("redis heartbeat error:", err)
+	}
+
 }

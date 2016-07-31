@@ -10,13 +10,14 @@ import (
 	"brooce/config"
 	loggerlib "brooce/logger"
 	"brooce/myip"
+	myredis "brooce/redis"
 	tasklib "brooce/task"
 	"brooce/web"
 
 	redis "gopkg.in/redis.v3"
 )
 
-var redisClient *redis.Client
+var redisClient = myredis.Get()
 var myProcName string
 var logger = loggerlib.Logger
 var queueWg = new(sync.WaitGroup)
@@ -25,7 +26,6 @@ var redisHeader = "brooce"
 var heartbeatKey = redisHeader + ":workerprocs"
 
 func setup() {
-	setup_redis()
 	setup_procname()
 
 	web.Start()
@@ -36,19 +36,6 @@ func setup() {
 	go jobpruner()
 	go cronner()
 	go suicider()
-}
-
-func setup_redis() {
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:         config.Config.Redis.Host,
-		Password:     config.Config.Redis.Password,
-		MaxRetries:   10,
-		PoolSize:     10,
-		DialTimeout:  30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolTimeout:  30 * time.Second,
-	})
 }
 
 func setup_procname() {
@@ -64,7 +51,6 @@ func main() {
 	setup()
 
 	threadid := 1
-
 	strQueueList := []string{}
 
 	for queue, ct := range config.Config.Queues {
