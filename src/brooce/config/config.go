@@ -2,14 +2,20 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"brooce/myip"
 )
 
 type ConfigType struct {
+	ClusterName string `json:"cluster_name"`
+	ProcName    string `json:"process_name"`
+
 	Redis struct {
 		Host     string
 		Password string
@@ -37,6 +43,14 @@ func init() {
 	err = json.Unmarshal(bytes, &Config)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	if Config.ClusterName == "" {
+		Config.ClusterName = "brooce"
+	}
+
+	if Config.ProcName == "" {
+		Config.ProcName = fmt.Sprintf("%v-%v", myip.PublicIPv4(), os.Getpid())
 	}
 
 	if Config.Queues == nil {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"brooce/config"
+	"brooce/heartbeat"
 	loggerlib "brooce/logger"
 	"brooce/myip"
 	myredis "brooce/redis"
@@ -22,29 +22,16 @@ var myProcName string
 var logger = loggerlib.Logger
 var queueWg = new(sync.WaitGroup)
 
-var redisHeader = "brooce"
+var redisHeader = config.Config.ClusterName
 var heartbeatKey = redisHeader + ":workerprocs"
+var publicIP = myip.PublicIPv4()
 
 func setup() {
-	setup_procname()
-
 	web.Start()
-
-	// need to send a single heartbeat FOR SURE before we grab a job!
-	heartbeat()
-	go heartbeater()
+	heartbeat.Start()
 	go jobpruner()
 	go cronner()
 	go suicider()
-}
-
-func setup_procname() {
-	ip := myip.PublicIPv4()
-	if ip == "" {
-		logger.Fatalln("Unable to determine our IPv4 address!")
-	}
-
-	myProcName = fmt.Sprintf("%v-%v", ip, os.Getpid())
 }
 
 func main() {
@@ -69,7 +56,7 @@ func main() {
 }
 
 func runner(queue string, threadid int) {
-	threadName := fmt.Sprintf("%v-%v", myProcName, threadid)
+	threadName := fmt.Sprintf("%v-%v", config.Config.ProcName, threadid)
 
 	pendingList := strings.Join([]string{redisHeader, "queue", queue, "pending"}, ":")
 	workingList := strings.Join([]string{redisHeader, "queue", queue, "working", threadName}, ":")

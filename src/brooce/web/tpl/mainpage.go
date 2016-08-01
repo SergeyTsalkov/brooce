@@ -15,7 +15,7 @@ var mainPageTpl = `
         </tr>
       </thead>
       <tbody>
-        {{ range $i, $Queue := .ListQueues }}
+        {{ range $i, $Queue := .Queues }}
           <tr>
             <td>{{ $Queue.QueueName }}</td>
             <td>{{ $Queue.Pending }}</td>
@@ -31,7 +31,7 @@ var mainPageTpl = `
 
 <div class="row">
   <div class="col-md-12">
-    <h3>1 Worker Alive</h3>
+    <h3>{{ len .RunningWorkers }} Workers Alive</h3>
     <table class="table">
       <thead>
         <tr>
@@ -39,18 +39,24 @@ var mainPageTpl = `
           <th>Machine Name</th>
           <th>Machine IP</th>
           <th>Process ID</th>
-          <th>Workers Active</th>
           <th>Queues</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>69.90.132.223-4135</td>
-          <td>sdev</td>
-          <td>69.90.132.223</td>
-          <td>4135</td>
-          <td>2/5</td>
-          <td>3x<tt>common</tt>, 2x<tt>special</tt></td>
+          {{ range $i, $Worker := .RunningWorkers }}
+          <tr>
+            <td>{{ $Worker.ProcName }}</td>
+            <td>{{ $Worker.Hostname }}</td>
+            <td>{{ $Worker.IP }}</td>
+            <td>{{ $Worker.PID }}</td>
+            <td>
+              {{ range $QueueName, $QueueCt := $Worker.Queues }}
+                {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
+              {{ end }}
+            </td>
+          </tr>
+        {{ end }}
         </tr>
       </tbody>
     </table>
@@ -62,18 +68,18 @@ var mainPageTpl = `
 <div class="row">
   <div class="col-md-12">
 
-    <h3>2 of 5 Threads Working</h3>
+    <h3>{{ len .RunningJobs }} of {{ .TotalThreads }} Threads Working</h3>
     <table class="table">
       <thead>
         <tr>
-          <th>Worker Name</th>
+          <th>Thread Name</th>
           <th>Queue</th>
           <th>Command</th>
           <th>Params</th>
         </tr>
       </thead>
       <tbody>
-        {{ range $i, $Job := .ListRunningJobs }}
+        {{ range $i, $Job := .RunningJobs }}
           <tr>
             <td>{{ $Job.WorkerName }}</td>
             <td>{{ $Job.QueueName }}</td>

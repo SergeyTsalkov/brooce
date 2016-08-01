@@ -8,8 +8,8 @@ import (
 
 func jobpruner() {
 	for {
-		time.Sleep(time.Minute)
 		prunejobs()
+		time.Sleep(time.Minute)
 	}
 }
 

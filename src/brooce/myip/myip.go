@@ -3,18 +3,31 @@ package myip
 import (
 	"bytes"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
-func PublicIPv4() string {
-	if IsEC2() {
-		return ec2IP()
-	}
+var ip string
+var once sync.Once
 
-	return externalIP()
+func PublicIPv4() string {
+	once.Do(func() {
+		if IsEC2() {
+			ip = ec2IP()
+		} else {
+			ip = externalIP()
+		}
+
+		if ip == "" {
+			log.Fatalln("Unable to determine our IPv4 address!")
+		}
+	})
+
+	return ip
 }
 
 func IsEC2() bool {

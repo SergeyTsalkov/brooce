@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"brooce/config"
+	"brooce/heartbeat"
 	myredis "brooce/redis"
 	"brooce/task"
 	"brooce/web/tpl"
@@ -17,7 +20,7 @@ import (
 )
 
 var redisClient = myredis.Get()
-var redisHeader = "brooce"
+var redisHeader = config.Config.ClusterName
 
 var reqHandler = http.NewServeMux()
 var templates = tpl.Get()
@@ -53,20 +56,30 @@ func makeHandler(fn func(req *http.Request) (*bytes.Buffer, error)) http.Handler
 }
 
 type mainpageOutputType struct {
-	ListQueues      map[string]*listQueueType
-	ListRunningJobs []*runningJobType
+	Queues         map[string]*listQueueType
+	RunningJobs    []*runningJobType
+	RunningWorkers []*heartbeat.HeartbeatType
+	TotalThreads   int
 }
 
 func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	buf = &bytes.Buffer{}
 	output := &mainpageOutputType{}
-	output.ListQueues, err = listQueues()
+	output.Queues, err = listQueues()
 	if err != nil {
 		return
 	}
-	output.ListRunningJobs, err = listRunningJobs()
+	output.RunningJobs, err = listRunningJobs()
 	if err != nil {
 		return
+	}
+	output.RunningWorkers, err = listRunningWorkers()
+	if err != nil {
+		return
+	}
+
+	for _, worker := range output.RunningWorkers {
+		output.TotalThreads += worker.TotalThreads()
 	}
 
 	err = templates.ExecuteTemplate(buf, "mainpage", output)
@@ -162,6 +175,38 @@ func listRunningJobs() (jobs []*runningJobType, err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	return
+}
+
+func listRunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
+	var keys []string
+	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
+	if err != nil {
+		return
+	}
+
+	var heartbeatStrs []*redis.StringCmd
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for _, key := range keys {
+			result := pipe.Get(key)
+			heartbeatStrs = append(heartbeatStrs, result)
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for _, str := range heartbeatStrs {
+		worker := &heartbeat.HeartbeatType{}
+		err = json.Unmarshal([]byte(str.Val()), worker)
+		if err != nil {
+			return
+		}
+
+		workers = append(workers, worker)
 	}
 
 	return
