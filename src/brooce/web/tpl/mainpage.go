@@ -11,13 +11,15 @@ var mainPageTpl = `
         <tr>
           <th>Queue</th>
           <th>Pending</th>
+          <th>Running</th>
         </tr>
       </thead>
       <tbody>
-        {{ range $queueName, $queueLength := .ListQueues }}
+        {{ range $i, $Queue := .ListQueues }}
           <tr>
-            <td>{{ $queueName }}</td>
-            <td>{{ $queueLength }}</td>
+            <td>{{ $Queue.QueueName }}</td>
+            <td>{{ $Queue.Pending }}</td>
+            <td>{{ $Queue.Running }}</td>
           </tr>
         {{ end }}
       </tbody>
@@ -66,19 +68,19 @@ var mainPageTpl = `
         <tr>
           <th>Worker Name</th>
           <th>Queue</th>
-          <th>Runtime</th>
           <th>Command</th>
           <th>Params</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>69.90.132.223-4135</td>
-          <td>common</td>
-          <td>2 minutes 8 seconds</td>
-          <td><code>rm -fr /</code></td>
-          <td><code>{}</code></td>
-        </tr>
+        {{ range $i, $Job := .ListRunningJobs }}
+          <tr>
+            <td>{{ $Job.WorkerName }}</td>
+            <td>{{ $Job.QueueName }}</td>
+            <td><code>{{ $Job.Task.FullCommand }}</code></td>
+            <td><code></code></td>
+          </tr>
+        {{ end }}
       </tbody>
     </table>
 

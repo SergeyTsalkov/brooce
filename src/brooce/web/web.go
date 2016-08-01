@@ -10,6 +10,7 @@ import (
 	"time"
 
 	myredis "brooce/redis"
+	"brooce/task"
 	"brooce/web/tpl"
 
 	redis "gopkg.in/redis.v3"
@@ -52,7 +53,8 @@ func makeHandler(fn func(req *http.Request) (*bytes.Buffer, error)) http.Handler
 }
 
 type mainpageOutputType struct {
-	ListQueues map[string]int64
+	ListQueues      map[string]*listQueueType
+	ListRunningJobs []*runningJobType
 }
 
 func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
@@ -62,33 +64,44 @@ func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	if err != nil {
 		return
 	}
+	output.ListRunningJobs, err = listRunningJobs()
+	if err != nil {
+		return
+	}
 
 	err = templates.ExecuteTemplate(buf, "mainpage", output)
 	return
 }
 
-func listQueues() (list map[string]int64, err error) {
+type listQueueType struct {
+	QueueName     string
+	Pending       int64
+	Running       int
+	pendingResult *redis.IntCmd
+	runningResult *redis.StringSliceCmd
+}
+
+func listQueues() (list map[string]*listQueueType, err error) {
+	list = map[string]*listQueueType{}
 	var results []string
 	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()
 	if err != nil {
 		return
 	}
 
-	var queues []string
 	for _, result := range results {
 		parts := strings.Split(result, ":")
 		if len(parts) < 3 {
 			continue
 		}
 
-		queues = append(queues, parts[2])
+		list[parts[2]] = &listQueueType{QueueName: parts[2]}
 	}
 
-	var lenResults []*redis.IntCmd
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		for _, queueName := range queues {
-			result := pipe.LLen(fmt.Sprintf("%s:queue:%s:pending", redisHeader, queueName))
-			lenResults = append(lenResults, result)
+		for _, queue := range list {
+			queue.pendingResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue.QueueName))
+			queue.runningResult = pipe.Keys(fmt.Sprintf("%s:queue:%s:working:*", redisHeader, queue.QueueName))
 		}
 		return nil
 	})
@@ -96,9 +109,59 @@ func listQueues() (list map[string]int64, err error) {
 		return
 	}
 
-	list = map[string]int64{}
-	for i, queueName := range queues {
-		list[queueName] = lenResults[i].Val()
+	for _, queue := range list {
+		queue.Pending = queue.pendingResult.Val()
+		queue.Running = len(queue.runningResult.Val())
+	}
+
+	return
+}
+
+type runningJobType struct {
+	RedisKey   string
+	WorkerName string
+	QueueName  string
+	Task       *task.Task
+	task       *redis.StringCmd
+}
+
+func listRunningJobs() (jobs []*runningJobType, err error) {
+	var results []string
+	results, err = redisClient.Keys(redisHeader + ":queue:*:working:*").Result()
+	if err != nil {
+		return
+	}
+
+	for _, result := range results {
+		parts := strings.Split(result, ":")
+		if len(parts) < 5 {
+			continue
+		}
+
+		job := &runningJobType{
+			RedisKey:   result,
+			WorkerName: parts[4],
+			QueueName:  parts[2],
+		}
+
+		jobs = append(jobs, job)
+	}
+
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for _, job := range jobs {
+			job.task = pipe.LIndex(job.RedisKey, 0)
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for _, job := range jobs {
+		job.Task, err = task.NewFromJson(job.task.Val())
+		if err != nil {
+			return
+		}
 	}
 
 	return
