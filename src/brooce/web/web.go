@@ -26,16 +26,22 @@ var reqHandler = http.NewServeMux()
 var templates = tpl.Get()
 
 var serv = &http.Server{
-	Addr:         ":8080",
+	Addr:         config.Config.Web.Addr,
 	Handler:      reqHandler,
 	ReadTimeout:  10 * time.Second,
 	WriteTimeout: 10 * time.Second,
 }
 
 func Start() {
+	if config.Config.Web.Username == "" || config.Config.Web.Password == "" {
+		log.Println("Web interface disabled -- you didn't configure username/password!")
+		return
+	}
+
 	reqHandler.HandleFunc("/", makeHandler(mainpageHandler))
 
 	go func() {
+		log.Println("Web server listening on", config.Config.Web.Addr)
 		err := serv.ListenAndServe()
 		if err != nil {
 			log.Fatalln(err)
@@ -45,6 +51,13 @@ func Start() {
 
 func makeHandler(fn func(req *http.Request) (*bytes.Buffer, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		username, password, authOk := r.BasicAuth()
+		if !authOk || username != config.Config.Web.Username || password != config.Config.Web.Password {
+			w.Header().Set("WWW-Authenticate", `Basic realm="brooce"`)
+			http.Error(w, "401 Unauthorized\n", http.StatusUnauthorized)
+			return
+		}
+
 		buf, err := fn(r)
 		if err != nil {
 			log.Println(err)
@@ -90,8 +103,12 @@ type listQueueType struct {
 	QueueName     string
 	Pending       int64
 	Running       int
+	Done          int64
+	Failed        int64
 	pendingResult *redis.IntCmd
 	runningResult *redis.StringSliceCmd
+	doneResult    *redis.IntCmd
+	failedResult  *redis.IntCmd
 }
 
 func listQueues() (list map[string]*listQueueType, err error) {
@@ -115,6 +132,8 @@ func listQueues() (list map[string]*listQueueType, err error) {
 		for _, queue := range list {
 			queue.pendingResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue.QueueName))
 			queue.runningResult = pipe.Keys(fmt.Sprintf("%s:queue:%s:working:*", redisHeader, queue.QueueName))
+			queue.doneResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:done", redisHeader, queue.QueueName))
+			queue.failedResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:failed", redisHeader, queue.QueueName))
 		}
 		return nil
 	})
@@ -125,6 +144,8 @@ func listQueues() (list map[string]*listQueueType, err error) {
 	for _, queue := range list {
 		queue.Pending = queue.pendingResult.Val()
 		queue.Running = len(queue.runningResult.Val())
+		queue.Done = queue.doneResult.Val()
+		queue.Failed = queue.failedResult.Val()
 	}
 
 	return

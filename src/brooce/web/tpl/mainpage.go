@@ -12,6 +12,8 @@ var mainPageTpl = `
           <th>Queue</th>
           <th>Pending</th>
           <th>Running</th>
+          <th>Done</th>
+          <th>Failed</th>
         </tr>
       </thead>
       <tbody>
@@ -20,6 +22,8 @@ var mainPageTpl = `
             <td>{{ $Queue.QueueName }}</td>
             <td>{{ $Queue.Pending }}</td>
             <td>{{ $Queue.Running }}</td>
+            <td>{{ $Queue.Done }}</td>
+            <td>{{ $Queue.Failed }}</td>
           </tr>
         {{ end }}
       </tbody>

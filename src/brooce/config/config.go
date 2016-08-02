@@ -16,6 +16,12 @@ type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
 	ProcName    string `json:"process_name"`
 
+	Web struct {
+		Addr     string
+		Username string
+		Password string
+	}
+
 	Redis struct {
 		Host     string
 		Password string
@@ -51,6 +57,10 @@ func init() {
 
 	if Config.ProcName == "" {
 		Config.ProcName = fmt.Sprintf("%v-%v", myip.PublicIPv4(), os.Getpid())
+	}
+
+	if Config.Web.Addr == "" {
+		Config.Web.Addr = ":8080"
 	}
 
 	if Config.Queues == nil {
