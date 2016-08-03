@@ -4,7 +4,7 @@ var mainPageTpl = `
 {{ define "mainpage" }}
 {{ template "header" }}
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-8">
     <h3>Queues</h3>
     <table class="table">
       <thead>
@@ -14,6 +14,7 @@ var mainPageTpl = `
           <th>Running</th>
           <th>Done</th>
           <th>Failed</th>
+          <th>Delayed</th>
         </tr>
       </thead>
       <tbody>
@@ -24,6 +25,7 @@ var mainPageTpl = `
             <td>{{ $Queue.Running }}</td>
             <td>{{ $Queue.Done }}</td>
             <td>{{ $Queue.Failed }}</td>
+            <td>{{ $Queue.Delayed }}</td>
           </tr>
         {{ end }}
       </tbody>

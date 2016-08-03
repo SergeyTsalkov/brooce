@@ -45,9 +45,6 @@ var headerTpl = `
 
       <li class="active"><a href="#">Overview</a></li>
       <li><a href="#">Schedule</a></li>
-      <li><a href="#">Workers</a></li>
-      <li><a href="#">Failed</a></li>
-      <li><a href="#">Delayed</a></li>
     </ul>
 
     <h1 class="text-muted">brooce</h1>

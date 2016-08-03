@@ -28,3 +28,16 @@ func Get() *redis.Client {
 
 	return redisClient
 }
+
+func FlushList(src, dst string) (err error) {
+	redisClient := Get()
+	for err == nil {
+		_, err = redisClient.RPopLPush(src, dst).Result()
+	}
+
+	if err == redis.Nil {
+		err = nil
+	}
+
+	return
+}

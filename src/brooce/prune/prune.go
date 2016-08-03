@@ -1,16 +1,26 @@
-package main
+package prune
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
+
+	"brooce/config"
+	myredis "brooce/redis"
 )
 
-func jobpruner() {
-	for {
-		prunejobs()
-		time.Sleep(time.Minute)
-	}
+var redisHeader = config.Config.ClusterName
+var heartbeatKey = redisHeader + ":workerprocs"
+var redisClient = myredis.Get()
+
+func Start() {
+	go func() {
+		for {
+			prunejobs()
+			time.Sleep(time.Minute)
+		}
+	}()
 }
 
 func prunejobs() {
@@ -33,7 +43,7 @@ func pruneProc(procName string) {
 
 		queue := parts[2]
 		failedList := strings.Join([]string{redisHeader, "queue", queue, "failed"}, ":")
-		logger.Println("Pruning dead working queue", result, "to", failedList)
+		log.Println("Pruning dead working queue", result, "to", failedList)
 
 		redisClient.RPopLPush(result, failedList)
 	}

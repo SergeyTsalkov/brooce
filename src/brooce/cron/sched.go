@@ -1,21 +1,31 @@
-package main
+package cron
 
 import (
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"brooce/config"
+	myredis "brooce/redis"
+	"brooce/util"
+
 	redis "gopkg.in/redis.v3"
 )
 
-func cronner() {
-	for {
-		sleepUntil00()
-		err := scheduleCrons()
-		if err != nil {
-			logger.Println("Cron scheduling error:", err)
+var redisHeader = config.Config.ClusterName
+var redisClient = myredis.Get()
+
+func Start() {
+	go func() {
+		for {
+			util.SleepUntilNextMinute()
+			err := scheduleCrons()
+			if err != nil {
+				log.Println("Cron scheduling error:", err)
+			}
 		}
-	}
+	}()
 }
 
 func scheduleCrons() error {
@@ -29,7 +39,7 @@ func scheduleCrons() error {
 
 	var lockValueCmd *redis.StringCmd
 	_, err := redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		pipe.SetNX(lockKey, myProcName, lockttl)
+		pipe.SetNX(lockKey, config.Config.ProcName, lockttl)
 		lockValueCmd = pipe.Get(lockKey)
 		return nil
 	})
@@ -40,7 +50,7 @@ func scheduleCrons() error {
 
 	lockValue, _ := lockValueCmd.Result()
 
-	if lockValue != myProcName {
+	if lockValue != config.Config.ProcName {
 		return nil
 	}
 
@@ -111,11 +121,11 @@ func listActiveCrons() map[string]*cronType {
 func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType, start time.Time, end time.Time) {
 	toSchedule := map[string]*cronType{}
 
-	for t := start; !t.After(end); t = t.Add(time.Minute) {
-		if !start.Equal(end) {
-			logger.Println("Scheduling cron for", t)
-		}
+	if !start.Equal(end) {
+		log.Println("Cron is catching up! Scheduling jobs for the period from", start, "to", end)
+	}
 
+	for t := start; !t.After(end); t = t.Add(time.Minute) {
 		for cronName, cron := range crons {
 			if cron.matchTime(t) {
 				toSchedule[cronName] = cron
@@ -124,7 +134,7 @@ func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType,
 	}
 
 	for cronName, cron := range toSchedule {
-		logger.Println("Scheduling job", cronName, ":", strings.Join(cron.command, " "))
+		log.Println("Scheduling job", cronName, ":", strings.Join(cron.command, " "))
 
 		if cron.queue == "" {
 			continue

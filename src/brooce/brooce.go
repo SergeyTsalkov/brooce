@@ -2,15 +2,19 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"brooce/config"
+	"brooce/cron"
 	"brooce/heartbeat"
 	loggerlib "brooce/logger"
 	"brooce/myip"
+	"brooce/prune"
 	myredis "brooce/redis"
+	"brooce/requeue"
 	tasklib "brooce/task"
 	"brooce/web"
 
@@ -18,7 +22,6 @@ import (
 )
 
 var redisClient = myredis.Get()
-var myProcName string
 var logger = loggerlib.Logger
 var queueWg = new(sync.WaitGroup)
 
@@ -29,8 +32,10 @@ var publicIP = myip.PublicIPv4()
 func setup() {
 	web.Start()
 	heartbeat.Start()
-	go jobpruner()
-	go cronner()
+	cron.Start()
+	prune.Start()
+	requeue.Start()
+
 	go suicider()
 }
 
@@ -48,7 +53,6 @@ func main() {
 		}
 
 		strQueueList = append(strQueueList, fmt.Sprintf("%v (x%v)", queue, ct))
-		go autoRequeueDelayed(queue)
 	}
 
 	logger.Println("Started with queues:", strings.Join(strQueueList, ", "))
@@ -58,27 +62,30 @@ func main() {
 func runner(queue string, threadid int) {
 	threadName := fmt.Sprintf("%v-%v", config.Config.ProcName, threadid)
 
-	pendingList := strings.Join([]string{redisHeader, "queue", queue, "pending"}, ":")
-	workingList := strings.Join([]string{redisHeader, "queue", queue, "working", threadName}, ":")
-	doneList := strings.Join([]string{redisHeader, "queue", queue, "done"}, ":")
-	failedList := strings.Join([]string{redisHeader, "queue", queue, "failed"}, ":")
-	delayedList := strings.Join([]string{redisHeader, "queue", queue, "delayed"}, ":")
+	pendingList := fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue)
+	workingList := fmt.Sprintf("%s:queue:%s:working:%s", redisHeader, queue, threadName)
+	doneList := fmt.Sprintf("%s:queue:%s:done", redisHeader, queue)
+	failedList := fmt.Sprintf("%s:queue:%s:failed", redisHeader, queue)
+	delayedList := fmt.Sprintf("%s:queue:%s:delayed", redisHeader, queue)
 
 	for {
 		taskStr, err := redisClient.BRPopLPush(pendingList, workingList, 15*time.Second).Result()
 		if err != nil {
+			if err != redis.Nil {
+				log.Println("redis error while running BRPOPLPUSH:", err)
+			}
 			continue
 		}
 
+		exitCode := 256
 		task, err := tasklib.NewFromJson(taskStr)
 		if err != nil {
-			fmt.Println("Failed to decode task:", err)
-			continue
+			log.Println("Failed to decode task:", err)
+		} else {
+			announceStatusWorking(threadid)
+			exitCode = (&runnableTask{task}).Run()
+			announceStatusWaiting(threadid)
 		}
-
-		announceStatusWorking(threadid)
-		exitCode := (&runnableTask{task}).Run()
-		announceStatusWaiting(threadid)
 
 		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
 			switch exitCode {
@@ -90,22 +97,11 @@ func runner(queue string, threadid int) {
 				pipe.LPush(failedList, task.Json())
 			}
 
-			// we're done who cares about this job
-			_ = pipe.RPop(workingList)
-
+			pipe.RPop(workingList)
 			return nil
 		})
 
 	}
 
 	queueWg.Done()
-}
-
-func sleepUntil00() {
-	now := time.Now().Unix()
-	last_minute := now - now%60
-	next_minute := last_minute + 60
-	sleep_for := next_minute - now
-
-	time.Sleep(time.Duration(sleep_for) * time.Second)
 }
