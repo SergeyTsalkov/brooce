@@ -11,7 +11,6 @@ import (
 	"brooce/cron"
 	"brooce/heartbeat"
 	loggerlib "brooce/logger"
-	"brooce/myip"
 	"brooce/prune"
 	myredis "brooce/redis"
 	"brooce/requeue"
@@ -25,10 +24,7 @@ import (
 var redisClient = myredis.Get()
 var logger = loggerlib.Logger
 var queueWg = new(sync.WaitGroup)
-
 var redisHeader = config.Config.ClusterName
-var heartbeatKey = redisHeader + ":workerprocs"
-var publicIP = myip.PublicIPv4()
 
 func setup() {
 	web.Start()

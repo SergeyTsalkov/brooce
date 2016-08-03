@@ -11,16 +11,17 @@ import (
 
 var redisClient *redis.Client
 var once sync.Once
+var threads = config.Config.TotalThreads() + 10
 
 func Get() *redis.Client {
 	once.Do(func() {
 		redisClient = redis.NewClient(&redis.Options{
 			Addr:         config.Config.Redis.Host,
 			Password:     config.Config.Redis.Password,
-			MaxRetries:   2,
-			PoolSize:     10, // TODO: make this equal to number of threads
+			MaxRetries:   10,
+			PoolSize:     threads,
 			DialTimeout:  5 * time.Second,
-			ReadTimeout:  20 * time.Second,
+			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 5 * time.Second,
 			PoolTimeout:  1 * time.Second,
 		})

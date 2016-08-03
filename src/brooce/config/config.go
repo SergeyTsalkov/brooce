@@ -40,6 +40,13 @@ type ConfigType struct {
 
 var Config ConfigType
 
+func (c *ConfigType) TotalThreads() (threads int) {
+	for _, ct := range Config.Queues {
+		threads += ct
+	}
+	return
+}
+
 func init() {
 	bytes, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".brooce"))
 	if err != nil {
