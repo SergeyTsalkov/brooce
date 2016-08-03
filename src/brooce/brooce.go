@@ -15,6 +15,7 @@ import (
 	"brooce/prune"
 	myredis "brooce/redis"
 	"brooce/requeue"
+	"brooce/suicide"
 	tasklib "brooce/task"
 	"brooce/web"
 
@@ -35,8 +36,7 @@ func setup() {
 	cron.Start()
 	prune.Start()
 	requeue.Start()
-
-	go suicider()
+	suicide.Start()
 }
 
 func main() {
@@ -82,9 +82,9 @@ func runner(queue string, threadid int) {
 		if err != nil {
 			log.Println("Failed to decode task:", err)
 		} else {
-			announceStatusWorking(threadid)
+			suicide.ThreadIsWorking(threadid)
 			exitCode = (&runnableTask{task}).Run()
-			announceStatusWaiting(threadid)
+			suicide.ThreadIsWaiting(threadid)
 		}
 
 		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
