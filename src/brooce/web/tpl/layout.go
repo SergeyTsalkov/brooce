@@ -33,6 +33,14 @@ var headerTpl = `
       div.header h1 a:hover {
         text-decoration: none;
       }
+
+      div.pages {
+        margin-top: 3em;
+        text-align: center;
+      }
+      div.pages i {
+        display: block;
+      }
     </style>
 
 
