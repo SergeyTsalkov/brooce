@@ -56,6 +56,8 @@ func main() {
 }
 
 func runner(queue string, threadid int) {
+	defer queueWg.Done()
+
 	threadName := fmt.Sprintf("%v-%v", config.Config.ProcName, threadid)
 
 	pendingList := fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue)
@@ -98,6 +100,4 @@ func runner(queue string, threadid int) {
 		})
 
 	}
-
-	queueWg.Done()
 }

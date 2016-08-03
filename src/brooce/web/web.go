@@ -32,7 +32,10 @@ func Start() {
 	}
 
 	reqHandler.HandleFunc("/", makeHandler(mainpageHandler))
-	reqHandler.HandleFunc("/failed", makeHandler(failedpageHandler))
+	reqHandler.HandleFunc("/failed/", makeHandler(joblistHandler))
+	reqHandler.HandleFunc("/done/", makeHandler(joblistHandler))
+	reqHandler.HandleFunc("/delayed/", makeHandler(joblistHandler))
+	reqHandler.HandleFunc("/pending/", makeHandler(joblistHandler))
 
 	go func() {
 		log.Println("Web server listening on", config.Config.Web.Addr)

@@ -9,6 +9,7 @@ var tplList = []string{
 	headerTpl,
 	footerTpl,
 	mainPageTpl,
+	jobListTpl,
 }
 
 func Get() *template.Template {

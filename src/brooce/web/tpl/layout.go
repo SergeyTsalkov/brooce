@@ -26,6 +26,13 @@ var headerTpl = `
         margin: 0;
         line-height: 40px;
       }
+      div.header h1 a {
+        text-decoration: none;
+        color: inherit;
+      }
+      div.header h1 a:hover {
+        text-decoration: none;
+      }
     </style>
 
 
@@ -43,11 +50,11 @@ var headerTpl = `
   <div class="header clearfix">
     <ul class="nav nav-pills pull-right">
 
-      <li class="active"><a href="#">Overview</a></li>
+      <li class="active"><a href="/">Overview</a></li>
       <li><a href="#">Schedule</a></li>
     </ul>
 
-    <h1 class="text-muted">brooce</h1>
+    <h1 class="text-muted"><a href="/">brooce</a></h1>
   </div>
 {{ end }}
 `

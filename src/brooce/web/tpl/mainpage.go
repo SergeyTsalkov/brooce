@@ -21,11 +21,11 @@ var mainPageTpl = `
         {{ range $i, $Queue := .Queues }}
           <tr>
             <td>{{ $Queue.QueueName }}</td>
-            <td>{{ $Queue.Pending }}</td>
+            <td><a href="/pending/{{ $Queue.QueueName }}">{{ $Queue.Pending }}</a></td>
             <td>{{ $Queue.Running }}</td>
-            <td>{{ $Queue.Done }}</td>
-            <td>{{ $Queue.Failed }}</td>
-            <td>{{ $Queue.Delayed }}</td>
+            <td><a href="/done/{{ $Queue.QueueName }}">{{ $Queue.Done }}</a></td>
+            <td><a href="/failed/{{ $Queue.QueueName }}">{{ $Queue.Failed }}</a></td>
+            <td><a href="/delayed/{{ $Queue.QueueName }}">{{ $Queue.Delayed }}</a></td>
           </tr>
         {{ end }}
       </tbody>
