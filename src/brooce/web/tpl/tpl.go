@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"brooce/config"
-
-	humanize "github.com/dustin/go-humanize"
+	"brooce/util"
 )
 
 var tplList = []string{
@@ -32,7 +31,20 @@ func Get() *template.Template {
 			return config.Config.CSRF()
 		},
 		"TimeSince": func(timestamp int64) string {
-			return humanize.Time(time.Unix(timestamp, 0))
+			if timestamp == 0 {
+				return ""
+			}
+			return util.HumanDuration(time.Since(time.Unix(timestamp, 0)), 2)
+		},
+		"TimeBetween": func(start, end int64) string {
+			if start == 0 || end == 0 {
+				return ""
+			}
+			if start > end {
+				start, end = end, start
+			}
+
+			return util.HumanDuration(time.Unix(end, 0).Sub(time.Unix(start, 0)), 2)
 		},
 	})
 

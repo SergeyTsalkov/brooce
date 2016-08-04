@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -40,4 +41,31 @@ func FileExists(filename string) bool {
 
 func ProcessExists(pid int) bool {
 	return FileExists(fmt.Sprintf("/proc/%v", pid))
+}
+
+func HumanDuration(d time.Duration, fields int) string {
+	secondDurations := []int64{31540000, 2628000, 86400, 3600, 60, 1}
+	humanDurations := []string{"year", "month", "day", "hour", "minute", "second"}
+
+	parts := []string{}
+	seconds := int64(d.Seconds())
+
+	for i, sDuration := range secondDurations {
+		if seconds >= sDuration {
+			multiple := seconds / sDuration
+
+			trail := "s"
+			if multiple == 1 {
+				trail = ""
+			}
+			parts = append(parts, fmt.Sprintf("%d %s%s", multiple, humanDurations[i], trail))
+			seconds -= multiple * sDuration
+		}
+	}
+
+	if len(parts) > fields {
+		parts = parts[:fields]
+	}
+
+	return strings.Join(parts, " ")
 }

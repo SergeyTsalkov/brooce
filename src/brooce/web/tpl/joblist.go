@@ -11,6 +11,8 @@ var jobListTpl = `
     <table class="table table-hover">
       <thead>
         <tr>
+          <th>Finished</th>
+          <th>Runtime</th>
           <th>Command</th>
           <th>Params</th>
           <th class="buttons">
@@ -34,6 +36,8 @@ var jobListTpl = `
       <tbody>
         {{ range .Jobs }}
           <tr>
+            <td>{{ TimeSince .EndTime }} ago</td>
+            <td>{{ TimeBetween .EndTime .StartTime }}</td>
             <td><code>{{ .FullCommand }}</code></td>
             <td><code></code></td>
             <td class="buttons">
