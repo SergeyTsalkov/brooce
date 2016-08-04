@@ -121,16 +121,16 @@ func listActiveCrons() map[string]*cronType {
 func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType, start time.Time, end time.Time) {
 	toSchedule := map[string]*cronType{}
 
-	if !start.Equal(end) {
-		log.Println("Cron is catching up! Scheduling jobs for the period from", start, "to", end)
-	}
-
 	for t := start; !t.After(end); t = t.Add(time.Minute) {
 		for cronName, cron := range crons {
 			if cron.matchTime(t) {
 				toSchedule[cronName] = cron
 			}
 		}
+	}
+
+	if !start.Equal(end) && len(toSchedule) > 0 {
+		log.Println("Cron is catching up! Scheduling jobs for the period from", start, "to", end)
 	}
 
 	for cronName, cron := range toSchedule {
