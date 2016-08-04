@@ -17,13 +17,13 @@ var jobListTpl = `
             <form action="" method="post">
               <input type="hidden" name="csrf" value="{{CSRF}}">
               {{ if eq .ListType "failed" "delayed" }}
-              <button type="submit" formaction="/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-xs">
+              <button type="submit" formaction="/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-sm">
                 <span class="glyphicon glyphicon-repeat"></span>
                 Retry All
               </button>
               {{ end }}
 
-              <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-xs">
+              <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
                 <span class="glyphicon glyphicon-remove"></span>
                 Delete All
               </button>

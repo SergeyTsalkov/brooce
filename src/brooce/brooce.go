@@ -27,8 +27,8 @@ var queueWg = new(sync.WaitGroup)
 var redisHeader = config.Config.ClusterName
 
 func setup() {
-	web.Start()
 	heartbeat.Start()
+	web.Start()
 	cron.Start()
 	prune.Start()
 	requeue.Start()

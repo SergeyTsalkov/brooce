@@ -11,6 +11,9 @@ import (
 	"brooce/config"
 	"brooce/myip"
 	myredis "brooce/redis"
+	"brooce/util"
+
+	redis "gopkg.in/redis.v3"
 )
 
 var heartbeatEvery = 30 * time.Second
@@ -64,24 +67,68 @@ func makeHeartbeat() string {
 func Start() {
 	// need to send a single heartbeat FOR SURE before we grab a job!
 	heartbeat()
+	auditHeartbeats()
 
 	go func() {
 		for {
 			time.Sleep(heartbeatEvery)
 			heartbeat()
+			auditHeartbeats()
 		}
 	}()
 }
 
 func heartbeat() {
-	/*once.Do(func() {
-		value = makeHeartbeat()
-	})*/
-
 	key := fmt.Sprintf("%s:workerprocs:%s", config.Config.ClusterName, config.Config.ProcName)
 	err := redisClient.Set(key, heartbeatStr, assumeDeadAfter).Err()
 	if err != nil {
 		log.Println("redis heartbeat error:", err)
 	}
+}
 
+// check other processes on same IP, make sure they're actually there
+// TODO: lock down ProcName from user change
+func auditHeartbeats() {
+	var err error
+	defer func() {
+		if err != nil {
+			log.Println("redis audit heartbeat error:", err)
+		}
+	}()
+
+	keyMatch := fmt.Sprintf("%s:workerprocs:%v-*", config.Config.ClusterName, myip.PublicIPv4())
+	var keys []string
+	keys, err = redisClient.Keys(keyMatch).Result()
+	if err != nil {
+		return
+	}
+
+	heartbeats := map[string]*redis.StringCmd{}
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for _, key := range keys {
+			result := pipe.Get(key)
+			heartbeats[key] = result
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for key, str := range heartbeats {
+		worker := &HeartbeatType{}
+		err = json.Unmarshal([]byte(str.Val()), worker)
+		if err != nil {
+			return
+		}
+
+		if worker.PID > 0 && !util.ProcessExists(worker.PID) {
+			log.Printf("Purging dead worker, was PID %v", worker.PID)
+			err = redisClient.Del(key).Err()
+			if err != nil {
+				return
+			}
+		}
+
+	}
 }

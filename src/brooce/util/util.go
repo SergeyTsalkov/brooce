@@ -3,7 +3,9 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"os"
 	"time"
 )
 
@@ -29,4 +31,13 @@ func Md5sum(data interface{}) string {
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func FileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func ProcessExists(pid int) bool {
+	return FileExists(fmt.Sprintf("/proc/%v", pid))
 }
