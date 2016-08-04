@@ -11,8 +11,11 @@ var jobListTpl = `
     <table class="table table-hover">
       <thead>
         <tr>
-          <th>Finished</th>
-          <th>Runtime</th>
+          {{ if ne .ListType "pending" }}
+            <th>Finished</th>
+            <th>Runtime</th>
+          {{ end }}
+
           <th>Command</th>
           <th>Params</th>
           <th class="buttons">
@@ -36,8 +39,10 @@ var jobListTpl = `
       <tbody>
         {{ range .Jobs }}
           <tr>
-            <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }} ago</span></td>
-            <td>{{ TimeBetween .EndTime .StartTime }}</td>
+            {{ if ne $.ListType "pending" }}
+              <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }} ago</span></td>
+              <td>{{ TimeBetween .EndTime .StartTime }}</td>
+            {{ end }}
             <td><code>{{ .FullCommand }}</code></td>
             <td><code></code></td>
             <td class="buttons">
