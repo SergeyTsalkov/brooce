@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"brooce/config"
 	tasklib "brooce/task"
 
 	redis "gopkg.in/redis.v3"
@@ -63,13 +64,19 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		done <- cmd.Wait()
 	}()
 
+	timeoutSeconds := task.Timeout
+	if timeoutSeconds == 0 {
+		timeoutSeconds = config.Config.Timeout
+	}
+	timeout := time.Duration(timeoutSeconds) * time.Second
+
 	select {
 	case err = <-done:
 		//finished normally, do nothing!
-	case <-time.After(task.GetTimeout()):
+	case <-time.After(timeout):
 		//timed out!
 		cmd.Process.Kill()
-		err = fmt.Errorf("timeout after %v", task.GetTimeout())
+		err = fmt.Errorf("timeout after %v", timeout)
 	}
 
 	if msg, ok := err.(*exec.ExitError); ok {

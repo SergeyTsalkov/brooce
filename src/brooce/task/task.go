@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
-	"time"
-
-	"brooce/config"
 )
 
 type Task struct {
@@ -42,13 +39,4 @@ func (task *Task) FullCommand() string {
 	}
 
 	return strings.Join(task.Command, " ")
-}
-
-func (task *Task) GetTimeout() time.Duration {
-	seconds := task.Timeout
-	if seconds == 0 {
-		seconds = config.Config.Timeout
-	}
-
-	return time.Duration(seconds) * time.Second
 }

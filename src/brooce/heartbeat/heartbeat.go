@@ -87,7 +87,6 @@ func heartbeat() {
 }
 
 // check other processes on same IP, make sure they're actually there
-// TODO: lock down ProcName from user change
 func auditHeartbeats() {
 	var err error
 	defer func() {
