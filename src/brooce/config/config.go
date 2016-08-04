@@ -17,6 +17,8 @@ type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
 	ProcName    string `json:"process_name"`
 
+	Timeout int
+
 	Web struct {
 		Addr     string
 		Username string
@@ -77,6 +79,10 @@ func init() {
 
 	if Config.Queues == nil {
 		log.Fatalln("The queues hash was not configured in the ~/.brooce config file!")
+	}
+
+	if Config.Timeout == 0 {
+		Config.Timeout = 3600
 	}
 
 	init_redis()

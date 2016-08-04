@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
+
+	"brooce/config"
 )
 
 type Task struct {
 	Id      string   `json:"id"`
 	Command []string `json:"command"`
+	Timeout int      `json:"timeout"`
 
 	Raw string `json:"-"`
 }
@@ -38,4 +42,13 @@ func (task *Task) FullCommand() string {
 	}
 
 	return strings.Join(task.Command, " ")
+}
+
+func (task *Task) GetTimeout() time.Duration {
+	seconds := task.Timeout
+	if seconds == 0 {
+		seconds = config.Config.Timeout
+	}
+
+	return time.Duration(seconds) * time.Second
 }

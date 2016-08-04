@@ -81,8 +81,12 @@ func runner(queue string, threadid int) {
 			log.Println("Failed to decode task:", err)
 		} else {
 			suicide.ThreadIsWorking(threadid)
-			exitCode = (&runnableTask{task}).Run()
+			exitCode, err = (&runnableTask{task}).Run()
 			suicide.ThreadIsWaiting(threadid)
+
+			if err != nil {
+				log.Printf("Error in task %v: %v", task.Id, err)
+			}
 		}
 
 		redisClient.Pipelined(func(pipe *redis.Pipeline) error {

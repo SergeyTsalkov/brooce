@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -16,17 +17,16 @@ type runnableTask struct {
 	*tasklib.Task
 }
 
-func (task *runnableTask) Run() (exitCode int) {
+func (task *runnableTask) Run() (exitCode int, err error) {
 	if len(task.Command) == 0 {
 		return
 	}
 
 	if task.Id == "" {
-		counter, err := redisClient.Incr(redisHeader + ":counter").Result()
+		var counter int64
+		counter, err = redisClient.Incr(redisHeader + ":counter").Result()
 
 		if err != nil {
-			logger.Printf("Unable to pick id for task, redis said: %v", err)
-			exitCode = 1
 			return
 		}
 
@@ -40,8 +40,11 @@ func (task *runnableTask) Run() (exitCode int) {
 		args = task.Command[1:]
 	}
 
-	logger.Printf("Starting task %v: %v", task.Id, task.FullCommand())
 	starttime := time.Now()
+	log.Printf("Starting task %v: %v", task.Id, task.FullCommand())
+	defer func() {
+		log.Printf("Task %v exited after %v with exitcode %v", task.Id, time.Since(starttime), exitCode)
+	}()
 
 	cmd := exec.Command(name, args...)
 
@@ -50,22 +53,34 @@ func (task *runnableTask) Run() (exitCode int) {
 		cmd.Stderr = task
 	}
 
-	err := cmd.Run()
-
-	// Grab unix process exit code
-	// WINDOWS BARFS HERE OH GOD
+	done := make(chan error)
+	err = cmd.Start()
 	if err != nil {
-		if msg, ok := err.(*exec.ExitError); ok {
-			exitCode = msg.Sys().(syscall.WaitStatus).ExitStatus()
-		}
+		return
 	}
 
-	logger.Printf("Task %v exited after %v with exitcode %v", task.Id, time.Since(starttime), exitCode)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case err = <-done:
+		//finished normally, do nothing!
+	case <-time.After(task.GetTimeout()):
+		//timed out!
+		cmd.Process.Kill()
+		err = fmt.Errorf("timeout after %v", task.GetTimeout())
+	}
+
+	if msg, ok := err.(*exec.ExitError); ok {
+		exitCode = msg.Sys().(syscall.WaitStatus).ExitStatus()
+	}
+
 	return
 }
 
 func (task *runnableTask) Write(p []byte) (int, error) {
-	logger.Printf("Task %v: %v", task.Id, string(p))
+	log.Printf("Task %v: %v", task.Id, string(p))
 
 	key := strings.Join([]string{redisHeader, "jobs", task.Id, "log"}, ":")
 
