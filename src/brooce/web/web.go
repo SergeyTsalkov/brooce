@@ -47,10 +47,12 @@ func Start() {
 	reqHandler.HandleFunc("/delete/failed/", makeHandler(deleteHandler, "POST"))
 	reqHandler.HandleFunc("/delete/done/", makeHandler(deleteHandler, "POST"))
 	reqHandler.HandleFunc("/delete/delayed/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc("/delete/pending/", makeHandler(deleteHandler, "POST"))
 
 	reqHandler.HandleFunc("/deleteall/failed/", makeHandler(deleteAllHandler, "POST"))
 	reqHandler.HandleFunc("/deleteall/done/", makeHandler(deleteAllHandler, "POST"))
 	reqHandler.HandleFunc("/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc("/deleteall/pending/", makeHandler(deleteAllHandler, "POST"))
 
 	go func() {
 		log.Println("Web server listening on", config.Config.Web.Addr)
