@@ -11,6 +11,9 @@ type Task struct {
 	Command []string `json:"command"`
 	Timeout int      `json:"timeout"`
 
+	StartTime int64 `json:"start_time"`
+	EndTime   int64 `json:"end_time"`
+
 	Raw string `json:"-"`
 }
 

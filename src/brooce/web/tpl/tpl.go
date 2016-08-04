@@ -3,8 +3,11 @@ package tpl
 import (
 	"html/template"
 	"log"
+	"time"
 
 	"brooce/config"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 var tplList = []string{
@@ -27,6 +30,9 @@ func Get() *template.Template {
 		},
 		"CSRF": func() string {
 			return config.Config.CSRF()
+		},
+		"TimeSince": func(timestamp int64) string {
+			return humanize.Time(time.Unix(timestamp, 0))
 		},
 	})
 

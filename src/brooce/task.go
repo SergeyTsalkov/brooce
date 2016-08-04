@@ -16,6 +16,7 @@ import (
 
 type runnableTask struct {
 	*tasklib.Task
+	workingList string
 }
 
 func (task *runnableTask) Run() (exitCode int, err error) {
@@ -24,14 +25,10 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	}
 
 	if task.Id == "" {
-		var counter int64
-		counter, err = redisClient.Incr(redisHeader + ":counter").Result()
-
+		err = task.GenerateId()
 		if err != nil {
 			return
 		}
-
-		task.Id = fmt.Sprintf("%v", counter)
 	}
 
 	name := task.Command[0]
@@ -42,6 +39,12 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	}
 
 	starttime := time.Now()
+	task.StartTime = starttime.Unix()
+	err = redisClient.LSet(task.workingList, 0, task.Json()).Err()
+	if err != nil {
+		return
+	}
+
 	log.Printf("Starting task %v: %v", task.Id, task.FullCommand())
 	defer func() {
 		log.Printf("Task %v exited after %v with exitcode %v", task.Id, time.Since(starttime), exitCode)
@@ -79,6 +82,8 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		err = fmt.Errorf("timeout after %v", timeout)
 	}
 
+	task.EndTime = time.Now().Unix()
+
 	if msg, ok := err.(*exec.ExitError); ok {
 		exitCode = msg.Sys().(syscall.WaitStatus).ExitStatus()
 	}
@@ -98,4 +103,14 @@ func (task *runnableTask) Write(p []byte) (int, error) {
 	})
 
 	return len(p), nil
+}
+
+func (task *runnableTask) GenerateId() (err error) {
+	var counter int64
+	counter, err = redisClient.Incr(redisHeader + ":counter").Result()
+
+	if err == nil {
+		task.Id = fmt.Sprintf("%v", counter)
+	}
+	return
 }
