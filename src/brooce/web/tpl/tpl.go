@@ -46,6 +46,12 @@ func Get() *template.Template {
 
 			return util.HumanDuration(time.Unix(end, 0).Sub(time.Unix(start, 0)), 2)
 		},
+		"FormatTime": func(timestamp int64) string {
+			if timestamp == 0 {
+				return ""
+			}
+			return time.Unix(timestamp, 0).Format("2006-01-02 15:04:05 MST")
+		},
 	})
 
 	for _, tplString := range tplList {

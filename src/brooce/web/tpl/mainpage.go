@@ -90,7 +90,7 @@ var mainPageTpl = `
           <tr>
             <td>{{ .WorkerName }}</td>
             <td>{{ .QueueName }}</td>
-            <td>{{ TimeSince .Task.StartTime }} ago</td>
+            <td><span title="{{FormatTime .Task.StartTime}}">{{ TimeSince .Task.StartTime }} ago</span></td>
             <td><code>{{ .Task.FullCommand }}</code></td>
             <td><code></code></td>
           </tr>

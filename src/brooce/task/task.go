@@ -7,12 +7,12 @@ import (
 )
 
 type Task struct {
-	Id      string   `json:"id"`
+	Id      string   `json:"id,omitempty"`
 	Command []string `json:"command"`
-	Timeout int      `json:"timeout"`
+	Timeout int      `json:"timeout,omitempty"`
 
-	StartTime int64 `json:"start_time"`
-	EndTime   int64 `json:"end_time"`
+	StartTime int64 `json:"start_time,omitempty"`
+	EndTime   int64 `json:"end_time,omitempty"`
 
 	Raw string `json:"-"`
 }
