@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"brooce/myip"
+	"brooce/util"
 )
 
 type ConfigType struct {
@@ -45,6 +46,10 @@ func (c *ConfigType) TotalThreads() (threads int) {
 		threads += ct
 	}
 	return
+}
+
+func (c *ConfigType) CSRF() string {
+	return util.Md5sum(c.Web.Username + ":" + c.Web.Password)
 }
 
 func init() {

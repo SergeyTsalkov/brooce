@@ -41,6 +41,10 @@ var headerTpl = `
       div.pages i {
         display: block;
       }
+
+      td.buttons, th.buttons {
+        text-align: right;
+      }
     </style>
 
 

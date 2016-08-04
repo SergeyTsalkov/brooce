@@ -86,6 +86,9 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	if output.End > output.Length {
 		output.End = output.Length
 	}
+	if output.Start > output.Length {
+		output.Start = output.Length
+	}
 
 	rangeLength := len(rangeResult.Val())
 	output.Jobs = make([]*task.Task, rangeLength)

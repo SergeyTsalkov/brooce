@@ -8,11 +8,27 @@ var jobListTpl = `
   <div class="col-md-12">
 
     <h3>{{ .ListType }} jobs for queue {{ .QueueName }}</h3>
-    <table class="table">
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Command</th>
           <th>Params</th>
+          <th class="buttons">
+            <form action="" method="post">
+              <input type="hidden" name="csrf" value="{{CSRF}}">
+              {{ if eq .ListType "failed" "delayed" }}
+              <button type="submit" formaction="/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-xs">
+                <span class="glyphicon glyphicon-repeat"></span>
+                Retry All
+              </button>
+              {{ end }}
+
+              <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-xs">
+                <span class="glyphicon glyphicon-remove"></span>
+                Delete All
+              </button>
+            </form>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -20,6 +36,25 @@ var jobListTpl = `
           <tr>
             <td><code>{{ .FullCommand }}</code></td>
             <td><code></code></td>
+            <td class="buttons">
+              <form action="" method="post">
+                <input type="hidden" name="csrf" value="{{CSRF}}">
+                <input type="hidden" name="item" value="{{.Raw}}">
+
+                {{ if eq $.ListType "failed" "delayed" "done" }}
+                <button type="submit" formaction="/retry/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-warning btn-xs">
+                  <span class="glyphicon glyphicon-repeat"></span>
+                  Retry
+                </button>
+                {{ end }}
+
+
+                <button type="submit" formaction="/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
+                  <span class="glyphicon glyphicon-remove"></span>
+                  Delete
+                </button>
+              </form>
+            </td>
           </tr>
         {{ end }}
       </tbody>

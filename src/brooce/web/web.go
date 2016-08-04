@@ -31,11 +31,26 @@ func Start() {
 		return
 	}
 
-	reqHandler.HandleFunc("/", makeHandler(mainpageHandler))
-	reqHandler.HandleFunc("/failed/", makeHandler(joblistHandler))
-	reqHandler.HandleFunc("/done/", makeHandler(joblistHandler))
-	reqHandler.HandleFunc("/delayed/", makeHandler(joblistHandler))
-	reqHandler.HandleFunc("/pending/", makeHandler(joblistHandler))
+	reqHandler.HandleFunc("/", makeHandler(mainpageHandler, "GET"))
+	reqHandler.HandleFunc("/failed/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc("/done/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc("/delayed/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc("/pending/", makeHandler(joblistHandler, "GET"))
+
+	reqHandler.HandleFunc("/retry/failed/", makeHandler(retryHandler, "POST"))
+	reqHandler.HandleFunc("/retry/done/", makeHandler(retryHandler, "POST"))
+	reqHandler.HandleFunc("/retry/delayed/", makeHandler(retryHandler, "POST"))
+
+	reqHandler.HandleFunc("/retryall/failed/", makeHandler(retryAllHandler, "POST"))
+	reqHandler.HandleFunc("/retryall/delayed/", makeHandler(retryAllHandler, "POST"))
+
+	reqHandler.HandleFunc("/delete/failed/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc("/delete/done/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc("/delete/delayed/", makeHandler(deleteHandler, "POST"))
+
+	reqHandler.HandleFunc("/deleteall/failed/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc("/deleteall/done/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc("/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
 
 	go func() {
 		log.Println("Web server listening on", config.Config.Web.Addr)
@@ -46,12 +61,22 @@ func Start() {
 	}()
 }
 
-func makeHandler(fn func(req *http.Request) (*bytes.Buffer, error)) http.HandlerFunc {
+func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, authOk := r.BasicAuth()
 		if !authOk || username != config.Config.Web.Username || password != config.Config.Web.Password {
 			w.Header().Set("WWW-Authenticate", `Basic realm="brooce"`)
 			http.Error(w, "401 Unauthorized\n", http.StatusUnauthorized)
+			return
+		}
+
+		if method != r.Method || r.URL.Path == "/favicon.ico" {
+			http.Error(w, "404 File Not Found\n", http.StatusNotFound)
+			return
+		}
+
+		if method != "GET" && r.FormValue("csrf") != config.Config.CSRF() {
+			http.Error(w, "Invalid csrf value!\n", http.StatusUnauthorized)
 			return
 		}
 
@@ -61,6 +86,15 @@ func makeHandler(fn func(req *http.Request) (*bytes.Buffer, error)) http.Handler
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		if buf == nil {
+			buf = &bytes.Buffer{}
+		}
+
+		if method != "GET" && buf.Len() == 0 {
+			http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+			return
+		}
+
 		io.Copy(w, buf)
 	}
 }

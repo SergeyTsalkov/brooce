@@ -9,11 +9,17 @@ import (
 type Task struct {
 	Id      string   `json:"id"`
 	Command []string `json:"command"`
+
+	Raw string `json:"-"`
 }
 
 func NewFromJson(str string) (task *Task, err error) {
 	task = &Task{}
 	err = json.Unmarshal([]byte(str), task)
+	if err != nil {
+		return
+	}
+	task.Raw = str
 	return
 }
 
