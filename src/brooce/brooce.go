@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"brooce/config"
@@ -23,7 +22,6 @@ import (
 
 var redisClient = myredis.Get()
 var logger = loggerlib.Logger
-var queueWg = new(sync.WaitGroup)
 var redisHeader = config.Config.ClusterName
 
 func setup() {
@@ -43,7 +41,6 @@ func main() {
 
 	for queue, ct := range config.Config.Queues {
 		for i := 0; i < ct; i++ {
-			queueWg.Add(1)
 			go runner(queue, threadid)
 			threadid++
 		}
@@ -51,13 +48,16 @@ func main() {
 		strQueueList = append(strQueueList, fmt.Sprintf("%v (x%v)", queue, ct))
 	}
 
-	logger.Println("Started with queues:", strings.Join(strQueueList, ", "))
-	queueWg.Wait()
+	if len(config.Config.Queues) > 0 {
+		logger.Println("Started with queues:", strings.Join(strQueueList, ", "))
+	} else {
+		logger.Println("Started with NO queues! We won't be doing any jobs!")
+	}
+
+	select {} //sleep forever!
 }
 
 func runner(queue string, threadid int) {
-	defer queueWg.Done()
-
 	threadName := fmt.Sprintf("%v-%v", config.Config.ProcName, threadid)
 
 	pendingList := fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue)

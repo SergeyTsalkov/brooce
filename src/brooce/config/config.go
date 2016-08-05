@@ -41,7 +41,7 @@ type ConfigType struct {
 	Path   string
 }
 
-var Config ConfigType
+var Config = ConfigType{}
 
 func (c *ConfigType) TotalThreads() (threads int) {
 	for _, ct := range Config.Queues {
@@ -55,16 +55,22 @@ func (c *ConfigType) CSRF() string {
 }
 
 func init() {
-	bytes, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".brooce"))
+	configFile := filepath.Join(os.Getenv("HOME"), ".brooce")
+
+	bytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println("Unable to read config file", configFile, "so using defaults!")
+	} else {
+		err = json.Unmarshal(bytes, &Config)
+		if err != nil {
+			log.Println("Your config file", configFile, "seem to have invalid json! Using defaults instead!")
+		}
 	}
 
-	err = json.Unmarshal(bytes, &Config)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	init_defaults()
+}
 
+func init_defaults() {
 	if Config.ClusterName == "" {
 		Config.ClusterName = "brooce"
 	}
@@ -77,20 +83,20 @@ func init() {
 		Config.Web.Addr = ":8080"
 	}
 
+	if Config.Web.Username == "" || Config.Web.Password == "" {
+		Config.Web.Username = "admin"
+		Config.Web.Password = util.RandomString(8)
+		log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
+	}
+
 	if Config.Queues == nil {
-		log.Fatalln("The queues hash was not configured in the ~/.brooce config file!")
+		Config.Queues = map[string]int{"common": 1}
 	}
 
 	if Config.Timeout == 0 {
 		Config.Timeout = 3600
 	}
 
-	init_redis()
-	init_path()
-	init_suicide()
-}
-
-func init_redis() {
 	if Config.Redis.Host == "" {
 		Config.Redis.Host = "localhost"
 	}
@@ -98,22 +104,7 @@ func init_redis() {
 	if !strings.Contains(Config.Redis.Host, ":") {
 		Config.Redis.Host = Config.Redis.Host + ":6379"
 	}
-}
 
-func init_path() {
-	if Config.Path == "" {
-		return
-	}
-
-	extrapath := Config.Path
-	if !strings.HasPrefix(extrapath, "/") {
-		extrapath = filepath.Join(os.Getenv("HOME"), extrapath)
-	}
-
-	os.Setenv("PATH", os.Getenv("PATH")+":"+extrapath)
-}
-
-func init_suicide() {
 	if Config.Suicide.Enabled {
 		if Config.Suicide.Command == "" {
 			Config.Suicide.Command = "sudo shutdown -h now"
@@ -122,5 +113,9 @@ func init_suicide() {
 		if Config.Suicide.Time == 0 {
 			Config.Suicide.Time = 600
 		}
+	}
+
+	if Config.Path != "" {
+		os.Setenv("PATH", os.Getenv("PATH")+":"+Config.Path)
 	}
 }
