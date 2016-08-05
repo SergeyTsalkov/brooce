@@ -49,6 +49,9 @@ func HumanDuration(d time.Duration, fields int) string {
 
 	parts := []string{}
 	seconds := int64(d.Seconds())
+	if seconds == 0 {
+		return "less than 1 second"
+	}
 
 	for i, sDuration := range secondDurations {
 		if seconds >= sDuration {

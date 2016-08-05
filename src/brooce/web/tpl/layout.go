@@ -45,6 +45,18 @@ var headerTpl = `
       td.buttons, th.buttons {
         text-align: right;
       }
+
+      td.buttons form, th.buttons form {
+        display: inline-block;
+        margin-left: 1em;
+      }
+
+      pre {
+        width: 100%;
+        height: 90vh;
+      }
+
+
     </style>
 
 

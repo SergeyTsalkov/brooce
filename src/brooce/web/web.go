@@ -54,6 +54,8 @@ func Start() {
 	reqHandler.HandleFunc("/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
 	reqHandler.HandleFunc("/deleteall/pending/", makeHandler(deleteAllHandler, "POST"))
 
+	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
+
 	go func() {
 		log.Println("Web server listening on", config.Config.Web.Addr)
 		err := serv.ListenAndServe()

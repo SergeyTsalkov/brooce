@@ -14,6 +14,7 @@ var tplList = []string{
 	footerTpl,
 	mainPageTpl,
 	jobListTpl,
+	showLogTpl,
 }
 
 func Get() *template.Template {
@@ -34,7 +35,7 @@ func Get() *template.Template {
 			if timestamp == 0 {
 				return ""
 			}
-			return util.HumanDuration(time.Since(time.Unix(timestamp, 0)), 2)
+			return util.HumanDuration(time.Since(time.Unix(timestamp, 0)), 1)
 		},
 		"TimeBetween": func(start, end int64) string {
 			if start == 0 || end == 0 {
@@ -44,7 +45,7 @@ func Get() *template.Template {
 				start, end = end, start
 			}
 
-			return util.HumanDuration(time.Unix(end, 0).Sub(time.Unix(start, 0)), 2)
+			return util.HumanDuration(time.Unix(end, 0).Sub(time.Unix(start, 0)), 1)
 		},
 		"FormatTime": func(timestamp int64) string {
 			if timestamp == 0 {

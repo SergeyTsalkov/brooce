@@ -46,6 +46,13 @@ var jobListTpl = `
             <td><code>{{ .FullCommand }}</code></td>
             <td><code></code></td>
             <td class="buttons">
+              {{ if .HasLog }}
+                <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
+                  <span class="glyphicon glyphicon-align-justify"></span>
+                  Show Log
+                </a>
+              {{ end }}
+
               <form action="" method="post">
                 <input type="hidden" name="csrf" value="{{CSRF}}">
                 <input type="hidden" name="item" value="{{.Raw}}">

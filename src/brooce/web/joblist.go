@@ -105,5 +105,20 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 		}
 	}
 
+	hasLog := make([]*redis.BoolCmd, len(output.Jobs))
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for i, job := range output.Jobs {
+			hasLog[i] = pipe.Exists(fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id))
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for i, result := range hasLog {
+		output.Jobs[i].HasLog = result.Val()
+	}
+
 	return
 }
