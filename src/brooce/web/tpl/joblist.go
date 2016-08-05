@@ -43,7 +43,7 @@ var jobListTpl = `
               <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }} ago</span></td>
               <td>{{ TimeBetween .EndTime .StartTime }}</td>
             {{ end }}
-            <td><code>{{ .FullCommand }}</code></td>
+            <td><code>{{ .Command }}</code></td>
             <td><code></code></td>
             <td class="buttons">
               {{ if .HasLog }}

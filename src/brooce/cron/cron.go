@@ -20,7 +20,7 @@ type cronType struct {
 	dayOfWeek  string
 
 	queue   string
-	command []string
+	command string
 }
 
 func parseCronLine(line string) (*cronType, error) {
@@ -59,8 +59,7 @@ func parseCronLine(line string) (*cronType, error) {
 		return nil, errors.New("cron string seems invalid")
 	}
 
-	cron.command = parts
-
+	cron.command = strings.Join(parts, " ")
 	return cron, nil
 }
 

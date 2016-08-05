@@ -36,13 +36,6 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		}
 	}
 
-	name := task.Command[0]
-	args := []string{}
-
-	if len(task.Command) > 1 {
-		args = task.Command[1:]
-	}
-
 	starttime := time.Now()
 	task.StartTime = starttime.Unix()
 	err = redisClient.LSet(task.workingList, 0, task.Json()).Err()
@@ -50,7 +43,7 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		return
 	}
 
-	log.Printf("Starting task %v: %v", task.Id, task.FullCommand())
+	log.Printf("Starting task %v: %v", task.Id, task.Command)
 	defer func() {
 		finishtime := time.Now()
 		runtime := finishtime.Sub(starttime)
@@ -64,13 +57,13 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	}()
 
 	task.WriteLog(fmt.Sprintf("\n\n*** COMMAND:[%s] STARTED_AT:[%s] WORKER_THREAD:[%s] QUEUE:[%s]\n",
-		task.FullCommand(),
+		task.Command,
 		starttime.Format(tsFormat),
 		task.threadName,
 		task.queueName,
 	))
 
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command("bash", "-c", task.Command)
 	cmd.Stdout = &prefixwriter.PrefixWriter{Writer: task, Prefix: "--ts--> ", TsFormat: tsFormat}
 	cmd.Stderr = cmd.Stdout
 

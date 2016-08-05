@@ -134,7 +134,7 @@ func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType,
 	}
 
 	for cronName, cron := range toSchedule {
-		log.Println("Scheduling job", cronName, ":", strings.Join(cron.command, " "))
+		log.Printf("Scheduling job %s:%s", cronName, cron.command)
 
 		if cron.queue == "" {
 			continue

@@ -2,14 +2,16 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 )
 
 type Task struct {
 	Id      string   `json:"id,omitempty"`
-	Command []string `json:"command"`
+	Command string   `json:"command"`
 	Timeout int      `json:"timeout,omitempty"`
+	Locks   []string `json:"locks,omitempty"`
 
 	StartTime int64 `json:"start_time,omitempty"`
 	EndTime   int64 `json:"end_time,omitempty"`
@@ -18,14 +20,23 @@ type Task struct {
 	HasLog bool   `json:"-"`
 }
 
-func NewFromJson(str string) (task *Task, err error) {
-	task = &Task{}
-	err = json.Unmarshal([]byte(str), task)
-	if err != nil {
-		return
+func NewFromJson(str string) (*Task, error) {
+	task := &Task{}
+	defer func() {
+		task.Raw = str
+	}()
+
+	err := json.Unmarshal([]byte(str), task)
+	if err == nil {
+		return task, nil
 	}
-	task.Raw = str
-	return
+
+	if words := strings.Fields(str); len(words) == 0 {
+		return task, fmt.Errorf("Invalid task: %s", str)
+	}
+
+	task.Command = str
+	return task, nil
 }
 
 func (task *Task) Json() string {
@@ -35,12 +46,4 @@ func (task *Task) Json() string {
 	}
 
 	return string(bytes)
-}
-
-func (task *Task) FullCommand() string {
-	if task.Command == nil {
-		task.Command = []string{}
-	}
-
-	return strings.Join(task.Command, " ")
 }

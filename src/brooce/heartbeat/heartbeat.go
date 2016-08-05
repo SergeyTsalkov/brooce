@@ -126,7 +126,7 @@ func auditHeartbeats() {
 		}
 
 		if !util.ProcessExists(worker.PID) {
-			log.Printf("Purging dead worker, was PID %v", worker.PID)
+			//log.Printf("Purging dead worker, was PID %v", worker.PID)
 			err = redisClient.Del(key).Err()
 			if err != nil {
 				return
