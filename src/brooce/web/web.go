@@ -58,10 +58,10 @@ func Start() {
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
 	go func() {
-		log.Println("Web server listening on", config.Config.Web.Addr)
+		log.Println("Starting web server on", config.Config.Web.Addr)
 		err := serv.ListenAndServe()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println("Warning: Unable to start web server, error was:", err)
 		}
 	}()
 }
