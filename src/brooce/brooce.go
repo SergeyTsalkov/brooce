@@ -80,8 +80,12 @@ func runner(queue string, threadid int) {
 		if err != nil {
 			log.Println("Failed to decode task:", err)
 		} else {
-			rTask := &runnableTask{Task: task}
-			rTask.workingList = workingList
+			rTask := &runnableTask{
+				Task:        task,
+				workingList: workingList,
+				threadName:  threadName,
+				queueName:   queue,
+			}
 			suicide.ThreadIsWorking(threadid)
 			exitCode, err = rTask.Run()
 			suicide.ThreadIsWaiting(threadid)

@@ -9,14 +9,19 @@ import (
 	"time"
 
 	"brooce/config"
+	"brooce/prefixwriter"
 	tasklib "brooce/task"
 
 	redis "gopkg.in/redis.v3"
 )
 
+var tsFormat = "2006-01-02 15:04:05"
+
 type runnableTask struct {
 	*tasklib.Task
 	workingList string
+	threadName  string
+	queueName   string
 }
 
 func (task *runnableTask) Run() (exitCode int, err error) {
@@ -47,15 +52,27 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 
 	log.Printf("Starting task %v: %v", task.Id, task.FullCommand())
 	defer func() {
-		log.Printf("Task %v exited after %v with exitcode %v", task.Id, time.Since(starttime), exitCode)
+		finishtime := time.Now()
+		runtime := finishtime.Sub(starttime)
+		log.Printf("Task %v exited after %v with exitcode %v", task.Id, runtime, exitCode)
+
+		task.WriteLog(fmt.Sprintf("\n*** EXITCODE:[%d] COMPLETED_AT:[%s] RUNTIME:[%s]\n",
+			exitCode,
+			finishtime.Format(tsFormat),
+			runtime,
+		))
 	}()
 
-	cmd := exec.Command(name, args...)
+	task.WriteLog(fmt.Sprintf("\n\n*** COMMAND:[%s] STARTED_AT:[%s] WORKER_THREAD:[%s] QUEUE:[%s]\n",
+		task.FullCommand(),
+		starttime.Format(tsFormat),
+		task.threadName,
+		task.queueName,
+	))
 
-	if task.Id != "" {
-		cmd.Stdout = task
-		cmd.Stderr = task
-	}
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = &prefixwriter.PrefixWriter{Writer: task, Prefix: "--ts--> ", TsFormat: tsFormat}
+	cmd.Stderr = cmd.Stdout
 
 	done := make(chan error)
 	err = cmd.Start()
@@ -91,16 +108,22 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	return
 }
 
+func (task *runnableTask) WriteLog(str string) {
+	task.Write([]byte(str))
+}
+
 func (task *runnableTask) Write(p []byte) (int, error) {
-	log.Printf("Task %v: %v", task.Id, string(p))
+	//log.Printf("Task %v: %v", task.Id, string(p))
 
-	key := strings.Join([]string{redisHeader, "jobs", task.Id, "log"}, ":")
+	if task.Id != "" {
+		key := strings.Join([]string{redisHeader, "jobs", task.Id, "log"}, ":")
 
-	redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		pipe.RPush(key, string(p))
-		pipe.Expire(key, 7*24*time.Hour)
-		return nil
-	})
+		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+			pipe.RPush(key, string(p))
+			pipe.Expire(key, 7*24*time.Hour)
+			return nil
+		})
+	}
 
 	return len(p), nil
 }
