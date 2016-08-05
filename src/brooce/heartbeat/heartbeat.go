@@ -121,12 +121,18 @@ func auditHeartbeats() {
 			return
 		}
 
-		if worker.PID > 0 && !util.ProcessExists(worker.PID) {
+		if worker.PID == 0 || worker.PID == os.Getpid() {
+			continue
+		}
+
+		if !util.ProcessExists(worker.PID) {
 			log.Printf("Purging dead worker, was PID %v", worker.PID)
 			err = redisClient.Del(key).Err()
 			if err != nil {
 				return
 			}
+		} else {
+			log.Println("Warning: Running multiple instances of brooce on the same machine is not recommended. Use threads in one instance instead!")
 		}
 
 	}
