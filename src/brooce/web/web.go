@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -67,6 +68,16 @@ func Start() {
 
 func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		defer func() {
+			if r := recover(); r != nil {
+				str := fmt.Sprintf("%v", r)
+				log.Println("Recovered from panic:", str)
+				http.Error(w, str, http.StatusInternalServerError)
+				return
+			}
+		}()
+
 		username, password, authOk := r.BasicAuth()
 		if !authOk || username != config.Config.Web.Username || password != config.Config.Web.Password {
 			w.Header().Set("WWW-Authenticate", `Basic realm="brooce"`)
