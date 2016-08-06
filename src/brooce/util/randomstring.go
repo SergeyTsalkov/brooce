@@ -6,34 +6,22 @@ import (
 	"time"
 )
 
-var randSource = rand.NewSource(time.Now().UnixNano())
-var randSourceMutex = sync.Mutex{}
+var myrand = rand.New(rand.NewSource(time.Now().UnixNano()))
+var myrandMutex = sync.Mutex{}
 
 func RandomString(length int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
-	const letterIdxBits = 6
-	const letterIdxMask = 1<<letterIdxBits - 1
-	const letterIdxMax = 63 / letterIdxBits
 
-	b := make([]byte, length)
-
-	for i, cache, remain := length-1, int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
+	output := make([]byte, length)
+	for i := 0; i < length; i++ {
+		output[i] = letterBytes[int31n(len(letterBytes))]
 	}
 
-	return string(b)
+	return string(output)
 }
 
-func int63() int64 {
-	randSourceMutex.Lock()
-	defer randSourceMutex.Unlock()
-	return randSource.Int63()
+func int31n(n int) int32 {
+	myrandMutex.Lock()
+	defer myrandMutex.Unlock()
+	return myrand.Int31n(int32(n))
 }
