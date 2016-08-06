@@ -1,4 +1,4 @@
 vendor/src
 pkg/
 bin/
-src/test/
+src/brooce/test/
