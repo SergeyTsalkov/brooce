@@ -13,11 +13,13 @@ type Task struct {
 	Timeout int      `json:"timeout,omitempty"`
 	Locks   []string `json:"locks,omitempty"`
 
-	StartTime int64 `json:"start_time,omitempty"`
-	EndTime   int64 `json:"end_time,omitempty"`
+	Cron      string `json:"cron,omitempty"`
+	StartTime int64  `json:"start_time,omitempty"`
+	EndTime   int64  `json:"end_time,omitempty"`
 
-	Raw    string `json:"-"`
-	HasLog bool   `json:"-"`
+	Raw      string `json:"-"`
+	RedisKey string `json:"-"`
+	HasLog   bool   `json:"-"`
 }
 
 func NewFromJson(str string) (*Task, error) {
@@ -46,4 +48,20 @@ func (task *Task) Json() string {
 	}
 
 	return string(bytes)
+}
+
+func (task *Task) QueueName() string {
+	parts := strings.SplitN(task.RedisKey, ":", 5)
+	if len(parts) < 5 {
+		return ""
+	}
+	return parts[2]
+}
+
+func (task *Task) WorkerThreadName() string {
+	parts := strings.SplitN(task.RedisKey, ":", 5)
+	if len(parts) < 5 {
+		return ""
+	}
+	return parts[4]
 }

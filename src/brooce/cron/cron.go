@@ -1,7 +1,6 @@
 package cron
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,31 +12,34 @@ import (
 // Example cron entry:
 // SET "brooce:cron:jobs:schedule_postprocess" "* * * * * queue:common gorunjob schedule_postprocess"
 
-type cronType struct {
-	minute     string
-	hour       string
-	dayOfMonth string
-	month      string
-	dayOfWeek  string
+type CronType struct {
+	Name string
 
-	queue         string
-	command       string
-	skipIfRunning bool
+	Minute     string
+	Hour       string
+	DayOfMonth string
+	Month      string
+	DayOfWeek  string
+
+	Queue         string
+	Command       string
+	SkipIfRunning bool
 }
 
-func parseCronLine(line string) (*cronType, error) {
-	cron := &cronType{}
-
+func ParseCronLine(name, line string) (*CronType, error) {
 	parts := strings.Fields(line)
 	if len(parts) < 6 {
 		return nil, fmt.Errorf("cron string seems invalid")
 	}
 
-	cron.minute = parts[0]
-	cron.hour = parts[1]
-	cron.dayOfMonth = parts[2]
-	cron.month = parts[3]
-	cron.dayOfWeek = parts[4]
+	cron := &CronType{
+		Name:       name,
+		Minute:     parts[0],
+		Hour:       parts[1],
+		DayOfMonth: parts[2],
+		Month:      parts[3],
+		DayOfWeek:  parts[4],
+	}
 
 	parts = parts[5:]
 
@@ -51,42 +53,45 @@ func parseCronLine(line string) (*cronType, error) {
 
 		switch key {
 		case "queue":
-			cron.queue = value
+			cron.Queue = value
 		case "skipifrunning":
-			cron.skipIfRunning = (value == "true" || value == "1")
+			cron.SkipIfRunning = (value == "true" || value == "1")
 		default:
 			//nothing yet!
 		}
 	}
 
 	if len(parts) == 0 {
-		return nil, errors.New("cron string seems invalid")
+		return nil, fmt.Errorf("cron string seems invalid")
+	}
+	if cron.Queue == "" {
+		return nil, fmt.Errorf("cron without queue is invalid")
 	}
 
-	cron.command = strings.Join(parts, " ")
+	cron.Command = strings.Join(parts, " ")
 	return cron, nil
 }
 
-func (cron *cronType) matchTime(t time.Time) bool {
+func (cron *CronType) MatchTime(t time.Time) bool {
 	t = t.UTC()
 
-	if !cronTimeCompare(cron.minute, t.Minute()) {
+	if !cronTimeCompare(cron.Minute, t.Minute()) {
 		return false
 	}
 
-	if !cronTimeCompare(cron.hour, t.Hour()) {
+	if !cronTimeCompare(cron.Hour, t.Hour()) {
 		return false
 	}
 
-	if !cronTimeCompare(cron.dayOfMonth, t.Day()) {
+	if !cronTimeCompare(cron.DayOfMonth, t.Day()) {
 		return false
 	}
 
-	if !cronTimeCompare(cron.month, int(t.Month())) {
+	if !cronTimeCompare(cron.Month, int(t.Month())) {
 		return false
 	}
 
-	if !cronTimeCompare(cron.dayOfWeek, int(t.Weekday())) {
+	if !cronTimeCompare(cron.DayOfWeek, int(t.Weekday())) {
 		return false
 	}
 
@@ -122,6 +127,9 @@ func cronTimeCompare(cronstr string, timeval int) bool {
 	return false
 }
 
-func (cron *cronType) task() *tasklib.Task {
-	return &tasklib.Task{Command: cron.command}
+func (cron *CronType) Task() *tasklib.Task {
+	return &tasklib.Task{
+		Command: cron.Command,
+		Cron:    cron.Name,
+	}
 }

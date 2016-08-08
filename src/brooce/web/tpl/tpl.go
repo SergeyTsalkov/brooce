@@ -35,7 +35,7 @@ func Get() *template.Template {
 			if timestamp == 0 {
 				return ""
 			}
-			return util.HumanDuration(time.Since(time.Unix(timestamp, 0)), 1)
+			return util.HumanDuration(time.Since(time.Unix(timestamp, 0)), 1) + " ago"
 		},
 		"TimeBetween": func(start, end int64) string {
 			if start == 0 || end == 0 {

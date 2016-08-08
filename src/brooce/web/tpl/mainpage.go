@@ -88,10 +88,10 @@ var mainPageTpl = `
       <tbody>
         {{ range .RunningJobs }}
           <tr>
-            <td>{{ .WorkerName }}</td>
+            <td>{{ .WorkerThreadName }}</td>
             <td>{{ .QueueName }}</td>
-            <td><span title="{{FormatTime .Task.StartTime}}">{{ TimeSince .Task.StartTime }} ago</span></td>
-            <td><code>{{ .Task.Command }}</code></td>
+            <td><span title="{{FormatTime .StartTime}}">{{ TimeSince .StartTime }}</span></td>
+            <td><code>{{ .Command }}</code></td>
             <td><code></code></td>
           </tr>
         {{ end }}

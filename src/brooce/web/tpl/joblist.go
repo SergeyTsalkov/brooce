@@ -40,7 +40,7 @@ var jobListTpl = `
         {{ range .Jobs }}
           <tr>
             {{ if eq $.ListType "done" "failed" }}
-              <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }} ago</span></td>
+              <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }}</span></td>
               <td>{{ TimeBetween .EndTime .StartTime }}</td>
             {{ end }}
             <td><code>{{ .Command }}</code></td>

@@ -2,12 +2,12 @@ package web
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"brooce/heartbeat"
+	"brooce/listing"
 	"brooce/task"
 
 	redis "gopkg.in/redis.v3"
@@ -15,7 +15,7 @@ import (
 
 type mainpageOutputType struct {
 	Queues         map[string]*listQueueType
-	RunningJobs    []*runningJobType
+	RunningJobs    []*task.Task
 	RunningWorkers []*heartbeat.HeartbeatType
 	TotalThreads   int
 }
@@ -27,11 +27,11 @@ func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	if err != nil {
 		return
 	}
-	output.RunningJobs, err = listRunningJobs()
+	output.RunningJobs, err = listing.RunningJobs()
 	if err != nil {
 		return
 	}
-	output.RunningWorkers, err = listRunningWorkers()
+	output.RunningWorkers, err = listing.RunningWorkers()
 	if err != nil {
 		return
 	}
@@ -95,88 +95,6 @@ func listQueues() (list map[string]*listQueueType, err error) {
 		queue.Done = queue.doneResult.Val()
 		queue.Failed = queue.failedResult.Val()
 		queue.Delayed = queue.delayedResult.Val()
-	}
-
-	return
-}
-
-type runningJobType struct {
-	RedisKey   string
-	WorkerName string
-	QueueName  string
-	Task       *task.Task
-	task       *redis.StringCmd
-}
-
-func listRunningJobs() (jobs []*runningJobType, err error) {
-	var results []string
-	results, err = redisClient.Keys(redisHeader + ":queue:*:working:*").Result()
-	if err != nil {
-		return
-	}
-
-	for _, result := range results {
-		parts := strings.Split(result, ":")
-		if len(parts) < 5 {
-			continue
-		}
-
-		job := &runningJobType{
-			RedisKey:   result,
-			WorkerName: parts[4],
-			QueueName:  parts[2],
-		}
-
-		jobs = append(jobs, job)
-	}
-
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		for _, job := range jobs {
-			job.task = pipe.LIndex(job.RedisKey, 0)
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for _, job := range jobs {
-		job.Task, err = task.NewFromJson(job.task.Val())
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func listRunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
-	var keys []string
-	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
-	if err != nil {
-		return
-	}
-
-	var heartbeatStrs []*redis.StringCmd
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		for _, key := range keys {
-			result := pipe.Get(key)
-			heartbeatStrs = append(heartbeatStrs, result)
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for _, str := range heartbeatStrs {
-		worker := &heartbeat.HeartbeatType{}
-		err = json.Unmarshal([]byte(str.Val()), worker)
-		if err != nil {
-			return
-		}
-
-		workers = append(workers, worker)
 	}
 
 	return

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"brooce/config"
-	"brooce/cron"
+	"brooce/cron/cronsched"
 	"brooce/heartbeat"
 	"brooce/lock"
 	loggerlib "brooce/logger"
@@ -34,7 +34,7 @@ var helpOpt = flag.Bool("help", false, "Show these options!")
 func setup() {
 	heartbeat.Start()
 	web.Start()
-	cron.Start()
+	cronsched.Start()
 	prune.Start()
 	requeue.Start()
 	suicide.Start()

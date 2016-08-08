@@ -1,12 +1,15 @@
-package cron
+package cronsched
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	"brooce/config"
+	"brooce/cron"
+	"brooce/listing"
 	myredis "brooce/redis"
 	"brooce/util"
 
@@ -43,7 +46,6 @@ func scheduleCrons() error {
 		lockValueCmd = pipe.Get(lockKey)
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -69,7 +71,7 @@ func scheduleCrons() error {
 	}
 
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		scheduleCronsForTimeRange(pipe, listActiveCrons(), start, end)
+		scheduleCronsForTimeRange(pipe, start, end)
 		pipe.Set(schedThroughKey, end.Unix(), maxSchedCatchup)
 		pipe.Expire(lockKey, lockttl)
 		return nil
@@ -89,41 +91,13 @@ func zeroOutSeconds(t time.Time) time.Time {
 	return t
 }
 
-func listActiveCrons() map[string]*cronType {
-	crons := map[string]*cronType{}
-
-	cronKeySet := redisHeader + ":cron:jobs:"
-	cronKeys, err := redisClient.Keys(cronKeySet + "*").Result()
-	if err != nil {
-		return crons
-	}
-
-	for _, cronKey := range cronKeys {
-		cronName := cronKey
-		if strings.HasPrefix(cronName, cronKeySet) {
-			cronName = strings.Replace(cronName, cronKeySet, "", 1)
-		}
-
-		cronLine, err := redisClient.Get(cronKey).Result()
-		if err != nil {
-			continue
-		}
-
-		cron, _ := parseCronLine(cronLine)
-		if cron != nil {
-			crons[cronName] = cron
-		}
-	}
-
-	return crons
-}
-
-func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType, start time.Time, end time.Time) {
-	toSchedule := map[string]*cronType{}
+func scheduleCronsForTimeRange(pipe *redis.Pipeline, start time.Time, end time.Time) {
+	crons := listing.Crons()
+	toSchedule := map[string]*cron.CronType{}
 
 	for t := start; !t.After(end); t = t.Add(time.Minute) {
 		for cronName, cron := range crons {
-			if cron.matchTime(t) {
+			if cron.MatchTime(t) {
 				toSchedule[cronName] = cron
 			}
 		}
@@ -133,14 +107,41 @@ func scheduleCronsForTimeRange(pipe *redis.Pipeline, crons map[string]*cronType,
 		log.Println("Cron is catching up! Scheduling jobs for the period from", start, "to", end)
 	}
 
-	for cronName, cron := range toSchedule {
-		log.Printf("Scheduling job %s:%s", cronName, cron.command)
+	for cronName, cronJob := range toSchedule {
 
-		if cron.queue == "" {
-			continue
+		if cronJob.SkipIfRunning {
+			isRunning, err := CronIsRunning(cronJob)
+			if err != nil {
+				log.Println("redis error:", err)
+			}
+			if err != nil || isRunning {
+				log.Printf("Skipping already-running job %s", cronName)
+				continue
+			}
 		}
 
-		pendingList := strings.Join([]string{redisHeader, "queue", cron.queue, "pending"}, ":")
-		pipe.LPush(pendingList, cron.task().Json())
+		log.Printf("Scheduling job %s", cronName)
+
+		pendingList := strings.Join([]string{redisHeader, "queue", cronJob.Queue, "pending"}, ":")
+		pipe.LPush(pendingList, cronJob.Task().Json())
 	}
+}
+
+func CronIsRunning(c *cron.CronType) (bool, error) {
+	if c.Name == "" {
+		return false, fmt.Errorf("cron has no name, can't determine if it's running")
+	}
+
+	jobs, err := listing.RunningJobs()
+	if err != nil {
+		return false, err
+	}
+
+	for _, job := range jobs {
+		if c.Name == job.Cron {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
