@@ -2,6 +2,7 @@ package cron
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -19,8 +20,9 @@ type cronType struct {
 	month      string
 	dayOfWeek  string
 
-	queue   string
-	command string
+	queue         string
+	command       string
+	skipIfRunning bool
 }
 
 func parseCronLine(line string) (*cronType, error) {
@@ -28,7 +30,7 @@ func parseCronLine(line string) (*cronType, error) {
 
 	parts := strings.Fields(line)
 	if len(parts) < 6 {
-		return nil, errors.New("cron string seems invalid")
+		return nil, fmt.Errorf("cron string seems invalid")
 	}
 
 	cron.minute = parts[0]
@@ -50,6 +52,8 @@ func parseCronLine(line string) (*cronType, error) {
 		switch key {
 		case "queue":
 			cron.queue = value
+		case "skipifrunning":
+			cron.skipIfRunning = (value == "true" || value == "1")
 		default:
 			//nothing yet!
 		}

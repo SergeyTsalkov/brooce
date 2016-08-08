@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -18,12 +20,16 @@ import (
 	tasklib "brooce/task"
 	"brooce/web"
 
+	daemon "github.com/sevlyar/go-daemon"
 	redis "gopkg.in/redis.v3"
 )
 
 var redisClient = myredis.Get()
 var logger = loggerlib.Logger
 var redisHeader = config.Config.ClusterName
+
+var daemonizeOpt = flag.Bool("daemonize", false, "Detach and run in the background!")
+var helpOpt = flag.Bool("help", false, "Show these options!")
 
 func setup() {
 	heartbeat.Start()
@@ -36,6 +42,27 @@ func setup() {
 }
 
 func main() {
+	flag.Parse()
+	if *helpOpt {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	if *daemonizeOpt {
+		context := &daemon.Context{}
+		child, err := context.Reborn()
+		if err != nil {
+			log.Fatalln("Daemonize error:", err)
+		}
+
+		if child != nil {
+			log.Println("Starting brooce in the background..")
+			os.Exit(0)
+		} else {
+			defer context.Release()
+		}
+	}
+
 	setup()
 
 	threadid := 1
