@@ -9,6 +9,7 @@ import (
 	"brooce/config"
 	"brooce/cron"
 	"brooce/heartbeat"
+	"brooce/lock"
 	loggerlib "brooce/logger"
 	"brooce/prune"
 	myredis "brooce/redis"
@@ -31,6 +32,7 @@ func setup() {
 	prune.Start()
 	requeue.Start()
 	suicide.Start()
+	lock.Start()
 }
 
 func main() {

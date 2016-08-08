@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"brooce/config"
+	"brooce/lock"
 	"brooce/prefixwriter"
 	tasklib "brooce/task"
 
@@ -42,6 +43,17 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	if err != nil {
 		return
 	}
+
+	var gotLock bool
+	gotLock, err = lock.GrabLocks(task.Locks)
+	if err != nil {
+		return
+	}
+	if !gotLock {
+		exitCode = 75
+		return
+	}
+	defer lock.ReleaseLocks(task.Locks)
 
 	log.Printf("Starting task %v: %v", task.Id, task.Command)
 	defer func() {
