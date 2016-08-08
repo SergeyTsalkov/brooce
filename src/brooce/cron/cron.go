@@ -24,6 +24,7 @@ type CronType struct {
 	Queue         string
 	Command       string
 	SkipIfRunning bool
+	Locks         []string
 }
 
 func ParseCronLine(name, line string) (*CronType, error) {
@@ -51,11 +52,13 @@ func ParseCronLine(name, line string) (*CronType, error) {
 		key := keyvalParts[0]
 		value := keyvalParts[1]
 
-		switch key {
+		switch strings.ToLower(key) {
 		case "queue":
 			cron.Queue = value
 		case "skipifrunning":
 			cron.SkipIfRunning = (value == "true" || value == "1")
+		case "locks":
+			cron.Locks = strings.Split(value, ",")
 		default:
 			//nothing yet!
 		}
@@ -131,5 +134,6 @@ func (cron *CronType) Task() *tasklib.Task {
 	return &tasklib.Task{
 		Command: cron.Command,
 		Cron:    cron.Name,
+		Locks:   cron.Locks,
 	}
 }
