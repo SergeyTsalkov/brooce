@@ -92,7 +92,13 @@ var mainPageTpl = `
             <td>{{ .QueueName }}</td>
             <td><span title="{{FormatTime .StartTime}}">{{ TimeSince .StartTime }}</span></td>
             <td><code>{{ .Command }}</code></td>
-            <td><code></code></td>
+            <td class="params">
+              <ul>
+                {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}
+                {{ if .Cron }} <li>Cron: {{ .Cron }} {{ end }}
+                {{ if .Locks }} <li>Locks: {{ Join .Locks ", " }} {{ end }}
+              </ul>
+            </td>
           </tr>
         {{ end }}
       </tbody>

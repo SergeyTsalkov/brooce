@@ -104,7 +104,7 @@ func runner(queue string, threadid int) {
 			continue
 		}
 
-		exitCode := 256
+		var exitCode int
 		task, err := tasklib.NewFromJson(taskStr)
 		if err != nil {
 			log.Println("Failed to decode task:", err)
@@ -125,12 +125,14 @@ func runner(queue string, threadid int) {
 		}
 
 		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-			switch exitCode {
-			case 0:
+			if err != nil {
+				pipe.LPush(failedList, task.Json())
+			} else if exitCode == 0 {
 				pipe.LPush(doneList, task.Json())
-			case 75: // Unix standard "temp fail" code
+			} else if exitCode == 75 {
+				// Unix standard "temp fail" code
 				pipe.LPush(delayedList, task.Json())
-			default:
+			} else {
 				pipe.LPush(failedList, task.Json())
 			}
 

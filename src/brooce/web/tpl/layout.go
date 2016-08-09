@@ -56,6 +56,17 @@ var headerTpl = `
         height: 90vh;
       }
 
+      td.params {
+        font-family: monospace;
+        font-size: 0.75em;
+      }
+
+      td.params ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
 
     </style>
 

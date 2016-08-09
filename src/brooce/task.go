@@ -61,10 +61,11 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		runtime := finishtime.Sub(starttime)
 		log.Printf("Task %v exited after %v with exitcode %v", task.Id, runtime, exitCode)
 
-		task.WriteLog(fmt.Sprintf("\n*** EXITCODE:[%d] COMPLETED_AT:[%s] RUNTIME:[%s]\n",
-			exitCode,
+		task.WriteLog(fmt.Sprintf("\n*** COMPLETED_AT:[%s] RUNTIME:[%s] EXITCODE:[%d] ERROR:[%v]\n",
 			finishtime.Format(tsFormat),
 			runtime,
+			exitCode,
+			err,
 		))
 	}()
 
@@ -91,7 +92,7 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 
 	timeoutSeconds := task.Timeout
 	if timeoutSeconds == 0 {
-		timeoutSeconds = config.Config.Timeout
+		timeoutSeconds = int64(config.Config.Timeout)
 	}
 	timeout := time.Duration(timeoutSeconds) * time.Second
 

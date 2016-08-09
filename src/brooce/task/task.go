@@ -10,7 +10,7 @@ import (
 type Task struct {
 	Id      string   `json:"id,omitempty"`
 	Command string   `json:"command"`
-	Timeout int      `json:"timeout,omitempty"`
+	Timeout int64    `json:"timeout,omitempty"`
 	Locks   []string `json:"locks,omitempty"`
 
 	Cron      string `json:"cron,omitempty"`

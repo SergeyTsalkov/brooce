@@ -44,7 +44,13 @@ var jobListTpl = `
               <td>{{ TimeBetween .EndTime .StartTime }}</td>
             {{ end }}
             <td><code>{{ .Command }}</code></td>
-            <td><code></code></td>
+            <td class="params">
+              <ul>
+                {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}
+                {{ if .Cron }} <li>Cron: {{ .Cron }} {{ end }}
+                {{ if .Locks }} <li>Locks: {{ Join .Locks ", " }} {{ end }}
+              </ul>
+            </td>
             <td class="buttons">
               {{ if .HasLog }}
                 <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
