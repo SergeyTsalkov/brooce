@@ -23,15 +23,16 @@ type mainpageOutputType struct {
 func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	buf = &bytes.Buffer{}
 	output := &mainpageOutputType{}
-	output.Queues, err = listQueues()
-	if err != nil {
-		return
-	}
+
 	output.RunningJobs, err = listing.RunningJobs()
 	if err != nil {
 		return
 	}
 	output.RunningWorkers, err = listing.RunningWorkers()
+	if err != nil {
+		return
+	}
+	output.Queues, err = listQueues(output.RunningWorkers)
 	if err != nil {
 		return
 	}
@@ -58,7 +59,7 @@ type listQueueType struct {
 	delayedResult *redis.IntCmd
 }
 
-func listQueues() (list map[string]*listQueueType, err error) {
+func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*listQueueType, err error) {
 	list = map[string]*listQueueType{}
 	var results []string
 	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()
@@ -73,6 +74,12 @@ func listQueues() (list map[string]*listQueueType, err error) {
 		}
 
 		list[parts[2]] = &listQueueType{QueueName: parts[2]}
+	}
+
+	for _, worker := range runningWorkers {
+		for queueName, _ := range worker.Queues {
+			list[queueName] = &listQueueType{QueueName: queueName}
+		}
 	}
 
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
