@@ -85,8 +85,8 @@ var headerTpl = `
   <div class="header clearfix">
     <ul class="nav nav-pills pull-right">
 
-      <li class="active"><a href="/">Overview</a></li>
-      <li><a href="#">Schedule</a></li>
+      <li {{ if eq . "overview" }}class="active"{{ end }}><a href="/">Overview</a></li>
+      <li {{ if eq . "cron" }}class="active"{{ end }}><a href="/cron">Cron Jobs</a></li>
     </ul>
 
     <h1 class="text-muted"><a href="/">brooce</a></h1>

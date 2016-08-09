@@ -92,7 +92,12 @@ func zeroOutSeconds(t time.Time) time.Time {
 }
 
 func scheduleCronsForTimeRange(pipe *redis.Pipeline, start time.Time, end time.Time) {
-	crons := listing.Crons()
+	crons, err := listing.Crons()
+	if err != nil {
+		log.Println("redis error:", err)
+		return
+	}
+
 	toSchedule := map[string]*cron.CronType{}
 
 	for t := start; !t.After(end); t = t.Add(time.Minute) {

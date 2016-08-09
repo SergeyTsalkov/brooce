@@ -2,7 +2,7 @@ package tpl
 
 var showLogTpl = `
 {{ define "showlog" }}
-{{ template "header" }}
+{{ template "header" "" }}
 
 <div class="row">
   <div class="col-md-12">

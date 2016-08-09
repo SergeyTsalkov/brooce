@@ -16,6 +16,7 @@ var tplList = []string{
 	mainPageTpl,
 	jobListTpl,
 	showLogTpl,
+	cronPageTpl,
 }
 
 func Get() *template.Template {

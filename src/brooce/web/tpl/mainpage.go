@@ -2,7 +2,7 @@ package tpl
 
 var mainPageTpl = `
 {{ define "mainpage" }}
-{{ template "header" }}
+{{ template "header" "overview" }}
 <div class="row">
   <div class="col-md-8">
     <h3>Queues</h3>

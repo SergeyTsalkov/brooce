@@ -25,6 +25,8 @@ type CronType struct {
 	Command       string
 	SkipIfRunning bool
 	Locks         []string
+
+	Raw string
 }
 
 func ParseCronLine(name, line string) (*CronType, error) {
@@ -35,6 +37,7 @@ func ParseCronLine(name, line string) (*CronType, error) {
 
 	cron := &CronType{
 		Name:       name,
+		Raw:        line,
 		Minute:     parts[0],
 		Hour:       parts[1],
 		DayOfMonth: parts[2],

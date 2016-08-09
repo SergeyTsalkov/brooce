@@ -8,11 +8,12 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
-func Crons() (crons map[string]*cron.CronType) {
+func Crons() (crons map[string]*cron.CronType, err error) {
 	crons = map[string]*cron.CronType{}
 
+	var keys []string
 	cronKeyPrefix := redisHeader + ":cron:jobs:"
-	keys, err := redisClient.Keys(cronKeyPrefix + "*").Result()
+	keys, err = redisClient.Keys(cronKeyPrefix + "*").Result()
 	if err != nil {
 		return
 	}

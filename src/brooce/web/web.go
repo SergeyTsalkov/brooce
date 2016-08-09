@@ -57,6 +57,8 @@ func Start() {
 
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
+	reqHandler.HandleFunc("/cron", makeHandler(cronpageHandler, "GET"))
+
 	go func() {
 		log.Println("Starting web server on", config.Config.Web.Addr)
 		err := serv.ListenAndServe()
