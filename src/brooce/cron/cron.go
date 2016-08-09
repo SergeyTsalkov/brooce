@@ -25,6 +25,7 @@ type CronType struct {
 	Command       string
 	SkipIfRunning bool
 	Locks         []string
+	Disabled      bool
 
 	Raw string
 }

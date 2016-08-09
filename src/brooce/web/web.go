@@ -58,6 +58,9 @@ func Start() {
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
 	reqHandler.HandleFunc("/cron", makeHandler(cronpageHandler, "GET"))
+	reqHandler.HandleFunc("/deletecron", makeHandler(deleteCronHandler, "POST"))
+	reqHandler.HandleFunc("/disablecron", makeHandler(disableCronHandler, "POST"))
+	reqHandler.HandleFunc("/enablecron", makeHandler(enableCronHandler, "POST"))
 
 	go func() {
 		log.Println("Starting web server on", config.Config.Web.Addr)
