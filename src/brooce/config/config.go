@@ -23,6 +23,8 @@ type ConfigType struct {
 		Addr     string
 		Username string
 		Password string
+		NoAuth   bool `json:"no_auth"`
+		Disable  bool
 	}
 
 	Redis struct {
@@ -79,14 +81,16 @@ func init_defaults() {
 		Config.ProcName = fmt.Sprintf("%v-%v", myip.PublicIPv4(), os.Getpid())
 	}
 
-	if Config.Web.Addr == "" {
-		Config.Web.Addr = ":8080"
-	}
+	if !Config.Web.Disable {
+		if Config.Web.Addr == "" {
+			Config.Web.Addr = ":8080"
+		}
 
-	if Config.Web.Username == "" || Config.Web.Password == "" {
-		Config.Web.Username = "admin"
-		Config.Web.Password = util.RandomString(8)
-		log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
+		if !Config.Web.NoAuth && (Config.Web.Username == "" || Config.Web.Password == "") {
+			Config.Web.Username = "admin"
+			Config.Web.Password = util.RandomString(8)
+			log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
+		}
 	}
 
 	if Config.Queues == nil {

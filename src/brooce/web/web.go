@@ -27,8 +27,8 @@ var serv = &http.Server{
 }
 
 func Start() {
-	if config.Config.Web.Username == "" || config.Config.Web.Password == "" {
-		log.Println("Web interface disabled -- you didn't configure username/password!")
+	if config.Config.Web.Disable {
+		log.Println("Web interface disabled!")
 		return
 	}
 
@@ -78,11 +78,13 @@ func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) h
 			}
 		}()
 
-		username, password, authOk := r.BasicAuth()
-		if !authOk || username != config.Config.Web.Username || password != config.Config.Web.Password {
-			w.Header().Set("WWW-Authenticate", `Basic realm="brooce"`)
-			http.Error(w, "401 Unauthorized\n", http.StatusUnauthorized)
-			return
+		if config.Config.Web.Username != "" && config.Config.Web.Password != "" {
+			username, password, authOk := r.BasicAuth()
+			if !authOk || username != config.Config.Web.Username || password != config.Config.Web.Password {
+				w.Header().Set("WWW-Authenticate", `Basic realm="brooce"`)
+				http.Error(w, "401 Unauthorized\n", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		if method != r.Method || r.URL.Path == "/favicon.ico" {
