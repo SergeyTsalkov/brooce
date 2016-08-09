@@ -4,6 +4,7 @@ import (
 	"brooce/config"
 	myredis "brooce/redis"
 	"brooce/task"
+	"fmt"
 
 	redis "gopkg.in/redis.v3"
 )
@@ -38,6 +39,21 @@ func RunningJobs() (jobs []*task.Task, err error) {
 		}
 		job.RedisKey = keys[i]
 		jobs = append(jobs, job)
+	}
+
+	hasLog := make([]*redis.BoolCmd, len(jobs))
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for i, job := range jobs {
+			hasLog[i] = pipe.Exists(fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id))
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for i, result := range hasLog {
+		jobs[i].HasLog = result.Val()
 	}
 
 	return

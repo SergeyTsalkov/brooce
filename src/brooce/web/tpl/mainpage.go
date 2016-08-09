@@ -83,6 +83,7 @@ var mainPageTpl = `
           <th>Started</th>
           <th>Command</th>
           <th>Params</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -98,6 +99,15 @@ var mainPageTpl = `
                 {{ if .Cron }} <li>Cron: {{ .Cron }} {{ end }}
                 {{ if .Locks }} <li>Locks: {{ Join .Locks ", " }} {{ end }}
               </ul>
+            </td>
+
+            <td class="buttons">
+              {{ if .HasLog }}
+                <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
+                  <span class="glyphicon glyphicon-align-justify"></span>
+                  Show Log
+                </a>
+              {{ end }}
             </td>
           </tr>
         {{ end }}
