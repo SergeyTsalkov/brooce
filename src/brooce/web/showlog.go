@@ -18,11 +18,12 @@ func showlogHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 
 	jobId := path[1]
 
-	var lines []string
-	lines, err = redisClient.LRange(fmt.Sprintf("%s:jobs:%s:log", redisHeader, jobId), 0, -1).Result()
-	output := strings.TrimSpace(strings.Join(lines, ""))
+	var output string
+	output, err = redisClient.Get(fmt.Sprintf("%s:jobs:%s:log", redisHeader, jobId)).Result()
+	if err != nil {
+		return
+	}
 
 	err = templates.ExecuteTemplate(buf, "showlog", output)
 	return
-
 }

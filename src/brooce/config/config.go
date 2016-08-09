@@ -27,6 +27,17 @@ type ConfigType struct {
 		Disable  bool
 	}
 
+	RedisOutputLog struct {
+		DropDone    bool  `json:"drop_done"`
+		DropFailed  bool  `json:"drop_failed"`
+		ExpireAfter int64 `json:"expire_after"`
+	} `json:"redis_output_log"`
+
+	JobResults struct {
+		DropDone   bool `json:"drop_done"`
+		DropFailed bool `json:"drop_failed"`
+	} `json:"job_results"`
+
 	Redis struct {
 		Host     string
 		Password string
@@ -91,6 +102,10 @@ func init_defaults() {
 			Config.Web.Password = util.RandomString(8)
 			log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
 		}
+	}
+
+	if Config.RedisOutputLog.ExpireAfter == 0 {
+		Config.RedisOutputLog.ExpireAfter = 604800 // 7 days
 	}
 
 	if Config.Queues == nil {

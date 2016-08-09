@@ -125,15 +125,37 @@ func runner(queue string, threadid int) {
 		}
 
 		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+			result := "failed"
+
 			if err != nil {
-				pipe.LPush(failedList, task.Json())
+				result = "failed"
 			} else if exitCode == 0 {
-				pipe.LPush(doneList, task.Json())
+				result = "done"
 			} else if exitCode == 75 {
 				// Unix standard "temp fail" code
+				result = "delayed"
+			}
+
+			switch result {
+			case "done":
+				if !config.Config.JobResults.DropDone {
+					pipe.LPush(doneList, task.Json())
+				}
+
+				if config.Config.RedisOutputLog.DropDone {
+					pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
+				}
+
+			case "failed":
+				if !config.Config.JobResults.DropFailed {
+					pipe.LPush(failedList, task.Json())
+				}
+
+				if config.Config.RedisOutputLog.DropFailed {
+					pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
+				}
+			case "delayed":
 				pipe.LPush(delayedList, task.Json())
-			} else {
-				pipe.LPush(failedList, task.Json())
 			}
 
 			pipe.RPop(workingList)

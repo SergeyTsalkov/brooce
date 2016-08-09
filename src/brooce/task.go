@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 
@@ -121,15 +120,21 @@ func (task *runnableTask) WriteLog(str string) {
 func (task *runnableTask) Write(p []byte) (int, error) {
 	//log.Printf("Task %v: %v", task.Id, string(p))
 
-	if task.Id != "" {
-		key := strings.Join([]string{redisHeader, "jobs", task.Id, "log"}, ":")
-
-		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-			pipe.RPush(key, string(p))
-			pipe.Expire(key, 7*24*time.Hour)
-			return nil
-		})
+	if task.Id == "" {
+		return len(p), nil
 	}
+
+	if config.Config.RedisOutputLog.DropDone && config.Config.RedisOutputLog.DropFailed {
+		return len(p), nil
+	}
+
+	key := fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id)
+
+	redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		pipe.Append(key, string(p))
+		pipe.Expire(key, time.Duration(config.Config.RedisOutputLog.ExpireAfter)*time.Second)
+		return nil
+	})
 
 	return len(p), nil
 }
