@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os/exec"
+	"sync"
 	"syscall"
 	"time"
 
@@ -11,8 +13,6 @@ import (
 	"brooce/lock"
 	"brooce/prefixwriter"
 	tasklib "brooce/task"
-
-	redis "gopkg.in/redis.v3"
 )
 
 var tsFormat = "2006-01-02 15:04:05"
@@ -22,6 +22,10 @@ type runnableTask struct {
 	workingList string
 	threadName  string
 	queueName   string
+
+	buffer     *bytes.Buffer
+	bufferLock sync.Mutex
+	running    bool
 }
 
 func (task *runnableTask) Run() (exitCode int, err error) {
@@ -54,6 +58,7 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	}
 	defer lock.ReleaseLocks(task.Locks)
 
+	task.StartFlushingLog()
 	log.Printf("Starting task %v: %v", task.Id, task.Command)
 	defer func() {
 		finishtime := time.Now()
@@ -66,6 +71,7 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 			exitCode,
 			err,
 		))
+		task.StopFlushingLog()
 	}()
 
 	task.WriteLog(fmt.Sprintf("\n\n*** COMMAND:[%s] STARTED_AT:[%s] WORKER_THREAD:[%s] QUEUE:[%s]\n",
@@ -110,41 +116,5 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 		exitCode = msg.Sys().(syscall.WaitStatus).ExitStatus()
 	}
 
-	return
-}
-
-func (task *runnableTask) WriteLog(str string) {
-	task.Write([]byte(str))
-}
-
-func (task *runnableTask) Write(p []byte) (int, error) {
-	//log.Printf("Task %v: %v", task.Id, string(p))
-
-	if task.Id == "" {
-		return len(p), nil
-	}
-
-	if config.Config.RedisOutputLog.DropDone && config.Config.RedisOutputLog.DropFailed {
-		return len(p), nil
-	}
-
-	key := fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id)
-
-	redisClient.Pipelined(func(pipe *redis.Pipeline) error {
-		pipe.Append(key, string(p))
-		pipe.Expire(key, time.Duration(config.Config.RedisOutputLog.ExpireAfter)*time.Second)
-		return nil
-	})
-
-	return len(p), nil
-}
-
-func (task *runnableTask) GenerateId() (err error) {
-	var counter int64
-	counter, err = redisClient.Incr(redisHeader + ":counter").Result()
-
-	if err == nil {
-		task.Id = fmt.Sprintf("%v", counter)
-	}
 	return
 }
