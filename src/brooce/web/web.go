@@ -64,8 +64,16 @@ func Start() {
 	reqHandler.HandleFunc("/enablecron", makeHandler(enableCronHandler, "POST"))
 
 	go func() {
-		log.Println("Starting web server on", config.Config.Web.Addr)
-		err := serv.ListenAndServe()
+		var err error
+
+		if config.Config.Web.CertFile == "" && config.Config.Web.KeyFile == "" {
+			log.Println("Starting HTTP server on", config.Config.Web.Addr)
+			err = serv.ListenAndServe()
+		} else {
+			log.Println("Starting HTTPS server on", config.Config.Web.Addr)
+			err = serv.ListenAndServeTLS(config.Config.Web.CertFile, config.Config.Web.KeyFile)
+		}
+
 		if err != nil {
 			log.Println("Warning: Unable to start web server, error was:", err)
 		}

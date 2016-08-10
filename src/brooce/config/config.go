@@ -13,6 +13,8 @@ import (
 	"brooce/util"
 )
 
+var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
+
 type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
 	ProcName    string `json:"process_name"`
@@ -21,6 +23,8 @@ type ConfigType struct {
 
 	Web struct {
 		Addr     string
+		CertFile string
+		KeyFile  string
 		Username string
 		Password string
 		NoAuth   bool `json:"no_auth"`
@@ -68,7 +72,7 @@ func (c *ConfigType) CSRF() string {
 }
 
 func init() {
-	configFile := filepath.Join(os.Getenv("HOME"), ".brooce")
+	configFile := filepath.Join(BrooceDir, "brooce.conf")
 
 	bytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
@@ -102,6 +106,9 @@ func init_defaults() {
 			Config.Web.Password = util.RandomString(8)
 			log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
 		}
+
+		Config.Web.CertFile = cleanpath(Config.Web.CertFile)
+		Config.Web.KeyFile = cleanpath(Config.Web.KeyFile)
 	}
 
 	if Config.RedisOutputLog.ExpireAfter == 0 {
@@ -137,4 +144,14 @@ func init_defaults() {
 	if Config.Path != "" {
 		os.Setenv("PATH", os.Getenv("PATH")+":"+Config.Path)
 	}
+}
+
+func cleanpath(path string) string {
+	if path == "" || strings.HasPrefix(path, "/") {
+		return path
+	} else if strings.HasPrefix(path, "~/") {
+		return filepath.Join(os.Getenv("HOME"), strings.TrimPrefix(path, "~/"))
+	}
+
+	return filepath.Join(BrooceDir, path)
 }
