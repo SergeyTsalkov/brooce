@@ -39,6 +39,15 @@ func FileExists(filename string) bool {
 	return err == nil
 }
 
+func IsDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return fileInfo.IsDir()
+}
+
 func ProcessExists(pid int) bool {
 	return FileExists(fmt.Sprintf("/proc/%v", pid))
 }

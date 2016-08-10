@@ -31,6 +31,10 @@ type ConfigType struct {
 		Disable  bool
 	}
 
+	FileOutputLog struct {
+		Enable bool
+	} `json:"file_output_log"`
+
 	RedisOutputLog struct {
 		DropDone    bool  `json:"drop_done"`
 		DropFailed  bool  `json:"drop_failed"`
@@ -46,14 +50,13 @@ type ConfigType struct {
 		Host     string
 		Password string
 	}
+
 	Suicide struct {
 		Enabled bool
 		Command string
 		Time    int
 	}
-	Syslog struct {
-		Host string
-	}
+
 	Queues map[string]int
 	Path   string
 }
@@ -72,6 +75,13 @@ func (c *ConfigType) CSRF() string {
 }
 
 func init() {
+	if !util.IsDir(BrooceDir) {
+		err := os.Mkdir(BrooceDir, 0755)
+		if err != nil {
+			log.Fatalln("Unable to create directory", BrooceDir, ":", err)
+		}
+	}
+
 	configFile := filepath.Join(BrooceDir, "brooce.conf")
 
 	bytes, err := ioutil.ReadFile(configFile)

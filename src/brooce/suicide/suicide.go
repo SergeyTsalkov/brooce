@@ -11,7 +11,7 @@ import (
 )
 
 var statusLock = sync.Mutex{}
-var workingThreads = map[int]bool{}
+var workingThreads = map[string]bool{}
 var lastStatusChangeTime = time.Now()
 
 func Start() {
@@ -29,19 +29,19 @@ func Start() {
 	}()
 }
 
-func ThreadIsWorking(threadid int) {
+func ThreadIsWorking(threadName string) {
 	statusLock.Lock()
 	defer statusLock.Unlock()
 
-	workingThreads[threadid] = true
+	workingThreads[threadName] = true
 	lastStatusChangeTime = time.Now()
 }
 
-func ThreadIsWaiting(threadid int) {
+func ThreadIsWaiting(threadName string) {
 	statusLock.Lock()
 	defer statusLock.Unlock()
 
-	delete(workingThreads, threadid)
+	delete(workingThreads, threadName)
 	lastStatusChangeTime = time.Now()
 }
 

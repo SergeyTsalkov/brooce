@@ -1,9 +1,9 @@
-package main
+package runnabletask
 
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"io"
 	"os/exec"
 	"sync"
 	"syscall"
@@ -11,24 +11,25 @@ import (
 
 	"brooce/config"
 	"brooce/lock"
-	"brooce/prefixwriter"
+	myredis "brooce/redis"
 	tasklib "brooce/task"
 )
 
 var tsFormat = "2006-01-02 15:04:05"
 
-type runnableTask struct {
+var redisClient = myredis.Get()
+var redisHeader = config.Config.ClusterName
+
+type RunnableTask struct {
 	*tasklib.Task
-	workingList string
-	threadName  string
-	queueName   string
+	FileWriter io.Writer
 
 	buffer     *bytes.Buffer
 	bufferLock sync.Mutex
 	running    bool
 }
 
-func (task *runnableTask) Run() (exitCode int, err error) {
+func (task *RunnableTask) Run() (exitCode int, err error) {
 	if len(task.Command) == 0 {
 		return
 	}
@@ -42,7 +43,7 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 
 	starttime := time.Now()
 	task.StartTime = starttime.Unix()
-	err = redisClient.LSet(task.workingList, 0, task.Json()).Err()
+	err = redisClient.LSet(task.RedisKey, 0, task.Json()).Err()
 	if err != nil {
 		return
 	}
@@ -59,11 +60,9 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	defer lock.ReleaseLocks(task.Locks)
 
 	task.StartFlushingLog()
-	log.Printf("Starting task %v: %v", task.Id, task.Command)
 	defer func() {
 		finishtime := time.Now()
 		runtime := finishtime.Sub(starttime)
-		log.Printf("Task %v exited after %v with exitcode %v", task.Id, runtime, exitCode)
 
 		task.WriteLog(fmt.Sprintf("\n*** COMPLETED_AT:[%s] RUNTIME:[%s] EXITCODE:[%d] ERROR:[%v]\n",
 			finishtime.Format(tsFormat),
@@ -77,12 +76,12 @@ func (task *runnableTask) Run() (exitCode int, err error) {
 	task.WriteLog(fmt.Sprintf("\n\n*** COMMAND:[%s] STARTED_AT:[%s] WORKER_THREAD:[%s] QUEUE:[%s]\n",
 		task.Command,
 		starttime.Format(tsFormat),
-		task.threadName,
-		task.queueName,
+		task.WorkerThreadName(),
+		task.QueueName(),
 	))
 
 	cmd := exec.Command("bash", "-c", task.Command)
-	cmd.Stdout = &prefixwriter.PrefixWriter{Writer: task, Prefix: "--ts--> ", TsFormat: tsFormat}
+	cmd.Stdout = &runnableTaskStdoutLog{RunnableTask: task}
 	cmd.Stderr = cmd.Stdout
 
 	done := make(chan error)

@@ -1,9 +1,10 @@
-package main
+package runnabletask
 
 import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"brooce/config"
@@ -11,28 +12,28 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
-func (task *runnableTask) WriteLog(str string) {
+func (task *RunnableTask) WriteLog(str string) {
+	log.Printf("[%s] %s", task.WorkerThreadName(), strings.TrimSpace(str))
 	task.Write([]byte(str))
 }
 
-func (task *runnableTask) Write(p []byte) (lenP int, err error) {
+func (task *RunnableTask) Write(p []byte) (lenP int, err error) {
 	task.bufferLock.Lock()
 	defer task.bufferLock.Unlock()
-
 	lenP = len(p)
-	//log.Printf("Task %v: %v", task.Id, string(p))
 
-	if task.Id == "" {
-		return
-	}
-	if config.Config.RedisOutputLog.DropDone && config.Config.RedisOutputLog.DropFailed {
-		return
+	if task.FileWriter != nil {
+		task.FileWriter.Write(p)
 	}
 
-	return task.buffer.Write(p)
+	if task.Id != "" && (!config.Config.RedisOutputLog.DropDone || !config.Config.RedisOutputLog.DropFailed) {
+		_, err = task.buffer.Write(p)
+	}
+
+	return
 }
 
-func (task *runnableTask) Flush() {
+func (task *RunnableTask) Flush() {
 	task.bufferLock.Lock()
 	defer task.bufferLock.Unlock()
 
@@ -57,7 +58,7 @@ func (task *runnableTask) Flush() {
 	return
 }
 
-func (task *runnableTask) StartFlushingLog() {
+func (task *RunnableTask) StartFlushingLog() {
 	task.running = true
 	task.buffer = &bytes.Buffer{}
 
@@ -69,12 +70,12 @@ func (task *runnableTask) StartFlushingLog() {
 	}()
 }
 
-func (task *runnableTask) StopFlushingLog() {
+func (task *RunnableTask) StopFlushingLog() {
 	task.running = false
 	task.Flush()
 }
 
-func (task *runnableTask) GenerateId() (err error) {
+func (task *RunnableTask) GenerateId() (err error) {
 	var counter int64
 	counter, err = redisClient.Incr(redisHeader + ":counter").Result()
 
