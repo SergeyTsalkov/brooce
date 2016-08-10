@@ -7,8 +7,6 @@ import (
 
 	"brooce/cron"
 	"brooce/listing"
-
-	redis "gopkg.in/redis.v3"
 )
 
 type cronpageOutputType struct {
@@ -31,8 +29,8 @@ func cronpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 		return
 	}
 
-	output.Edit = req.FormValue("edit")
-	output.New = (req.FormValue("new") == "1")
+	//output.Edit = req.FormValue("edit")
+	//output.New = (req.FormValue("new") == "1")
 
 	err = templates.ExecuteTemplate(buf, "cronpage", output)
 	return
@@ -68,6 +66,7 @@ func enableCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
+/*
 func saveCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	name := req.FormValue("name")
 	item := req.FormValue("item")
@@ -94,3 +93,4 @@ func saveCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 
 	return
 }
+*/

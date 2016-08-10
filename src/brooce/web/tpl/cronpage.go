@@ -7,10 +7,13 @@ var cronPageTpl = `
   <td><tt>{{ .Raw }}</tt></td>
 
   <td class="buttons">
+
+    <!--
     <a class="btn btn-info btn-xs" href="/cron?edit={{ .Name }}">
       <span class="glyphicon glyphicon-edit"></span>
       Edit
     </a>
+    -->
 
     <form action="" method="post">
       <input type="hidden" name="csrf" value="{{CSRF}}">
@@ -82,10 +85,10 @@ var cronPageTpl = `
           <th class="buttons">
 
             {{ if eq .Edit "" }}
-            <a class="btn btn-success btn-sm" href="/cron?new=1">
+            <!-- <a class="btn btn-success btn-sm" href="/cron?new=1">
               <span class="glyphicon glyphicon-plus"></span>
               New
-            </button>
+            </button> -->
             {{ end }}
           </th>
         </tr>

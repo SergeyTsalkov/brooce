@@ -58,7 +58,7 @@ func Start() {
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
 	reqHandler.HandleFunc("/cron", makeHandler(cronpageHandler, "GET"))
-	reqHandler.HandleFunc("/savecron", makeHandler(saveCronHandler, "POST"))
+	//reqHandler.HandleFunc("/savecron", makeHandler(saveCronHandler, "POST"))
 	reqHandler.HandleFunc("/deletecron", makeHandler(deleteCronHandler, "POST"))
 	reqHandler.HandleFunc("/disablecron", makeHandler(disableCronHandler, "POST"))
 	reqHandler.HandleFunc("/enablecron", makeHandler(enableCronHandler, "POST"))
