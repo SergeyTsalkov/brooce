@@ -7,10 +7,10 @@ var cronPageTpl = `
   <td><tt>{{ .Raw }}</tt></td>
 
   <td class="buttons">
-    <button class="btn btn-info btn-xs">
+    <a class="btn btn-info btn-xs" href="/cron?edit={{ .Name }}">
       <span class="glyphicon glyphicon-edit"></span>
       Edit
-    </button>
+    </a>
 
     <form action="" method="post">
       <input type="hidden" name="csrf" value="{{CSRF}}">
@@ -37,6 +37,37 @@ var cronPageTpl = `
 </tr>
 {{ end }}
 
+{{ define "cronitemedit" }}
+<form action="/savecron" method="post">
+  <input type="hidden" name="csrf" value="{{CSRF}}">
+  <input type="hidden" name="redirect" value="/cron">
+  <input type="hidden" name="oldname" value="{{ .Name }}">
+  <input type="hidden" name="disabled" value="{{ .Disabled }}">
+
+  <tr class="info">
+    <td>
+      <input type="text" class="form-control" name="name" value="{{ .Name }}">
+    </td>
+    <td>
+      <input type="text" class="form-control" name="item" value="{{ .Raw }}">
+    </td>
+
+    <td class="buttons">
+      <button type="submit" class="btn btn-success btn-sm">
+        <span class="glyphicon glyphicon-ok"></span>
+        Save
+      </button>
+
+      <a class="btn btn-warning btn-sm" href="/cron">
+        <span class="glyphicon glyphicon-remove"></span>
+        Cancel
+      </a>
+    </td>
+  </tr>
+
+</form>
+{{ end }}
+
 {{ define "cronpage" }}
 {{ template "header" "cron" }}
 <div class="row">
@@ -49,20 +80,35 @@ var cronPageTpl = `
           <th>Name</th>
           <th>Job</th>
           <th class="buttons">
-            <button class="btn btn-success btn-sm">
+
+            {{ if eq .Edit "" }}
+            <a class="btn btn-success btn-sm" href="/cron?new=1">
               <span class="glyphicon glyphicon-plus"></span>
               New
             </button>
+            {{ end }}
           </th>
         </tr>
       </thead>
       <tbody>
         {{ range .Crons }}
-          {{ template "cronitem" . }}
+          {{ if eq .Name $.Edit }} 
+            {{ template "cronitemedit" . }}
+          {{ else }}
+            {{ template "cronitem" . }}
+          {{ end }}
         {{ end }}
 
         {{ range .DisabledCrons }}
-          {{ template "cronitem" . }}
+          {{ if eq .Name $.Edit }} 
+            {{ template "cronitemedit" . }}
+          {{ else }}
+            {{ template "cronitem" . }}
+          {{ end }}
+        {{ end }}
+
+        {{ if $.New }}
+          {{ template "cronitemedit" }}
         {{ end }}
       </tbody>
     </table>

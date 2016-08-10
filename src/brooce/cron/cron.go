@@ -31,6 +31,10 @@ type CronType struct {
 }
 
 func ParseCronLine(name, line string) (*CronType, error) {
+	if len(name) == 0 {
+		return nil, fmt.Errorf("cron name can't be empty")
+	}
+
 	parts := strings.Fields(line)
 	if len(parts) < 6 {
 		return nil, fmt.Errorf("cron string seems invalid")

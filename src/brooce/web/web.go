@@ -58,6 +58,7 @@ func Start() {
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
 	reqHandler.HandleFunc("/cron", makeHandler(cronpageHandler, "GET"))
+	reqHandler.HandleFunc("/savecron", makeHandler(saveCronHandler, "POST"))
 	reqHandler.HandleFunc("/deletecron", makeHandler(deleteCronHandler, "POST"))
 	reqHandler.HandleFunc("/disablecron", makeHandler(disableCronHandler, "POST"))
 	reqHandler.HandleFunc("/enablecron", makeHandler(enableCronHandler, "POST"))
@@ -77,7 +78,7 @@ func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) h
 		defer func() {
 			if r := recover(); r != nil {
 				str := fmt.Sprintf("%v", r)
-				log.Println("Recovered from panic:", str)
+				log.Println("Recovered from web panic:", str)
 				http.Error(w, str, http.StatusInternalServerError)
 				return
 			}
@@ -104,7 +105,7 @@ func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) h
 
 		buf, err := fn(r)
 		if err != nil {
-			log.Println(err)
+			log.Println("Web error:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -113,7 +114,12 @@ func makeHandler(fn func(*http.Request) (*bytes.Buffer, error), method string) h
 		}
 
 		if method != "GET" && buf.Len() == 0 {
-			http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+			if redirect := r.FormValue("redirect"); redirect != "" {
+				http.Redirect(w, r, redirect, http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+			}
+
 			return
 		}
 

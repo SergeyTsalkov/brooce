@@ -29,7 +29,7 @@ var jobListTpl = `
               {{ end }}
 
               <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
-                <span class="glyphicon glyphicon-remove"></span>
+                <span class="glyphicon glyphicon-trash"></span>
                 Delete All
               </button>
             </form>
@@ -72,7 +72,7 @@ var jobListTpl = `
 
 
                 <button type="submit" formaction="/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
-                  <span class="glyphicon glyphicon-remove"></span>
+                  <span class="glyphicon glyphicon-trash"></span>
                   Delete
                 </button>
               </form>
