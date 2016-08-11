@@ -17,22 +17,22 @@ var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
 
 type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
-	ProcName    string `json:"process_name"`
+	ProcName    string `json:"-"`
 
-	Timeout int
+	Timeout int `json:"timeout"`
 
 	Web struct {
-		Addr     string
-		CertFile string
-		KeyFile  string
-		Username string
-		Password string
-		NoAuth   bool `json:"no_auth"`
-		Disable  bool
-	}
+		Addr     string `json:"addr"`
+		CertFile string `json:"certfile"`
+		KeyFile  string `json:"keyfile"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		NoAuth   bool   `json:"no_auth"`
+		Disable  bool   `json:"disable"`
+	} `json:"web"`
 
 	FileOutputLog struct {
-		Enable bool
+		Enable bool `json:"enable"`
 	} `json:"file_output_log"`
 
 	RedisOutputLog struct {
@@ -47,18 +47,18 @@ type ConfigType struct {
 	} `json:"job_results"`
 
 	Redis struct {
-		Host     string
-		Password string
-	}
+		Host     string `json:"host"`
+		Password string `json:"password"`
+	} `json:"redis"`
 
 	Suicide struct {
-		Enabled bool
-		Command string
-		Time    int
-	}
+		Enable  bool   `json:"enable"`
+		Command string `json:"command"`
+		Time    int    `json:"time"`
+	} `json:"suicide"`
 
-	Queues map[string]int
-	Path   string
+	Queues map[string]int `json:"queues"`
+	Path   string         `json:"path"`
 }
 
 var Config = ConfigType{}
@@ -90,11 +90,22 @@ func init() {
 	} else {
 		err = json.Unmarshal(bytes, &Config)
 		if err != nil {
-			log.Println("Your config file", configFile, "seem to have invalid json! Using defaults instead!")
+			log.Fatalln("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file!")
 		}
 	}
 
 	init_defaults()
+
+	if !util.FileExists(configFile) {
+		if bytes, err := json.MarshalIndent(&Config, "", "  "); err == nil {
+			err = ioutil.WriteFile(configFile, bytes, 0744)
+			if err != nil {
+				log.Println("Warning: Unable to write clean config file to", configFile, ", error was:", err)
+			} else {
+				log.Println("We wrote a default config file to", configFile)
+			}
+		}
+	}
 }
 
 func init_defaults() {
@@ -141,7 +152,7 @@ func init_defaults() {
 		Config.Redis.Host = Config.Redis.Host + ":6379"
 	}
 
-	if Config.Suicide.Enabled {
+	if Config.Suicide.Enable {
 		if Config.Suicide.Command == "" {
 			Config.Suicide.Command = "sudo shutdown -h now"
 		}

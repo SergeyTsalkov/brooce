@@ -15,7 +15,7 @@ var workingThreads = map[string]bool{}
 var lastStatusChangeTime = time.Now()
 
 func Start() {
-	if !config.Config.Suicide.Enabled {
+	if !config.Config.Suicide.Enable {
 		return
 	}
 
@@ -49,7 +49,7 @@ func check() {
 	statusLock.Lock()
 	defer statusLock.Unlock()
 
-	if !config.Config.Suicide.Enabled {
+	if !config.Config.Suicide.Enable {
 		return
 	}
 
