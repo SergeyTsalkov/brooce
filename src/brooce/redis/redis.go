@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -25,6 +26,15 @@ func Get() *redis.Client {
 			WriteTimeout: 5 * time.Second,
 			PoolTimeout:  1 * time.Second,
 		})
+
+		for {
+			err := redisClient.Ping().Err()
+			if err == nil {
+				break
+			}
+			log.Println("Can't reach redis at", config.Config.Redis.Host, "-- are your redis addr and password right?")
+			time.Sleep(5 * time.Second)
+		}
 	})
 
 	return redisClient
