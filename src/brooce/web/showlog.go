@@ -1,15 +1,12 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
 )
 
-func showlogHandler(req *http.Request) (buf *bytes.Buffer, err error) {
-	buf = &bytes.Buffer{}
-
+func showlogHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 2 {
 		err = fmt.Errorf("Invalid path")
@@ -24,6 +21,6 @@ func showlogHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 		return
 	}
 
-	err = templates.ExecuteTemplate(buf, "showlog", output)
+	err = templates.ExecuteTemplate(rep, "showlog", output)
 	return
 }

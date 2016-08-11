@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,7 +8,7 @@ import (
 	myredis "brooce/redis"
 )
 
-func retryHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func retryHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
@@ -36,7 +35,7 @@ func retryHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
-func deleteHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func deleteHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
@@ -55,7 +54,7 @@ func deleteHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
-func retryAllHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func retryAllHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
@@ -72,7 +71,7 @@ func retryAllHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
-func deleteAllHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func deleteAllHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")

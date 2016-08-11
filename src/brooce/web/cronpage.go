@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -16,8 +15,7 @@ type cronpageOutputType struct {
 	New           bool
 }
 
-func cronpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
-	buf = &bytes.Buffer{}
+func cronpageHandler(req *http.Request, rep *httpReply) (err error) {
 	output := &cronpageOutputType{}
 
 	output.Crons, err = listing.Crons()
@@ -32,11 +30,11 @@ func cronpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	//output.Edit = req.FormValue("edit")
 	//output.New = (req.FormValue("new") == "1")
 
-	err = templates.ExecuteTemplate(buf, "cronpage", output)
+	err = templates.ExecuteTemplate(rep, "cronpage", output)
 	return
 }
 
-func deleteCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func deleteCronHandler(req *http.Request, rep *httpReply) (err error) {
 	if item := req.FormValue("item"); item != "" {
 		enabledKey := fmt.Sprintf("%s:cron:jobs:%s", redisHeader, item)
 		disabledKey := fmt.Sprintf("%s:cron:disabledjobs:%s", redisHeader, item)
@@ -46,7 +44,7 @@ func deleteCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
-func disableCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func disableCronHandler(req *http.Request, rep *httpReply) (err error) {
 	if item := req.FormValue("item"); item != "" {
 		srcKey := fmt.Sprintf("%s:cron:jobs:%s", redisHeader, item)
 		dstKey := fmt.Sprintf("%s:cron:disabledjobs:%s", redisHeader, item)
@@ -56,7 +54,7 @@ func disableCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 	return
 }
 
-func enableCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func enableCronHandler(req *http.Request, rep *httpReply) (err error) {
 	if item := req.FormValue("item"); item != "" {
 		srcKey := fmt.Sprintf("%s:cron:disabledjobs:%s", redisHeader, item)
 		dstKey := fmt.Sprintf("%s:cron:jobs:%s", redisHeader, item)
@@ -67,7 +65,7 @@ func enableCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 }
 
 /*
-func saveCronHandler(req *http.Request) (buf *bytes.Buffer, err error) {
+func saveCronHandler(req *http.Request, rep *httpReply) (err error) {
 	name := req.FormValue("name")
 	item := req.FormValue("item")
 

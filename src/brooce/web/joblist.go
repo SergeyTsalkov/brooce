@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"net/http"
@@ -25,9 +24,7 @@ type joblistOutputType struct {
 	Jobs []*task.Task
 }
 
-func joblistHandler(req *http.Request) (buf *bytes.Buffer, err error) {
-	buf = &bytes.Buffer{}
-
+func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
 	if len(path) < 2 {
 		err = fmt.Errorf("Invalid path")
@@ -52,7 +49,7 @@ func joblistHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 		return
 	}
 
-	err = templates.ExecuteTemplate(buf, "joblist", output)
+	err = templates.ExecuteTemplate(rep, "joblist", output)
 	return
 }
 

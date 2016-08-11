@@ -31,7 +31,7 @@ func Get() *template.Template {
 			return result
 		},
 		"CSRF": func() string {
-			return config.Config.CSRF()
+			return config.Config.CSRF() + "a"
 		},
 		"TimeSince": func(timestamp int64) string {
 			if timestamp == 0 {

@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
@@ -20,8 +19,7 @@ type mainpageOutputType struct {
 	TotalThreads   int
 }
 
-func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
-	buf = &bytes.Buffer{}
+func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	output := &mainpageOutputType{}
 
 	output.RunningJobs, err = listing.RunningJobs()
@@ -41,7 +39,7 @@ func mainpageHandler(req *http.Request) (buf *bytes.Buffer, err error) {
 		output.TotalThreads += worker.TotalThreads()
 	}
 
-	err = templates.ExecuteTemplate(buf, "mainpage", output)
+	err = templates.ExecuteTemplate(rep, "mainpage", output)
 	return
 }
 
