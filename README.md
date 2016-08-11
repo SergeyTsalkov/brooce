@@ -34,6 +34,10 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 ## Setting Up Multiple Queues
 Brooce is multi-threaded, and can run many jobs at once on multiple queues.
 
-## Cron Jobs
+## Timeouts
 
 ## Locking
+
+## Cron Jobs
+
+
