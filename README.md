@@ -13,6 +13,9 @@ Brooce is a language-agnostic job queue with a redis backend. It was written in 
 * **Cron Jobs** -- Schedule tasks to run on a schedule.
 * **Suicide Mode** -- Instruct brooce to run a shell command after it's been idle for a pre-set period. Perfect for having unneeded EC2 workers terminate themselves.
 
+## Learn Redis First
+Redis can be accessed from any programming language, but how to do it for each one is beyond the scope of this documentation. All of our examples will use the redis-cli shell commands, and it's up to you to substitute the equavalents in your language of choice!
+
 ## Quick Start
 We have a tutorial that'll get you set up and run your first job.
 
@@ -24,6 +27,8 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 
 [View brooce.conf Documentation](CONFIG.md)
  
+
+
 
 ## Setting Up Multiple Queues
 Brooce is multi-threaded, and can run many jobs at once on multiple queues.
