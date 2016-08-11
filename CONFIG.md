@@ -46,7 +46,7 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 Leave this alone unless you want multiple sets of workers to share one redis server. Multiple brooce workers on separate machines can normally draw jobs from the same queue, but putting them in separate clusters will make them unaware of each other.
 
 ### timeout
-How long jobs can run before they're killed. Individual jobs can override this.
+How long jobs can run before they're killed. Individual jobs can override this. The global default is 1 hour (3600 seconds). The timeout can't be disabled -- you should set it to the most time you expect your jobs to take, so it will automatically kill any that get stuck.
  
 ### web.addr
 Where the web server is hosted. Defaults on port 8080 on all IPs that it can bind to.
