@@ -170,7 +170,6 @@ func makeHandler(fn httpHandler, method string) http.HandlerFunc {
 func allMiddleware(fn httpHandler) httpHandler {
 	// these middlewares will be run in reverse!
 	middlewares := []middleware{
-		filterMiddleware,
 		csrfMiddleware,
 		authMiddleware,
 		errorMiddleware,
@@ -217,19 +216,6 @@ func errorMiddleware(next httpHandler) httpHandler {
 			rep.statusCode = http.StatusInternalServerError
 		}
 
-		return
-	}
-}
-
-func filterMiddleware(next httpHandler) httpHandler {
-	return func(req *http.Request, rep *httpReply) (err error) {
-
-		if req.URL.Path == "/favicon.ico" {
-			rep.statusCode = http.StatusNotFound
-			return
-		}
-
-		err = next(req, rep)
 		return
 	}
 }

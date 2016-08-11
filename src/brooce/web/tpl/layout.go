@@ -10,6 +10,8 @@ var headerTpl = `
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABsElEQVR42mNgoBZwc3PjTkxMlC0oKFDAhjMyMqRDQ0M5sWr28/Pj9fDwSAfiXQEBAcewYS8vry2urq75CQkJChgGADUq2NjYHFNSUvqnrKz8TUVF5SMyBop9BMp9NTQ0/Obr61teWFjIiWGAubn5MXV19W86OjpzgXQiMlZVVQXhSUDD/puYmEwHekcMqwHa2tofgXQiugv379/PAfRGPsgAoPzM/Px8cXwGJOnp6XEbGBgIgLC7u7tQaWlpOJD9EGjAH1NT05r58+dz4DTAzMysCujfzUD8AYaBYfAVFD5A598IDw/3xBqI+AwAYUVFxS9A+q+dnd255ORkM5wGWFpaJmdlZfFkZmYKwnBUVJSgvb29KzAWrgNd89/R0bEIJSYIBSII1NfXMwHDoURNTe0/MMp7gelBAMMAoORXTU3NOfLy8onoGOj8JC0trRXA6PxvYWHREh0dzQc3ABhFCkC/gRLSX6BfvwLxB3QMlAMlqp9ACx4C1QalpaWxwg1ISkridXJyigEq6lNQUMCJgYmqw9raOhyYJ4Qw/Ojg4MAhJycniA8DLeAHeoONgZoAAFeoynJXT6jnAAAAAElFTkSuQmCC">
+
     <title>Brooce Job Queue</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
