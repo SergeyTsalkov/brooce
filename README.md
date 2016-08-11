@@ -117,3 +117,5 @@ redis-cli SET "brooce:cron:jobs:hourly-log-rotater" "0 * * * * queue:common ~/bi
 redis-cli SET "brooce:cron:jobs:twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
 ```
 
+## Hacking on brooce
+For most users, it should be enough to download our binaries. If you want to hack on the project, you should install Go and the [Gb build tool](https://getgb.io/). Then check out the repo into its own folder, and use gb to build it.
