@@ -60,7 +60,7 @@ redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/bill-account.sh 6
 Even if there are multiple workers available, only one of these jobs will run at a time. The other will get pushed into the delayed queue, which you can see in the web interface. Once per minute, the contents of the delayed queue are dumped back into the pending queue, where it'll get the chance to run again if it can grab the needed lock.
 
 ### Multiple Locks
-Since locks is an array of strings, you can pass multiple locks. Your job must grab all the locks to run:
+You can pass multiple locks. Your job must grab all the locks to run:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671","server:5"]}'
 ```
