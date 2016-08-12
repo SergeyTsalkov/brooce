@@ -81,6 +81,8 @@ Cron jobs work much the same way they do on Linux, except you're setting them up
 ```shell
 redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
 ```
+**Cron job times are always UTC, regardless of your local time zone!** This was unavoidable since brooce instances could be running on multiple servers in different time zones.
+
 You can see any pending cron jobs on the Cron Jobs page in the web interface.
 
 
