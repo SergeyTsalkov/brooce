@@ -18,6 +18,7 @@ Check out the github page for the documentation: https://github.com/SergeyTsalko
 * **Crash Recovery** -- If you run multiple instances of brooce on different servers, they'll monitor each other. All features can survive instances failures, and any jobs being worked on by crashed instances will be marked as failed.
 * **Web Interface** -- Brooce runs its own password-protected web server. You can access it to monitor currently running jobs across all instances, and list jobs that are pending, delayed, done, or failed. You can look at the stdout/stderr output of jobs while they're running, or after they're done.
 * **Job Logging** -- Job stdout/stderr output can be logged to redis or log files, for later review through the web interface or your favorite text editor.
+* **Timeouts** -- To prevent jobs from getting stuck, brooce automatically kills any jobs that don't finish in an hour. You can change this default timeout in [brooce.conf](CONFIG.md), or set per-job timeouts.
 * **Locking** -- Jobs can use brooce's lock system, or implement their own. A job that can't grab a lock it needs will be delayed and put back on the queue a minute later.
 * **Cron Jobs** -- Schedule tasks to run on a schedule.
 * **Suicide Mode** -- Instruct brooce to run a shell command after it's been idle for a pre-set period. Perfect for having unneeded EC2 workers terminate themselves.
