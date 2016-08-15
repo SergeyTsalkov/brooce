@@ -1,12 +1,20 @@
 # brooce
-Brooce is a language-agnostic job queue with a redis backend. It was written in Go. You can build your jobs in any language, so long as they can be invoked from the command line. You use redis to add shell commands to the queue, and they will be run in sequence. You can setup multiple queues on one or more machines for concurrent execution of jobs.
+Hey Hackers! Brooce is a **language-agnostic job queue** I made in Go. I built it because I like to work on personal projects in a variety of languages, and I want to be able to **use the same job queue regardless of what language I'm writing in**. I like a lot about Resque, but it has the same flaw as many others: you're all-but-forced to write jobs in its preferred language, Ruby.
+
+Therefore, I built a job queue system where **the jobs themselves are just shell commands**. It's really simple to get started: you just grab the brooce binary and run it on any Linux system. You then use redis to LPUSH some shell commands to a queue, and then brooce will run them in sequence.
+
+That's really all you need to know to use it, but there are some advanced features under the hood. There's a resque-inspired web interface, multi-threaded job execution, locking, and automatically scheduled cron-like jobs. All features are baked into a single binary that runs on any Linux platform, and can be deployed on an unlimited number of servers. If they can all access the same redis database, they'll all coordinate amongst themselves to work on jobs.
+
+I've been personally relying on it with great results! If you try it out, your feedback is welcome!
+
+Check out the github page for the documentation: https://github.com/SergeyTsalkov/brooce
 
 ## Features
 
 * **Single Executable** -- Brooce comes as a single executable that runs on any Linux system.
 * **Redis Backend** -- Redis can be accessed from any programming language, or the command line. Schedule jobs from anywhere.
 * **Language-Agnostic** -- Jobs are just shell commands. Write jobs in any language.
-* **Scalable** -- Deploy workers on one machine or many. All workers coordinate amongst themselves.
+* **Scalable** -- Deploy instances on one server, or many. Each instance can run multiple jobs simultaneously. All instances coordinate amongst themselves.
 * **Crash Recovery** -- If you run multiple instances of brooce on different servers, they'll monitor each other. All features can survive instances failures, and any jobs being worked on by crashed instances will be marked as failed.
 * **Web Interface** -- Brooce runs its own password-protected web server. You can access it to monitor currently running jobs across all instances, and list jobs that are pending, delayed, done, or failed. You can look at the stdout/stderr output of jobs while they're running, or after they're done.
 * **Job Logging** -- Job stdout/stderr output can be logged to redis or log files, for later review through the web interface or your favorite text editor.
