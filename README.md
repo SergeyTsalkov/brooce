@@ -5,7 +5,7 @@ Therefore, I built a job queue system where **the jobs themselves are just shell
 
 That's really all you need to know to use it, but there are some advanced features under the hood. There's a resque-inspired web interface, multi-threaded job execution, locking, and automatically scheduled cron-like jobs. All features are baked into a single binary that runs on any Linux platform, and can be deployed on an unlimited number of servers. If they can all access the same redis database, they'll all coordinate amongst themselves to work on jobs.
 
-I've been personally relying on it with great results! If you try it out, your feedback is welcome!
+I've been personally relying on brooce with great results! If you try it out, I would welcome your feedback!
 
 Check out the github page for the documentation: https://github.com/SergeyTsalkov/brooce
 
