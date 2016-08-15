@@ -7,8 +7,6 @@ That's really all you need to know to use it, but there are some advanced featur
 
 I've been personally relying on brooce with great results! If you try it out, I would welcome your feedback!
 
-Check out the github page for the documentation: https://github.com/SergeyTsalkov/brooce
-
 ## Features
 
 * **Single Executable** -- Brooce comes as a single executable that runs on any Linux system.
