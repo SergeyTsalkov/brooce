@@ -1,5 +1,5 @@
 # brooce
-Brooce is a language-agnostic job queue with a redis backend. It was written in Go.
+Brooce is a language-agnostic job queue with a redis backend. It was written in Go. You can build your jobs in any language, so long as they can be invoked from the command line. You use redis to add shell commands to the queue, and they will be run in sequence. You can setup multiple queues on one or more machines for concurrent execution of jobs.
 
 ## Features
 
@@ -8,7 +8,7 @@ Brooce is a language-agnostic job queue with a redis backend. It was written in 
 * **Language-Agnostic** -- Jobs are just shell commands. Write jobs in any language.
 * **Scalable** -- Deploy workers on one machine or many. All workers coordinate amongst themselves.
 * **Crash Recovery** -- If you run multiple instances of brooce on different servers, they'll monitor each other. All features can survive instances failures, and any jobs being worked on by crashed instances will be marked as failed.
-* **Web Interface** -- Brooce runs its own password-protected web server. Access it to easily monitor running jobs.
+* **Web Interface** -- Brooce runs its own password-protected web server. You can access it to monitor currently running jobs across all instances, and list jobs that are pending, delayed, done, or failed. You can look at the stdout/stderr output of jobs while they're running, or after they're done.
 * **Job Logging** -- Job stdout/stderr output can be logged to redis or log files, for later review through the web interface or your favorite text editor.
 * **Locking** -- Jobs can use brooce's lock system, or implement their own. A job that can't grab a lock it needs will be delayed and put back on the queue a minute later.
 * **Cron Jobs** -- Schedule tasks to run on a schedule.
