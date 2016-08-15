@@ -25,27 +25,76 @@ I've been personally relying on brooce with great results! If you try it out, I 
 Brooce uses redis as its database. Redis can be accessed from any programming language, but how to do it for each one is beyond the scope of this documentation. All of our examples will use the redis-cli shell commands, and it's up to you to substitute the equavalents in your language of choice! If you're a programmer and you haven't learned redis yet, you owe it to yourself to do so!
 
 ## Quick Start
-We have a tutorial that'll get you set up and run your first job.
+Just a few commands will download bruce and get it running:
+```shell
+sudo apt-get install redis-server
+wget [url-of-binary]
+./brooce
+```
 
-[View Quick Start Tutorial](QUICKSTART.md)
+You'll see the output shown below:
+```
+Unable to read config file /home/sergey/.brooce/brooce.conf so using defaults!
+You didn't specify a web username/password, so we generated these: admin/uxuavdia
+We wrote a default config file to /home/sergey/.brooce/brooce.conf
+Starting HTTP server on :8080
+Started with queues: common (x1)
+```
+It's telling you that since it couldn't find your config file, it created a default one, and started the web server on port 8080. Since you haven't specified login credentials for the web interface yet, it generated some for you.
+
+### Let's run a job!
+Now open up another terminal window, and schedule your first command:
+```shell
+redis-cli LPUSH brooce:queue:common:pending 'ls -l ~ | tee ~/files.txt'
+```
+
+Give it a sec to run, and see that it actually ran:
+```shell
+cat ~/files.txt
+```
+
+### Check out the web interface!
+Type `http://<yourIP>:8080` into your browser and you should see the brooce web interface come up. At the top, you'll see the "common" queue with 1 done job. Click on the hyperlinked 1 in the Done column, and you'll see some options to reschedule or delete the job. For now, just click on `Show Log` and see a listing of the files in your home directory.
+
+### What about running jobs in parallel?
+Go back to your first terminal window and hit Ctrl+C to kill brooce. Open up its config file, `~/brooce/brooce.conf`. We have a [whole separate page](CONFIG.md) about all the various options, but for now, let's add another queue with 5 threads. Change the "queues" section to look like this:
+```json
+{
+  "queues": {
+    "common": 1,
+    "parallel": 5
+  }
+}
+```
+
+Now save and re-launch brooce, and in a separate shell window, run a bunch of slow commands in our new parallel queue:
+```shell
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
+```
+Now go back to the web interface, and note that 5 of your jobs are running, with others waiting to run. Go ahead and kill brooce again -- any jobs that are running when it dies will fail.
+
+### Send it to the background!
+Now that you're convinced that brooce is working, send it to the background:
+```shell
+./brooce --daemonize
+```
+It'll run until you kill it from the command line. Alternatively, you can use your operating system's launcher to have it run on boot.
 
  
 ## Configuration
 The first time brooce runs, it will create a `~/.brooce` dir in your home directory with a default `~/.brooce/brooce.conf` config file. 
 
 [View brooce.conf Documentation](CONFIG.md)
- 
 
-
-
-
-
-
-## Scheduling Jobs
-By default, there is a single queue called "common" that uses a single thread to run jobs. To schedule a job on that queue, run: 
-```shell
-redis-cli LPUSH brooce:queue:common:pending 'ls -l ~ | tee ~/files.txt'
-```
 
 ## Setting Up Multiple Queues
 Brooce is multi-threaded, and can run many jobs at once on multiple queues. To set up multiple queues, edit the [queues section of brooce.conf](CONFIG.md#queues).
@@ -135,3 +184,4 @@ redis-cli SET "brooce:cron:jobs:twice-daily-error-checker" "0 */12 * * * queue:c
 
 ## Hacking on brooce
 For most users, it should be enough to download our binaries. If you want to hack on the project, you should install Go and the [Gb build tool](https://getgb.io/). Then check out the repo into its own folder, and use gb to build it.
+
