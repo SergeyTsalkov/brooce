@@ -97,8 +97,12 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 [View brooce.conf Documentation](CONFIG.md)
 
 
-## Setting Up Multiple Queues
-Brooce is multi-threaded, and can run many jobs at once on multiple queues. To set up multiple queues, edit the [queues section of brooce.conf](CONFIG.md#queues).
+## Concurrency
+### Multiple Threads
+Brooce is multi-threaded, and can run many jobs at once from multiple queues. To set up multiple queues, edit the [queues section of brooce.conf](CONFIG.md#queues).
+
+### Multiple VPSes/Servers
+You can deploy brooce on multiple servers. Make sure they all connect to the same redis server, and have the same cluster_name set in [brooce.conf](CONFIG.md#queues). They can all work on jobs from the same queues, if desired.
 
 ## Timeouts
 So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here is a job that overwrites the [default 1-hour timeout in brooce.conf](CONFIG.md#timeout) and runs for only 10 seconds:
