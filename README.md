@@ -58,7 +58,7 @@ cat ~/files.txt
 Type `http://<yourIP>:8080` into your browser and you should see the brooce web interface come up. At the top, you'll see the "common" queue with 1 done job. Click on the hyperlinked 1 in the Done column, and you'll see some options to reschedule or delete the job. For now, just click on `Show Log` and see a listing of the files in your home directory.
 
 ### What about running jobs in parallel?
-Go back to your first terminal window and hit Ctrl+C to kill brooce. Open up its config file, `~/brooce/brooce.conf`. We have a [whole separate page](CONFIG.md) about all the various options, but for now, let's add another queue with 5 threads. Change the "queues" section to look like this:
+Go back to your first terminal window and hit Ctrl+C to kill brooce. Open up its config file, `~/.brooce/brooce.conf`. We have a [whole separate page](CONFIG.md) about all the various options, but for now, let's add another queue with 5 threads. Change the "queues" section to look like this:
 ```json
 {
   "queues": {
