@@ -38,16 +38,15 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, aliveWorkers 
 		workerTS := time.Unix(int64(worker.TS), 0)
 		worker.PrettyTS = workerTS.Format(time.RFC3339)
 
-		currentTS := time.Now().Unix()
-
-		if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {
+		switch IsAlive(workerTS) {
+		case -1:
 			worker.StatusColor = "red"
-		} else if currentTS < workerTS.Add(heartbeat.AssumeDeadAfter).Unix() && currentTS > workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+		case 0:
 			worker.StatusColor = "yellow"
-		} else if currentTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+		case 1:
 			worker.StatusColor = "green"
 			aliveWorkers = aliveWorkers + 1
-		} else {
+		default:
 			worker.StatusColor = "grey"
 		}
 
@@ -55,4 +54,18 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, aliveWorkers 
 	}
 
 	return
+}
+
+func IsAlive(workerTS time.Time) int {
+	currentTS := time.Now().Unix()
+
+	if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {
+		return -1
+	} else if currentTS < workerTS.Add(heartbeat.AssumeDeadAfter).Unix() && currentTS > workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+		return 0
+	} else if currentTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+		return 1
+	} else {
+		return -11
+	}
 }

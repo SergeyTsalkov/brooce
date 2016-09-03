@@ -8,6 +8,9 @@ import (
 
 	"brooce/config"
 	myredis "brooce/redis"
+	"brooce/heartbeat"
+	"encoding/json"
+	"brooce/listing"
 )
 
 var redisHeader = config.Config.ClusterName
@@ -61,7 +64,19 @@ func beatingProcs() ([]string, error) {
 		var livingProc string
 		fmt.Sscanf(result, heartbeatKey+":%s", &livingProc)
 
-		livingProcs = append(livingProcs, livingProc)
+		str := myredis.Get().Get(result)
+
+		worker := &heartbeat.HeartbeatTemplateType{}
+		err = json.Unmarshal([]byte(str.Val()), worker)
+		if err != nil {
+			return nil, err
+		}
+
+		workerTS := time.Unix(int64(worker.TS), 0)
+
+		if listing.IsAlive(workerTS) == -1 {
+			livingProcs = append(livingProcs, livingProc)
+		}
 	}
 
 	if len(livingProcs) == 0 {
