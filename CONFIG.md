@@ -28,7 +28,8 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
   },
   "redis": {
     "host": "localhost:6379",
-    "password": ""
+    "password": "",
+    "db": 0
   },
   "suicide": {
     "enable": false,
@@ -77,6 +78,9 @@ By default, we store the name of each completed job in redis for later review th
 
 ### redis.host / redis.password
 The hostname and password to access your redis server. Defaults to localhost and no-password.
+
+### redis.db
+The db which will be used by brooce on your redis server. Defaults to 0.
 
 ### suicide.enable / suicide.command / suicide.time
 For example, if you enabled suicide and set command to `"sudo shutdown -h now"` and time to `600`, you could shutdown your server after there haven't been any jobs for some time. Useful for shutting down idle EC2 instances. Keep in mind that the brooce program will need to have proper permissions to execute the given command, without additional prompts for passwords.
