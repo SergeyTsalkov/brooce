@@ -49,6 +49,7 @@ type ConfigType struct {
 	Redis struct {
 		Host     string `json:"host"`
 		Password string `json:"password"`
+		DB       int    `json:"db"`
 	} `json:"redis"`
 
 	Suicide struct {

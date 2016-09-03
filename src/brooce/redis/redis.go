@@ -25,6 +25,7 @@ func Get() *redis.Client {
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 5 * time.Second,
 			PoolTimeout:  1 * time.Second,
+			DB:           int64(config.Config.Redis.DB),
 		})
 
 		for {
