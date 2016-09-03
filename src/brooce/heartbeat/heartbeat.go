@@ -21,7 +21,6 @@ var AssumeDeadAfter = 95 * time.Second
 var removeDeadAfter = 7 * 24 * time.Hour
 
 var redisClient = myredis.Get()
-var heartbeatStr = makeHeartbeat()
 var once sync.Once
 
 type HeartbeatType struct {
@@ -88,6 +87,7 @@ func Start() {
 }
 
 func heartbeat() {
+	heartbeatStr := makeHeartbeat()
 	key := fmt.Sprintf("%s:workerprocs:%s", config.Config.ClusterName, config.Config.ProcName)
 	err := redisClient.Set(key, heartbeatStr, removeDeadAfter).Err()
 	if err != nil {
