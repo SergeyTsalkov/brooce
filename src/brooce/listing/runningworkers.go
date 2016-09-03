@@ -38,14 +38,13 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, err error) {
 		workerTS := time.Unix(int64(worker.TS), 0)
 		worker.PrettyTS = workerTS.Format(time.RFC3339)
 
-		currentTS := time.Now()
-		compareTS := currentTS.Add(-heartbeat.AssumeDeadAfter).Unix()
+		currentTS := time.Now().Unix()
 
-		if compareTS > int64(worker.TS) {
+		if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {
 			worker.StatusColor = "red"
-		} else if compareTS <= int64(worker.TS) && compareTS > workerTS.Add(heartbeat.HeartbeatEvery * 2).Unix()  {
+		} else if currentTS < workerTS.Add(heartbeat.AssumeDeadAfter).Unix() && currentTS > workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
 			worker.StatusColor = "yellow"
-		} else if compareTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+		} else if currentTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
 			worker.StatusColor = "green"
 		} else {
 			worker.StatusColor = "grey"
