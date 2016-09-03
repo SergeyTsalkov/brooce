@@ -46,6 +46,7 @@ var mainPageTpl = `
           <th>Machine IP</th>
           <th>Process ID</th>
           <th>Queues</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
@@ -61,6 +62,7 @@ var mainPageTpl = `
                 {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
               {{ end }}
             </td>
+            <td><div style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{ $Worker.PrettyTS }}"></div></td>
           </tr>
         {{ end }}
         </tr>

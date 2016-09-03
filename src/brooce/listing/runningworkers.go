@@ -6,9 +6,10 @@ import (
 	"brooce/heartbeat"
 
 	redis "gopkg.in/redis.v3"
+	"time"
 )
 
-func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
+func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, err error) {
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
 	if err != nil {
@@ -28,10 +29,26 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
 	}
 
 	for _, str := range heartbeatStrs {
-		worker := &heartbeat.HeartbeatType{}
+		worker := &heartbeat.HeartbeatTemplateType{}
 		err = json.Unmarshal([]byte(str.Val()), worker)
 		if err != nil {
 			return
+		}
+
+		workerTS := time.Unix(int64(worker.TS), 0)
+		worker.PrettyTS = workerTS.Format(time.RFC3339)
+
+		currentTS := time.Now()
+		compareTS := currentTS.Add(-heartbeat.AssumeDeadAfter).Unix()
+
+		if compareTS > int64(worker.TS) {
+			worker.StatusColor = "red"
+		} else if compareTS <= int64(worker.TS) && compareTS > workerTS.Add(heartbeat.HeartbeatEvery * 2).Unix()  {
+			worker.StatusColor = "yellow"
+		} else if compareTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
+			worker.StatusColor = "green"
+		} else {
+			worker.StatusColor = "grey"
 		}
 
 		workers = append(workers, worker)

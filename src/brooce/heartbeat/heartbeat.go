@@ -16,8 +16,9 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
-var heartbeatEvery = 30 * time.Second
-var assumeDeadAfter = 95 * time.Second
+var HeartbeatEvery = 30 * time.Second
+var AssumeDeadAfter = 95 * time.Second
+var removeDeadAfter = 7 * 24 * time.Hour
 
 var redisClient = myredis.Get()
 var heartbeatStr = makeHeartbeat()
@@ -29,6 +30,13 @@ type HeartbeatType struct {
 	IP       string         `json:"ip"`
 	PID      int            `json:"pid"`
 	Queues   map[string]int `json:"queues"`
+	TS       int32          `json:"timestamp"`
+}
+
+type HeartbeatTemplateType struct {
+	*HeartbeatType
+	StatusColor    string   `json:"status_color"`
+	PrettyTS       string   `json:"pretty_timestamp"`
 }
 
 func (hb *HeartbeatType) TotalThreads() (total int) {
@@ -48,6 +56,7 @@ func makeHeartbeat() string {
 		IP:       myip.PublicIPv4(),
 		PID:      os.Getpid(),
 		Queues:   config.Config.Queues,
+		TS:       int32(time.Now().Unix()),
 	}
 
 	var err error
@@ -71,7 +80,7 @@ func Start() {
 
 	go func() {
 		for {
-			time.Sleep(heartbeatEvery)
+			time.Sleep(HeartbeatEvery)
 			heartbeat()
 			auditHeartbeats()
 		}
@@ -80,7 +89,7 @@ func Start() {
 
 func heartbeat() {
 	key := fmt.Sprintf("%s:workerprocs:%s", config.Config.ClusterName, config.Config.ProcName)
-	err := redisClient.Set(key, heartbeatStr, assumeDeadAfter).Err()
+	err := redisClient.Set(key, heartbeatStr, removeDeadAfter).Err()
 	if err != nil {
 		log.Println("redis heartbeat error:", err)
 	}

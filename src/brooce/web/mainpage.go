@@ -15,7 +15,7 @@ import (
 type mainpageOutputType struct {
 	Queues         map[string]*listQueueType
 	RunningJobs    []*task.Task
-	RunningWorkers []*heartbeat.HeartbeatType
+	RunningWorkers []*heartbeat.HeartbeatTemplateType
 	TotalThreads   int
 }
 
@@ -57,7 +57,7 @@ type listQueueType struct {
 	delayedResult *redis.IntCmd
 }
 
-func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*listQueueType, err error) {
+func listQueues(runningWorkers []*heartbeat.HeartbeatTemplateType) (list map[string]*listQueueType, err error) {
 	list = map[string]*listQueueType{}
 	var results []string
 	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()
