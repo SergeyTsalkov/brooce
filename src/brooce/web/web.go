@@ -70,6 +70,8 @@ func Start() {
 	reqHandler.HandleFunc("/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
 	reqHandler.HandleFunc("/deleteall/pending/", makeHandler(deleteAllHandler, "POST"))
 
+	reqHandler.HandleFunc("/removedead/", makeHandler(removeDeadHandler, "POST"))
+
 	reqHandler.HandleFunc("/showlog/", makeHandler(showlogHandler, "GET"))
 
 	reqHandler.HandleFunc("/cron", makeHandler(cronpageHandler, "GET"))

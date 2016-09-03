@@ -37,7 +37,7 @@ var mainPageTpl = `
 
 <div class="row">
   <div class="col-md-12">
-    <h3>{{ len .RunningWorkers }} Workers Alive</h3>
+    <h3>{{ .AliveWorkers }} of {{ len .RunningWorkers }} Workers Alive</h3>
     <table class="table">
       <thead>
         <tr>
@@ -46,7 +46,15 @@ var mainPageTpl = `
           <th>Machine IP</th>
           <th>Process ID</th>
           <th>Queues</th>
-          <th>Status</th>
+          <th class="buttons">
+	    <form action="" method="post">
+	      <input type="hidden" name="csrf" value="{{CSRF}}">
+	      <button type="submit" formaction="/removedead/" class="btn btn-danger btn-sm">
+	        <span class="glyphicon glyphicon-trash"></span>
+	        Remove Dead
+	      </button>
+	    </form>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +70,7 @@ var mainPageTpl = `
                 {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
               {{ end }}
             </td>
-            <td><div style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{ $Worker.PrettyTS }}"></div></td>
+            <td><div style="float: right; width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{ $Worker.PrettyTS }}"></div></td>
           </tr>
         {{ end }}
         </tr>

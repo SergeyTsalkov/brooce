@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, err error) {
+func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, aliveWorkers int, err error) {
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
 	if err != nil {
@@ -46,6 +46,7 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, err error) {
 			worker.StatusColor = "yellow"
 		} else if currentTS <= workerTS.Add(heartbeat.HeartbeatEvery).Unix() {
 			worker.StatusColor = "green"
+			aliveWorkers = aliveWorkers + 1
 		} else {
 			worker.StatusColor = "grey"
 		}

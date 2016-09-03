@@ -17,6 +17,7 @@ type mainpageOutputType struct {
 	RunningJobs    []*task.Task
 	RunningWorkers []*heartbeat.HeartbeatTemplateType
 	TotalThreads   int
+	AliveWorkers   int
 }
 
 func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
@@ -26,7 +27,7 @@ func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	if err != nil {
 		return
 	}
-	output.RunningWorkers, err = listing.RunningWorkers()
+	output.RunningWorkers, output.AliveWorkers, err = listing.RunningWorkers()
 	if err != nil {
 		return
 	}
