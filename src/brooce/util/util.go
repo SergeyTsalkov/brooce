@@ -49,7 +49,7 @@ func IsDir(path string) bool {
 }
 
 func ProcessExists(pid int) bool {
-	_, err := os.FindProcess(int(pid))
+	_, err := os.FindProcess(pid)
 	if err != nil {
 		return false
 	}
