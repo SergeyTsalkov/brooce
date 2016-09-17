@@ -29,13 +29,12 @@ type HeartbeatType struct {
 	IP       string         `json:"ip"`
 	PID      int            `json:"pid"`
 	Queues   map[string]int `json:"queues"`
-	TS       int32          `json:"timestamp"`
+	TS       int64          `json:"timestamp"`
 }
 
 type HeartbeatTemplateType struct {
 	*HeartbeatType
 	StatusColor    string   `json:"status_color"`
-	PrettyTS       string   `json:"pretty_timestamp"`
 }
 
 func (hb *HeartbeatType) TotalThreads() (total int) {
@@ -55,7 +54,7 @@ func makeHeartbeat() string {
 		IP:       myip.PublicIPv4(),
 		PID:      os.Getpid(),
 		Queues:   config.Config.Queues,
-		TS:       int32(time.Now().Unix()),
+		TS:       time.Now().Unix(),
 	}
 
 	var err error
@@ -124,7 +123,7 @@ func auditHeartbeats() {
 	}
 
 	for key, str := range heartbeats {
-		worker := &HeartbeatType{}
+		worker := &HeartbeatTemplateType{}
 		err = json.Unmarshal([]byte(str.Val()), worker)
 		if err != nil {
 			return
@@ -135,14 +134,33 @@ func auditHeartbeats() {
 		}
 
 		if !util.ProcessExists(worker.PID) {
-			//log.Printf("Purging dead worker, was PID %v", worker.PID)
+			log.Printf("Purging dead worker, was PID %v", worker.PID)
 			err = redisClient.Del(key).Err()
 			if err != nil {
 				return
 			}
-		} else {
+		} else if IsAlive(worker) == 1 {
 			log.Println("Warning: Running multiple instances of brooce on the same machine is not recommended. Use threads in one instance instead!")
 		}
 
+	}
+}
+
+func IsAlive(worker *HeartbeatTemplateType) int {
+	workerTS := time.Unix(worker.TS, 0)
+	currentTS := time.Now().Unix()
+
+	if currentTS > workerTS.Add(AssumeDeadAfter).Unix() {
+		worker.StatusColor = "red"
+		return -1
+	} else if currentTS < workerTS.Add(AssumeDeadAfter).Unix() && currentTS > workerTS.Add(HeartbeatEvery).Unix() {
+		worker.StatusColor = "yellow"
+		return 0
+	} else if currentTS <= workerTS.Add(HeartbeatEvery).Unix() {
+		worker.StatusColor = "green"
+		return 1
+	} else {
+		worker.StatusColor = "grey"
+		return -11
 	}
 }

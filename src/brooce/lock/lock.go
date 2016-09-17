@@ -54,7 +54,11 @@ func ReleaseLocks(locks []string) (err error) {
 
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
 		for _, lock := range locks {
-			pipe.LRem(lockRedisKey(lock), 1, actor)
+			_, err := pipe.LRem(lockRedisKey(lock), 1, actor).Result()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 		}
 		return nil
 	})

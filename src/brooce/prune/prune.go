@@ -10,7 +10,9 @@ import (
 	myredis "brooce/redis"
 	"brooce/heartbeat"
 	"encoding/json"
-	"brooce/listing"
+	tasklib "brooce/task"
+
+	"brooce/lock"
 )
 
 var redisHeader = config.Config.ClusterName
@@ -33,7 +35,7 @@ func prunejobs() {
 }
 
 func pruneProc(procName string) {
-	results, err := redisClient.Keys(redisHeader + ":queue:*:working:" + procName + "-*").Result()
+	results, err := redisClient.Keys(redisHeader + ":queue:*:working:" + procName).Result()
 	if err != nil {
 		return
 	}
@@ -48,7 +50,13 @@ func pruneProc(procName string) {
 		failedList := strings.Join([]string{redisHeader, "queue", queue, "failed"}, ":")
 		log.Println("Pruning dead working queue", result, "to", failedList)
 
-		redisClient.RPopLPush(result, failedList)
+		taskStr, err := redisClient.RPopLPush(result, failedList).Result()
+		task, err := tasklib.NewFromJson(taskStr)
+		if err != nil {
+			log.Println("Failed to decode task:", err)
+		} else {
+			lock.ReleaseLocks(task.Locks)
+		}
 	}
 }
 
@@ -72,9 +80,7 @@ func beatingProcs() ([]string, error) {
 			return nil, err
 		}
 
-		workerTS := time.Unix(int64(worker.TS), 0)
-
-		if listing.IsAlive(workerTS) == -1 {
+		if heartbeat.IsAlive(worker) != -1 {
 			livingProcs = append(livingProcs, livingProc)
 		}
 	}
@@ -106,14 +112,29 @@ outer:
 			workingProc = strings.Join(workingProcParts[0:2], "-")
 		}
 
-		//dedup
-		for _, alreadyListed := range workingProcs {
-			if alreadyListed == workingProc {
-				continue outer
-			}
+		workingProcTaskList, err := myredis.Get().LRange(result, 0, -1).Result()
+		if err != nil {
+			log.Println(err)
+			return workingProcs
 		}
 
-		workingProcs = append(workingProcs, workingProc)
+		for _, str := range workingProcTaskList {
+			worker := &heartbeat.HeartbeatTemplateType{}
+			err = json.Unmarshal([]byte(str), worker)
+			if err != nil {
+				log.Println(err)
+				return workingProcs
+			}
+
+			//dedup
+			for _, alreadyListed := range workingProcs {
+				if alreadyListed == workingProc {
+					continue outer
+				}
+			}
+
+			workingProcs = append(workingProcs, workingProc)
+		}
 	}
 
 	return workingProcs

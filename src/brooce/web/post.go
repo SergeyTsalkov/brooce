@@ -116,7 +116,7 @@ func removeDeadHandler(req *http.Request, rep *httpReply) (err error) {
 			return
 		}
 
-		workerTS := time.Unix(int64(worker.TS), 0)
+		workerTS := time.Unix(worker.TS, 0)
 		currentTS := time.Now().Unix()
 
 		if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {

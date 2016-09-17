@@ -70,7 +70,7 @@ var mainPageTpl = `
                 {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
               {{ end }}
             </td>
-            <td><div style="float: right; width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{ $Worker.PrettyTS }}"></div></td>
+            <td><div style="float: right; width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{FormatTime $Worker.TS}}"></div></td>
           </tr>
         {{ end }}
         </tr>
