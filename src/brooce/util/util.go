@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"runtime"
 )
 
 func SleepUntilNextMinute() {
@@ -49,6 +50,11 @@ func IsDir(path string) bool {
 }
 
 func ProcessExists(pid int) bool {
+	// TODO: better corss-system process exists handling
+	if runtime.GOOS != "darwin" {
+		return FileExists(fmt.Sprintf("/proc/%v", pid))
+	}
+
 	_, err := os.FindProcess(pid)
 	if err != nil {
 		return false
