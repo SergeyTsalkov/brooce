@@ -49,7 +49,11 @@ func IsDir(path string) bool {
 }
 
 func ProcessExists(pid int) bool {
-	return FileExists(fmt.Sprintf("/proc/%v", pid))
+	_, err := os.FindProcess(int(pid))
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func HumanDuration(d time.Duration, fields int) string {
