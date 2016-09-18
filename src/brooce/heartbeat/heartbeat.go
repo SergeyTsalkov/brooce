@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
 	"time"
 
 	"brooce/config"
@@ -17,11 +16,11 @@ import (
 )
 
 var HeartbeatEvery = 30 * time.Second
-var AssumeDeadAfter = 95 * time.Second
-var removeDeadAfter = 7 * 24 * time.Hour
+var AssumeUnresponsiveAfter = time.Duration(config.Config.Workers.AssumeUnresponsiveAfter) * time.Second
+var AssumeDeadAfter = time.Duration(config.Config.Workers.AssumeDeadAfter) * time.Second
+var removeDeadAfter = time.Duration(config.Config.Workers.ExpireWorker) * 7 * 24 * time.Hour
 
 var redisClient = myredis.Get()
-var once sync.Once
 
 type HeartbeatType struct {
 	ProcName string         `json:"procname"`
@@ -150,13 +149,13 @@ func IsAlive(worker *HeartbeatTemplateType) int {
 	workerTS := time.Unix(worker.TS, 0)
 	currentTS := time.Now().Unix()
 
-	if currentTS > workerTS.Add(AssumeDeadAfter).Unix() {
+	if currentTS >= workerTS.Add(AssumeDeadAfter).Unix() {
 		worker.StatusColor = "red"
 		return -1
-	} else if currentTS < workerTS.Add(AssumeDeadAfter).Unix() && currentTS > workerTS.Add(HeartbeatEvery).Unix() {
+	} else if currentTS < workerTS.Add(AssumeDeadAfter).Unix() && currentTS >= workerTS.Add(AssumeUnresponsiveAfter).Unix() {
 		worker.StatusColor = "yellow"
 		return 0
-	} else if currentTS <= workerTS.Add(HeartbeatEvery).Unix() {
+	} else if currentTS < workerTS.Add(AssumeUnresponsiveAfter).Unix() {
 		worker.StatusColor = "green"
 		return 1
 	} else {
