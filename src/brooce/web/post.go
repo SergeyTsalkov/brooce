@@ -91,6 +91,12 @@ func deleteAllHandler(req *http.Request, rep *httpReply) (err error) {
 }
 
 func removeDeadHandler(req *http.Request, rep *httpReply) (err error) {
+	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	procName := ""
+	if len(path) == 2 {
+		procName = path[1]
+	}
+
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
 	if err != nil {
@@ -120,8 +126,10 @@ func removeDeadHandler(req *http.Request, rep *httpReply) (err error) {
 		currentTS := time.Now().Unix()
 
 		if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {
-			removeKey := fmt.Sprintf(str)
-			err = redisClient.Del(removeKey).Err()
+			if procName == "" || procName == worker.ProcName {
+				removeKey := fmt.Sprintf(str)
+				err = redisClient.Del(removeKey).Err()
+			}
 		}
 	}
 

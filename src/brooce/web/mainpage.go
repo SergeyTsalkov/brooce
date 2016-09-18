@@ -13,11 +13,12 @@ import (
 )
 
 type mainpageOutputType struct {
-	Queues         map[string]*listQueueType
-	RunningJobs    []*task.Task
-	RunningWorkers []*heartbeat.HeartbeatTemplateType
-	TotalThreads   int
-	AliveWorkers   int
+	Queues           map[string]*listQueueType
+	RunningJobs      []*task.Task
+	RunningWorkers   []*heartbeat.HeartbeatTemplateType
+	TotalThreads     int
+	AliveWorkers     int
+	DeadWorkerExists bool
 }
 
 func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
@@ -31,13 +32,17 @@ func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	if err != nil {
 		return
 	}
+	output.DeadWorkerExists = len(output.RunningWorkers) != output.AliveWorkers
+
 	output.Queues, err = listQueues(output.RunningWorkers)
 	if err != nil {
 		return
 	}
 
 	for _, worker := range output.RunningWorkers {
-		output.TotalThreads += worker.TotalThreads()
+		if worker.StatusColor != "red" {
+			output.TotalThreads += worker.TotalThreads()
+		}
 	}
 
 	err = templates.ExecuteTemplate(rep, "mainpage", output)
