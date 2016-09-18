@@ -52,6 +52,12 @@ type ConfigType struct {
 		DB       int    `json:"db"`
 	} `json:"redis"`
 
+	Workers struct {
+		AssumeUnresponsiveAfter int `json:"assume_unresponsive_after"`
+		AssumeDeadAfter         int `json:"assume_dead_after"`
+	        ExpireWorker            int `json:"expire_after"`
+	} `json:"workers"`
+
 	Suicide struct {
 		Enable  bool   `json:"enable"`
 		Command string `json:"command"`
@@ -147,6 +153,18 @@ func init_defaults() {
 
 	if Config.Redis.Host == "" {
 		Config.Redis.Host = "localhost"
+	}
+
+	if Config.Workers.AssumeUnresponsiveAfter == 0 {
+		Config.Workers.AssumeUnresponsiveAfter = 65
+	}
+
+	if Config.Workers.AssumeDeadAfter == 0 {
+		Config.Workers.AssumeDeadAfter = 95
+	}
+
+	if Config.Workers.ExpireWorker == 0 {
+		Config.Workers.ExpireWorker = 1
 	}
 
 	if !strings.Contains(Config.Redis.Host, ":") {

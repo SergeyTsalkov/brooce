@@ -31,6 +31,11 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
     "password": "",
     "db": 0
   },
+  "workers": {
+    "assume_unresponsive_after": 65,
+    "assume_dead_after": 95,
+    "expire_after": 1
+  },
   "suicide": {
     "enable": false,
     "command": "",
@@ -81,6 +86,12 @@ The hostname and password to access your redis server. Defaults to localhost and
 
 ### redis.db
 The db which will be used by brooce on your redis server. Defaults to 0.
+
+### workers.assume_unresponsive_after / workers.assume_dead_after
+Timeouts in seconds for yellow and red status lights on worker list. After `assume_dead_after` time without heartbeat worker gets status red and jobs that worker was working on are automatically marked as failed and any locks gets released. Defaults to 65 and 95.
+
+### workers.expire_after
+The time (in weeks) after which dead workers will be automatically removed from the worker list. Defaults to 1.
 
 ### suicide.enable / suicide.command / suicide.time
 For example, if you enabled suicide and set command to `"sudo shutdown -h now"` and time to `600`, you could shutdown your server after there haven't been any jobs for some time. Useful for shutting down idle EC2 instances. Keep in mind that the brooce program will need to have proper permissions to execute the given command, without additional prompts for passwords.

@@ -13,10 +13,12 @@ import (
 )
 
 type mainpageOutputType struct {
-	Queues         map[string]*listQueueType
-	RunningJobs    []*task.Task
-	RunningWorkers []*heartbeat.HeartbeatType
-	TotalThreads   int
+	Queues           map[string]*listQueueType
+	RunningJobs      []*task.Task
+	RunningWorkers   []*heartbeat.HeartbeatTemplateType
+	TotalThreads     int
+	AliveWorkers     int
+	DeadWorkerExists bool
 }
 
 func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
@@ -26,17 +28,21 @@ func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	if err != nil {
 		return
 	}
-	output.RunningWorkers, err = listing.RunningWorkers()
+	output.RunningWorkers, output.AliveWorkers, err = listing.RunningWorkers()
 	if err != nil {
 		return
 	}
+	output.DeadWorkerExists = len(output.RunningWorkers) != output.AliveWorkers
+
 	output.Queues, err = listQueues(output.RunningWorkers)
 	if err != nil {
 		return
 	}
 
 	for _, worker := range output.RunningWorkers {
-		output.TotalThreads += worker.TotalThreads()
+		if worker.StatusColor != "red" {
+			output.TotalThreads += worker.TotalThreads()
+		}
 	}
 
 	err = templates.ExecuteTemplate(rep, "mainpage", output)
@@ -57,7 +63,7 @@ type listQueueType struct {
 	delayedResult *redis.IntCmd
 }
 
-func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*listQueueType, err error) {
+func listQueues(runningWorkers []*heartbeat.HeartbeatTemplateType) (list map[string]*listQueueType, err error) {
 	list = map[string]*listQueueType{}
 	var results []string
 	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()

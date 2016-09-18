@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
 	"time"
 
 	"brooce/config"
@@ -16,12 +15,12 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
-var heartbeatEvery = 30 * time.Second
-var assumeDeadAfter = 95 * time.Second
+var HeartbeatEvery = 30 * time.Second
+var AssumeUnresponsiveAfter = time.Duration(config.Config.Workers.AssumeUnresponsiveAfter) * time.Second
+var AssumeDeadAfter = time.Duration(config.Config.Workers.AssumeDeadAfter) * time.Second
+var removeDeadAfter = time.Duration(config.Config.Workers.ExpireWorker) * 7 * 24 * time.Hour
 
 var redisClient = myredis.Get()
-var heartbeatStr = makeHeartbeat()
-var once sync.Once
 
 type HeartbeatType struct {
 	ProcName string         `json:"procname"`
@@ -29,6 +28,12 @@ type HeartbeatType struct {
 	IP       string         `json:"ip"`
 	PID      int            `json:"pid"`
 	Queues   map[string]int `json:"queues"`
+	TS       int64          `json:"timestamp"`
+}
+
+type HeartbeatTemplateType struct {
+	*HeartbeatType
+	StatusColor    string   `json:"status_color"`
 }
 
 func (hb *HeartbeatType) TotalThreads() (total int) {
@@ -48,6 +53,7 @@ func makeHeartbeat() string {
 		IP:       myip.PublicIPv4(),
 		PID:      os.Getpid(),
 		Queues:   config.Config.Queues,
+		TS:       time.Now().Unix(),
 	}
 
 	var err error
@@ -71,7 +77,7 @@ func Start() {
 
 	go func() {
 		for {
-			time.Sleep(heartbeatEvery)
+			time.Sleep(HeartbeatEvery)
 			heartbeat()
 			auditHeartbeats()
 		}
@@ -79,8 +85,9 @@ func Start() {
 }
 
 func heartbeat() {
+	heartbeatStr := makeHeartbeat()
 	key := fmt.Sprintf("%s:workerprocs:%s", config.Config.ClusterName, config.Config.ProcName)
-	err := redisClient.Set(key, heartbeatStr, assumeDeadAfter).Err()
+	err := redisClient.Set(key, heartbeatStr, removeDeadAfter).Err()
 	if err != nil {
 		log.Println("redis heartbeat error:", err)
 	}
@@ -115,7 +122,7 @@ func auditHeartbeats() {
 	}
 
 	for key, str := range heartbeats {
-		worker := &HeartbeatType{}
+		worker := &HeartbeatTemplateType{}
 		err = json.Unmarshal([]byte(str.Val()), worker)
 		if err != nil {
 			return
@@ -126,14 +133,33 @@ func auditHeartbeats() {
 		}
 
 		if !util.ProcessExists(worker.PID) {
-			//log.Printf("Purging dead worker, was PID %v", worker.PID)
+			log.Printf("Purging dead worker, was PID %v", worker.PID)
 			err = redisClient.Del(key).Err()
 			if err != nil {
 				return
 			}
-		} else {
+		} else if IsAlive(worker) == 1 {
 			log.Println("Warning: Running multiple instances of brooce on the same machine is not recommended. Use threads in one instance instead!")
 		}
 
+	}
+}
+
+func IsAlive(worker *HeartbeatTemplateType) int {
+	workerTS := time.Unix(worker.TS, 0)
+	currentTS := time.Now().Unix()
+
+	if currentTS >= workerTS.Add(AssumeDeadAfter).Unix() {
+		worker.StatusColor = "red"
+		return -1
+	} else if currentTS < workerTS.Add(AssumeDeadAfter).Unix() && currentTS >= workerTS.Add(AssumeUnresponsiveAfter).Unix() {
+		worker.StatusColor = "yellow"
+		return 0
+	} else if currentTS < workerTS.Add(AssumeUnresponsiveAfter).Unix() {
+		worker.StatusColor = "green"
+		return 1
+	} else {
+		worker.StatusColor = "grey"
+		return -11
 	}
 }

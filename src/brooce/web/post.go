@@ -6,6 +6,10 @@ import (
 	"strings"
 
 	myredis "brooce/redis"
+	"gopkg.in/redis.v3"
+	"encoding/json"
+	"time"
+	"brooce/heartbeat"
 )
 
 func retryHandler(req *http.Request, rep *httpReply) (err error) {
@@ -83,5 +87,51 @@ func deleteAllHandler(req *http.Request, rep *httpReply) (err error) {
 
 	removeKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, queueName, listType)
 	err = redisClient.Del(removeKey).Err()
+	return
+}
+
+func removeDeadHandler(req *http.Request, rep *httpReply) (err error) {
+	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	procName := ""
+	if len(path) == 2 {
+		procName = path[1]
+	}
+
+	var keys []string
+	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
+	if err != nil {
+		return
+	}
+
+	var heartbeatStrs []*redis.StringCmd
+	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		for _, key := range keys {
+			result := pipe.Get(key)
+			heartbeatStrs = append(heartbeatStrs, result)
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	for i, str := range keys {
+		worker := &heartbeat.HeartbeatTemplateType{}
+		err = json.Unmarshal([]byte(heartbeatStrs[i].Val()), worker)
+		if err != nil {
+			return
+		}
+
+		workerTS := time.Unix(worker.TS, 0)
+		currentTS := time.Now().Unix()
+
+		if currentTS > workerTS.Add(heartbeat.AssumeDeadAfter).Unix() {
+			if procName == "" || procName == worker.ProcName {
+				removeKey := fmt.Sprintf(str)
+				err = redisClient.Del(removeKey).Err()
+			}
+		}
+	}
+
 	return
 }

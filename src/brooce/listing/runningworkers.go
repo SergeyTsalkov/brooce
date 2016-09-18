@@ -8,7 +8,7 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
-func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
+func RunningWorkers() (workers []*heartbeat.HeartbeatTemplateType, aliveWorkers int, err error) {
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
 	if err != nil {
@@ -28,12 +28,15 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
 	}
 
 	for _, str := range heartbeatStrs {
-		worker := &heartbeat.HeartbeatType{}
+		worker := &heartbeat.HeartbeatTemplateType{}
 		err = json.Unmarshal([]byte(str.Val()), worker)
 		if err != nil {
 			return
 		}
 
+		if heartbeat.IsAlive(worker) == 1 {
+			aliveWorkers = aliveWorkers + 1
+		}
 		workers = append(workers, worker)
 	}
 

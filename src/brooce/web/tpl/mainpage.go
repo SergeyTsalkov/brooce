@@ -37,7 +37,7 @@ var mainPageTpl = `
 
 <div class="row">
   <div class="col-md-12">
-    <h3>{{ len .RunningWorkers }} Workers Alive</h3>
+    <h3>{{ .AliveWorkers }} of {{ len .RunningWorkers }} Workers Alive</h3>
     <table class="table">
       <thead>
         <tr>
@@ -46,6 +46,17 @@ var mainPageTpl = `
           <th>Machine IP</th>
           <th>Process ID</th>
           <th>Queues</th>
+          <th class="buttons">
+            {{ if .DeadWorkerExists }}
+	    <form action="" method="post">
+	      <input type="hidden" name="csrf" value="{{CSRF}}">
+	      <button type="submit" formaction="/removedead/" class="btn btn-danger btn-sm">
+	        <span class="glyphicon glyphicon-trash"></span>
+	        Remove Dead
+	      </button>
+	    </form>
+	    {{ end }}
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -59,6 +70,17 @@ var mainPageTpl = `
             <td>
               {{ range $QueueName, $QueueCt := $Worker.Queues }}
                 {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
+              {{ end }}
+            </td>
+            <td><div style="float: right; width: 20px; height: 20px; border-radius: 50%; background-color: {{ $Worker.StatusColor }};" title="Last seen: {{FormatTime $Worker.TS}}"></div></td>
+            <td>
+	      {{ if eq $Worker.StatusColor "red" }}
+	        <form action="" method="post">
+                <input type="hidden" name="csrf" value="{{CSRF}}">
+	        <button type="submit" formaction="/removedead/{{ $Worker.ProcName }}" class="btn btn-danger btn-xs">
+                  <span class="glyphicon glyphicon-remove"></span>Remove
+                </button>
+                </form>
               {{ end }}
             </td>
           </tr>
