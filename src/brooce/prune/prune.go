@@ -6,122 +6,65 @@ import (
 	"strings"
 	"time"
 
-	"brooce/config"
+	"brooce/heartbeat"
+	"brooce/listing"
 	myredis "brooce/redis"
+	"brooce/task"
 )
-
-var redisHeader = config.Config.ClusterName
-var heartbeatKey = redisHeader + ":workerprocs"
-var redisClient = myredis.Get()
 
 func Start() {
 	go func() {
 		for {
-			prunejobs()
+			err := prunejobs()
+			if err != nil {
+				log.Println("Error while pruning jobs:", err)
+			}
+
 			time.Sleep(time.Minute)
 		}
 	}()
 }
 
-func prunejobs() {
-	for _, proc := range deadProcs() {
-		pruneProc(proc)
-	}
-}
-
-func pruneProc(procName string) {
-	results, err := redisClient.Keys(redisHeader + ":queue:*:working:" + procName + "-*").Result()
+func prunejobs() error {
+	workers, err := listing.RunningWorkers()
 	if err != nil {
-		return
+		return err
 	}
 
-	for _, result := range results {
-		parts := strings.Split(result, ":")
-		if len(parts) < 5 {
-			continue
-		}
-
-		queue := parts[2]
-		failedList := strings.Join([]string{redisHeader, "queue", queue, "failed"}, ":")
-		log.Println("Pruning dead working queue", result, "to", failedList)
-
-		redisClient.RPopLPush(result, failedList)
-	}
-}
-
-func beatingProcs() ([]string, error) {
-	livingProcs := []string{}
-
-	results, err := redisClient.Keys(heartbeatKey + ":*").Result()
+	jobs, err := listing.RunningJobs()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	for _, result := range results {
-		var livingProc string
-		fmt.Sscanf(result, heartbeatKey+":%s", &livingProc)
+	for _, job := range jobs {
+		if !jobHasWorker(job, workers) {
+			deadList := job.RedisKey
 
-		livingProcs = append(livingProcs, livingProc)
-	}
+			parts := strings.SplitN(deadList, ":", 5)
+			if len(parts) < 5 {
+				log.Println("Weird working queue found:", deadList)
+				continue
+			}
 
-	if len(livingProcs) == 0 {
-		return nil, fmt.Errorf("Couldn't find any living processes!")
-	}
-	return livingProcs, nil
-}
+			failedList := fmt.Sprintf("%s:queue:%s:failed", parts[0], parts[2])
+			log.Println("Pruning dead working queue", deadList, "to", failedList)
 
-func workingProcs() []string {
-	workingProcs := []string{}
-
-	results, err := redisClient.Keys(redisHeader + ":queue:*:working:*").Result()
-	if err != nil {
-		return workingProcs
-	}
-
-outer:
-	for _, result := range results {
-		parts := strings.Split(result, ":")
-		if len(parts) < 5 {
-			continue
-		}
-
-		workingProc := parts[4]
-
-		if workingProcParts := strings.Split(workingProc, "-"); len(workingProcParts) == 3 {
-			workingProc = strings.Join(workingProcParts[0:2], "-")
-		}
-
-		//dedup
-		for _, alreadyListed := range workingProcs {
-			if alreadyListed == workingProc {
-				continue outer
+			err = myredis.FlushList(deadList, failedList)
+			if err != nil {
+				return err
 			}
 		}
-
-		workingProcs = append(workingProcs, workingProc)
 	}
 
-	return workingProcs
+	return nil
 }
 
-func deadProcs() []string {
-	deadProcs := []string{}
-
-	beatingProcs, err := beatingProcs()
-	if err != nil {
-		return deadProcs
-	}
-
-outer:
-	for _, working := range workingProcs() {
-		for _, beating := range beatingProcs {
-			if working == beating {
-				continue outer
-			}
+func jobHasWorker(job *task.Task, workers []*heartbeat.HeartbeatType) bool {
+	for _, worker := range workers {
+		if strings.HasPrefix(job.WorkerThreadName(), worker.ProcName+"-") {
+			return true
 		}
-
-		deadProcs = append(deadProcs, working)
 	}
 
-	return deadProcs
+	return false
 }
