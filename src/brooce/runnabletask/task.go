@@ -37,6 +37,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 	if task.Id == "" {
 		err = task.GenerateId()
 		if err != nil {
+			err = fmt.Errorf("Error in task.GenerateId: %v", err)
 			return
 		}
 	}
@@ -45,12 +46,14 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 	task.StartTime = starttime.Unix()
 	err = redisClient.LSet(task.RedisKey, 0, task.Json()).Err()
 	if err != nil {
+		err = fmt.Errorf("Error updating working key 0: %v", err)
 		return
 	}
 
 	var gotLock bool
 	gotLock, err = lock.GrabLocks(task.Locks)
 	if err != nil {
+		err = fmt.Errorf("Error grabbing locks: %v", err)
 		return
 	}
 	if !gotLock {
