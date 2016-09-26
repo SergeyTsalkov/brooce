@@ -67,7 +67,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 		finishtime := time.Now()
 		runtime := finishtime.Sub(starttime)
 
-		task.WriteLog(fmt.Sprintf("\n*** COMPLETED_AT:[%s] RUNTIME:[%s] EXITCODE:[%d] ERROR:[%v]\n",
+		task.WriteLog(fmt.Sprintf("*** COMPLETED_AT:[%s] RUNTIME:[%s] EXITCODE:[%d] ERROR:[%v]\n",
 			finishtime.Format(tsFormat),
 			runtime,
 			exitCode,
