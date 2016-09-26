@@ -173,5 +173,12 @@ func runner(queue string, ct int) {
 			return nil
 		})
 
+		// workingList should be empty by this point
+		// if it's not, something went wrong earlier
+		err = myredis.FlushList(workingList, failedList)
+		if err != nil {
+			log.Println("Error while flushing", workingList, "to", failedList, ":", err)
+		}
+
 	}
 }
