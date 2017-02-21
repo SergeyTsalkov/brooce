@@ -9,7 +9,7 @@ import (
 
 	"brooce/task"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 type joblistOutputType struct {

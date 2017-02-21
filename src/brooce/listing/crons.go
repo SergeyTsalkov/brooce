@@ -5,7 +5,7 @@ import (
 
 	"brooce/cron"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 func Crons() (map[string]*cron.CronType, error) {

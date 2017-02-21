@@ -13,7 +13,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/util"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 var heartbeatEvery = 30 * time.Second

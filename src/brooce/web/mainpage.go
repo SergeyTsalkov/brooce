@@ -9,7 +9,7 @@ import (
 	"brooce/listing"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 type mainpageOutputType struct {

@@ -4,25 +4,19 @@
 		{
 			"importpath": "github.com/kardianos/osext",
 			"repository": "https://github.com/kardianos/osext",
-			"revision": "c2c54e542fb797ad986b31721e1baedf214ca413",
+			"revision": "9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/sevlyar/go-daemon",
 			"repository": "https://github.com/sevlyar/go-daemon",
-			"revision": "01bb5caedcc4ad839213b4ff96c363f6fab40adb",
+			"revision": "8577c7ddef908e104dae56c9e46f0956cb33c844",
 			"branch": "master"
 		},
 		{
-			"importpath": "gopkg.in/bsm/ratelimit.v1",
-			"repository": "https://gopkg.in/bsm/ratelimit.v1",
-			"revision": "db14e161995a5177acef654cb0dd785e8ee8bc22",
-			"branch": "v1"
-		},
-		{
-			"importpath": "gopkg.in/redis.v3",
-			"repository": "https://gopkg.in/redis.v3",
-			"revision": "b5e368500d0a508ef8f16e9c2d4025a8a46bcc29",
+			"importpath": "gopkg.in/redis.v5",
+			"repository": "https://gopkg.in/redis.v5",
+			"revision": "135cb12c7689ffe92338baf677a1e0d2086144dc",
 			"branch": "master"
 		}
 	]

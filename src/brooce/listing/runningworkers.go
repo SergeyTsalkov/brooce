@@ -5,7 +5,7 @@ import (
 
 	"brooce/heartbeat"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {

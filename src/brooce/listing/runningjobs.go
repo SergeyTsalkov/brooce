@@ -6,7 +6,7 @@ import (
 	"brooce/task"
 	"fmt"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 var redisClient = myredis.Get()

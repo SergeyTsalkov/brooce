@@ -7,7 +7,7 @@ import (
 
 	"brooce/config"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 var redisClient *redis.Client
@@ -25,7 +25,7 @@ func Get() *redis.Client {
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 5 * time.Second,
 			PoolTimeout:  1 * time.Second,
-			DB:           int64(config.Config.Redis.DB),
+			DB:           config.Config.Redis.DB,
 		})
 
 		for {

@@ -9,7 +9,7 @@ import (
 
 	"brooce/config"
 
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 func (task *RunnableTask) WriteLog(str string) {

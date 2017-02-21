@@ -22,7 +22,7 @@ import (
 	"brooce/web"
 
 	daemon "github.com/sevlyar/go-daemon"
-	redis "gopkg.in/redis.v3"
+	redis "gopkg.in/redis.v5"
 )
 
 var redisClient = myredis.Get()
