@@ -61,7 +61,7 @@ func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*lis
 	list = map[string]*listQueueType{}
 	var results []string
 	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()
-	if err != nil {
+	if err != nil || len(results) == 0 {
 		return
 	}
 

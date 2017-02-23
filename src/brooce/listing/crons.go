@@ -26,7 +26,7 @@ func crons(disabled bool) (crons map[string]*cron.CronType, err error) {
 	}
 
 	keys, err = redisClient.Keys(cronKeyPrefix + "*").Result()
-	if err != nil {
+	if err != nil || len(keys) == 0 {
 		return
 	}
 

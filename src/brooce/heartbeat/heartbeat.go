@@ -98,7 +98,7 @@ func auditHeartbeats() {
 	keyMatch := fmt.Sprintf("%s:workerprocs:%v-*", config.Config.ClusterName, myip.PublicIPv4())
 	var keys []string
 	keys, err = redisClient.Keys(keyMatch).Result()
-	if err != nil {
+	if err != nil || len(keys) == 0 {
 		return
 	}
 

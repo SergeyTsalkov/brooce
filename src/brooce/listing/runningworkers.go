@@ -11,7 +11,7 @@ import (
 func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
-	if err != nil {
+	if err != nil || len(keys) == 0 {
 		return
 	}
 

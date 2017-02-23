@@ -89,6 +89,11 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 
 	rangeLength := len(rangeResult.Val())
 	output.Jobs = make([]*task.Task, rangeLength)
+
+	if len(output.Jobs) == 0 {
+		return
+	}
+
 	for i, value := range rangeResult.Val() {
 		job, err := task.NewFromJson(value)
 		if err != nil {

@@ -17,7 +17,7 @@ func RunningJobs() (jobs []*task.Task, err error) {
 
 	var keys []string
 	keys, err = redisClient.Keys(redisHeader + ":queue:*:working:*").Result()
-	if err != nil {
+	if err != nil || len(keys) == 0 {
 		return
 	}
 
