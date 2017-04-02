@@ -137,6 +137,10 @@ func cleanupAll() (err error) {
 		delete(actors, parts[2])
 	}
 
+	if len(actors) == 0 {
+		return
+	}
+
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
 		for actor, _ := range actors {
 			for _, key := range lockKeys {
