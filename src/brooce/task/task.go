@@ -15,6 +15,7 @@ type Task struct {
 	Command  string   `json:"command"`
 	Timeout  int64    `json:"timeout,omitempty"`
 	MaxTries int      `json:"max_tries"`
+	Tried    int      `json:"tried"`
 	Locks    []string `json:"locks,omitempty"`
 
 	Cron      string `json:"cron,omitempty"`

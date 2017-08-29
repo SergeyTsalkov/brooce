@@ -158,6 +158,12 @@ func runner(queue string, ct int) {
 				}
 
 			case "failed":
+				// log.Printf("Failed and try %d/%d", task.Tried, task.MaxTries)
+				if task.MaxTries > task.Tried {
+					log.Printf("Failed attempt %d of %d; re-queuing!", task.Tried, task.MaxTries)
+					pipe.LPush(delayedList, task.Json())
+				}
+
 				if !config.Config.JobResults.DropFailed {
 					pipe.LPush(failedList, task.Json())
 				}
