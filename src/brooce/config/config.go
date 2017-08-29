@@ -171,8 +171,6 @@ func init_defaults() {
 	}
 
 	if Config.Queues == nil {
-		// Config.Queues = map[string]int{"common": 1}
-		// Config.Queues = make([]Queue, 1)
 		Config.Queues = []Queue{
 			Queue{
 				Name:    "common",

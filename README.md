@@ -59,13 +59,21 @@ Type `http://<yourIP>:8080` into your browser and you should see the brooce web 
 
 ### What about running jobs in parallel?
 Go back to your first terminal window and hit Ctrl+C to kill brooce. Open up its config file, `~/.brooce/brooce.conf`. We have a [whole separate page](CONFIG.md) about all the various options, but for now, let's add another queue with 5 threads. Change the "queues" section to look like this:
+
 ```json
 {
-  "queues": {
-    "common": 1,
-    "parallel": 5
-  }
+  "queues": [
+    {
+      "name": "common",
+      "workers": 1
+    },
+    {
+      "name": "parallel",
+      "workers": 5
+    }
+  ]
 }
+
 ```
 
 Now save and re-launch brooce, and in a separate shell window, run a bunch of slow commands in our new parallel queue:
