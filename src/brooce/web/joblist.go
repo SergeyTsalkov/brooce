@@ -96,7 +96,8 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	}
 
 	for i, value := range rangeResult.Val() {
-		job, err := task.NewFromJson(value, config.JobOptions{})
+		opts := config.Config.LocalOptionsForQueue(output.QueueName)
+		job, err := task.NewFromJson(value, opts)
 		if err != nil {
 			continue
 		}
