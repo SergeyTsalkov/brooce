@@ -185,6 +185,10 @@ func init_defaults() {
 		Config.GlobalJobOptions.Timeout = 3600
 	}
 
+	if Config.GlobalJobOptions.MaxTries == 0 {
+		Config.GlobalJobOptions.MaxTries = 1
+	}
+
 	if Config.Redis.Host == "" {
 		Config.Redis.Host = "localhost"
 	}

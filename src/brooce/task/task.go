@@ -33,19 +33,17 @@ func NewFromJson(str string, defaultOpts config.JobOptions) (*Task, error) {
 	}()
 
 	err := json.Unmarshal([]byte(str), task)
-	if err == nil {
-		return task, nil
-	}
+	if err != nil {
+		// we have a non-JSON (plain-string) command.
+		if words := strings.Fields(str); len(words) == 0 {
+			return task, fmt.Errorf("Invalid task: %s", str)
+		}
 
-	if words := strings.Fields(str); len(words) == 0 {
-		return task, fmt.Errorf("Invalid task: %s", str)
+		task.Command = str
 	}
-
-	task.Command = str
 
 	if task.Timeout == 0 {
 		task.Timeout = int64(defaultOpts.Timeout)
-		// task.Timeout = config.Config.GlobalJobOptions.Timeout
 	}
 
 	if task.MaxTries == 0 {
