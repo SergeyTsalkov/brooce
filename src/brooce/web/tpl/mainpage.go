@@ -57,8 +57,8 @@ var mainPageTpl = `
             <td>{{ $Worker.IP }}</td>
             <td>{{ $Worker.PID }}</td>
             <td>
-              {{ range $QueueName, $QueueCt := $Worker.Queues }}
-                {{ $QueueCt }}x<tt>{{ $QueueName }}</tt>
+              {{ range $j, $Queue := $Worker.Queues }}
+                {{ $Queue.Workers }}x<tt>{{ $Queue.Name }}</tt>
               {{ end }}
             </td>
           </tr>
