@@ -75,8 +75,8 @@ func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*lis
 	}
 
 	for _, worker := range runningWorkers {
-		for queueName, _ := range worker.Queues {
-			list[queueName] = &listQueueType{QueueName: queueName}
+		for _, queue := range worker.Queues {
+			list[queue.Name] = &listQueueType{QueueName: queue.Name}
 		}
 	}
 

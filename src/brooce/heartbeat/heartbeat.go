@@ -28,7 +28,7 @@ type HeartbeatType struct {
 	Hostname string         `json:"hostname"`
 	IP       string         `json:"ip"`
 	PID      int            `json:"pid"`
-	Queues   map[string]int `json:"queues"`
+	Queues   []config.Queue `json:"queues"`
 }
 
 func (hb *HeartbeatType) TotalThreads() (total int) {
@@ -36,8 +36,8 @@ func (hb *HeartbeatType) TotalThreads() (total int) {
 		return
 	}
 
-	for _, ct := range hb.Queues {
-		total += ct
+	for _, q := range hb.Queues {
+		total += q.Workers
 	}
 	return
 }

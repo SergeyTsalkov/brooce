@@ -33,7 +33,7 @@ func RunningJobs() (jobs []*task.Task, err error) {
 	}
 
 	for i, value := range values {
-		job, err := task.NewFromJson(value.Val())
+		job, err := task.NewFromJson(value.Val(), config.JobOptions{})
 		if err != nil {
 			continue
 		}

@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
+
+	"brooce/config"
 )
 
 type Task struct {
-	Id      string   `json:"id,omitempty"`
-	Command string   `json:"command"`
-	Timeout int64    `json:"timeout,omitempty"`
-	Locks   []string `json:"locks,omitempty"`
+	Id       string   `json:"id,omitempty"`
+	Command  string   `json:"command"`
+	Timeout  int64    `json:"timeout,omitempty"`
+	MaxTries int      `json:"max_tries"`
+	Locks    []string `json:"locks,omitempty"`
 
 	Cron      string `json:"cron,omitempty"`
 	StartTime int64  `json:"start_time,omitempty"`
@@ -22,7 +26,7 @@ type Task struct {
 	HasLog   bool   `json:"-"`
 }
 
-func NewFromJson(str string) (*Task, error) {
+func NewFromJson(str string, defaultOpts config.JobOptions) (*Task, error) {
 	task := &Task{}
 	defer func() {
 		task.Raw = str
@@ -38,7 +42,21 @@ func NewFromJson(str string) (*Task, error) {
 	}
 
 	task.Command = str
+
+	if task.Timeout == 0 {
+		task.Timeout = int64(defaultOpts.Timeout)
+		// task.Timeout = config.Config.GlobalJobOptions.Timeout
+	}
+
+	if task.MaxTries == 0 {
+		task.MaxTries = defaultOpts.MaxTries
+	}
+
 	return task, nil
+}
+
+func (task *Task) TimeoutSeconds() time.Duration {
+	return time.Duration(task.Timeout) * time.Second
 }
 
 func (task *Task) Json() string {

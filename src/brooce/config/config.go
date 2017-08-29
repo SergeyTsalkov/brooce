@@ -11,15 +11,30 @@ import (
 
 	"brooce/myip"
 	"brooce/util"
+
+	"github.com/imdario/mergo"
 )
 
 var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
+
+type JobOptions struct {
+	Timeout  int      `json:"timeout,omitempty"`
+	MaxTries int      `json:"max_tries,omitempty"`
+	Locks    []string `json:"locks,omitempty"`
+}
+
+type Queue struct {
+	Name       string `json:"name"`
+	Workers    int    `json:"workers"`
+	JobOptions `json:"job_options"`
+}
 
 type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
 	ProcName    string `json:"-"`
 
-	Timeout int `json:"timeout"`
+	// Timeout int `json:"timeout"`
+	GlobalJobOptions JobOptions `json:"global_job_options"`
 
 	Web struct {
 		Addr     string `json:"addr"`
@@ -58,21 +73,39 @@ type ConfigType struct {
 		Time    int    `json:"time"`
 	} `json:"suicide"`
 
-	Queues map[string]int `json:"queues"`
-	Path   string         `json:"path"`
+	Queues []Queue `json:"queues"`
+
+	Path string `json:"path"`
 }
 
 var Config = ConfigType{}
 
 func (c *ConfigType) TotalThreads() (threads int) {
-	for _, ct := range Config.Queues {
-		threads += ct
+	for _, queue := range Config.Queues {
+		threads += queue.Workers
 	}
 	return
 }
 
 func (c *ConfigType) CSRF() string {
 	return util.Md5sum(c.Web.Username + ":" + c.Web.Password)
+}
+
+func (c *ConfigType) LocalOptionsForQueue(queue string) (opts JobOptions) {
+
+	// find our queue
+	for _, q := range c.Queues {
+		if q.Name == queue {
+			opts = q.JobOptions
+		}
+	}
+
+	// destination (first-arg) wins conflicts;
+	if err := mergo.Merge(&opts, c.GlobalJobOptions); err != nil {
+		panic(fmt.Sprintf("wtf getting options! %+v", err))
+	}
+
+	return opts
 }
 
 func init() {
@@ -91,7 +124,7 @@ func init() {
 	} else {
 		err = json.Unmarshal(bytes, &Config)
 		if err != nil {
-			log.Fatalln("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file!")
+			log.Fatalln(fmt.Sprintf("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file! %s", err))
 		}
 	}
 
@@ -138,11 +171,18 @@ func init_defaults() {
 	}
 
 	if Config.Queues == nil {
-		Config.Queues = map[string]int{"common": 1}
+		// Config.Queues = map[string]int{"common": 1}
+		// Config.Queues = make([]Queue, 1)
+		Config.Queues = []Queue{
+			Queue{
+				Name:    "common",
+				Workers: 1,
+			},
+		}
 	}
 
-	if Config.Timeout == 0 {
-		Config.Timeout = 3600
+	if Config.GlobalJobOptions.Timeout == 0 {
+		Config.GlobalJobOptions.Timeout = 3600
 	}
 
 	if Config.Redis.Host == "" {

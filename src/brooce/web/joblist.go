@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"brooce/config"
 	"brooce/task"
 
 	redis "gopkg.in/redis.v5"
@@ -95,7 +96,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	}
 
 	for i, value := range rangeResult.Val() {
-		job, err := task.NewFromJson(value)
+		job, err := task.NewFromJson(value, config.JobOptions{})
 		if err != nil {
 			continue
 		}

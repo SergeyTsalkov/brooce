@@ -70,12 +70,12 @@ func main() {
 
 	strQueueList := []string{}
 
-	for queue, ct := range config.Config.Queues {
-		for i := 0; i < ct; i++ {
-			go runner(queue, i)
+	for _, q := range config.Config.Queues {
+		for i := 0; i < q.Workers; i++ {
+			go runner(q.Name, i)
 		}
 
-		strQueueList = append(strQueueList, fmt.Sprintf("%v (x%v)", queue, ct))
+		strQueueList = append(strQueueList, fmt.Sprintf("%v (x%v)", q.Name, q.Workers))
 	}
 
 	if len(config.Config.Queues) > 0 {
@@ -117,7 +117,7 @@ func runner(queue string, ct int) {
 		}
 
 		var exitCode int
-		task, err := tasklib.NewFromJson(taskStr)
+		task, err := tasklib.NewFromJson(taskStr, config.Config.LocalOptionsForQueue(queue))
 		if err != nil {
 			log.Println("Failed to decode task:", err)
 		} else {
