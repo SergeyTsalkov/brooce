@@ -47,6 +47,7 @@ var jobListTpl = `
             <td class="params">
               <ul>
                 {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}
+                {{ if gt .MaxTries 1 }} <li>Max Tries: {{ .MaxTries }} {{ end }}
                 {{ if .Cron }} <li>Cron: {{ .Cron }} {{ end }}
                 {{ if .Locks }} <li>Locks: {{ Join .Locks ", " }} {{ end }}
               </ul>

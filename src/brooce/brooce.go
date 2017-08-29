@@ -162,14 +162,14 @@ func runner(queue string, ct int) {
 				if task.MaxTries > task.Tried {
 					log.Printf("Failed attempt %d of %d; re-queuing!", task.Tried, task.MaxTries)
 					pipe.LPush(delayedList, task.Json())
-				}
+				} else {
+					if !config.Config.JobResults.DropFailed {
+						pipe.LPush(failedList, task.Json())
+					}
 
-				if !config.Config.JobResults.DropFailed {
-					pipe.LPush(failedList, task.Json())
-				}
-
-				if config.Config.RedisOutputLog.DropFailed {
-					pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
+					if config.Config.RedisOutputLog.DropFailed {
+						pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
+					}
 				}
 			case "delayed":
 				pipe.LPush(delayedList, task.Json())
