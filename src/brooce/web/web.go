@@ -53,6 +53,8 @@ func Start() {
 	reqHandler.HandleFunc("/delayed/", makeHandler(joblistHandler, "GET"))
 	reqHandler.HandleFunc("/pending/", makeHandler(joblistHandler, "GET"))
 
+	reqHandler.HandleFunc("/search", makeHandler(searchHandler, "GET"))
+
 	reqHandler.HandleFunc("/retry/failed/", makeHandler(retryHandler, "POST"))
 	reqHandler.HandleFunc("/retry/done/", makeHandler(retryHandler, "POST"))
 	reqHandler.HandleFunc("/retry/delayed/", makeHandler(retryHandler, "POST"))

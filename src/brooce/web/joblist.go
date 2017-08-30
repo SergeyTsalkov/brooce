@@ -2,8 +2,11 @@ package web
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -21,6 +24,9 @@ type joblistOutputType struct {
 	Length    int64
 	Start     int64
 	End       int64
+	Query     string
+
+	URL *url.URL
 
 	Jobs []*task.Task
 }
@@ -35,15 +41,13 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 	listType := path[0]
 	queueName := path[1]
 
-	page := 1
-	if pg, err := strconv.Atoi(req.URL.RawQuery); err == nil && pg > 1 {
-		page = pg
-	}
+	page := joblistQueryParams(req.URL.RawQuery)
 
 	output := &joblistOutputType{
 		QueueName: queueName,
 		ListType:  listType,
 		Page:      int64(page),
+		URL:       req.URL,
 	}
 	err = output.listJobs(listType == "pending")
 	if err != nil {
@@ -52,6 +56,32 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 
 	err = templates.ExecuteTemplate(rep, "joblist", output)
 	return
+}
+
+func joblistQueryParams(rq string) (page int) {
+	params, err := url.ParseQuery(rq)
+	if err != nil {
+		log.Printf("Malformed URL query: %s err: %s", rq, err)
+		return 1
+	}
+
+	page = 1
+	if pg, err := strconv.Atoi(params.Get("page")); err == nil && pg > 1 {
+		page = pg
+	}
+
+	return page
+}
+
+func (output *joblistOutputType) LinkParamsForPage(page int64) template.URL {
+	if output.URL == nil {
+		return template.URL("")
+	}
+
+	q := output.URL.Query()
+	q.Set("page", strconv.Itoa(int(page)))
+
+	return template.URL(q.Encode())
 }
 
 func (output *joblistOutputType) listJobs(reverse bool) (err error) {

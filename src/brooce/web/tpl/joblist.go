@@ -7,6 +7,21 @@ var jobListTpl = `
 <div class="row">
   <div class="col-md-12">
 
+    <div class='row'>
+      <div class='col-sm-3'>
+        <form class="form-search" method="get" action="/search">
+          <input type="hidden" name="queue" value="{{ .QueueName }}">
+          <input type="hidden" name="listType" value="{{ .ListType }}">
+          <div class="input-group">
+          <input name="q" type="text" class="form-control search-query" placeholder="Search by Command" value="{{ .Query }}">
+            <div class="input-group-btn">
+              <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <h3>{{ .ListType }} jobs for queue {{ .QueueName }}</h3>
     <table class="table table-hover">
       <thead>
@@ -91,7 +106,7 @@ var jobListTpl = `
           {{ if eq $.Page . }}
             {{ . }}
           {{ else }}
-            <a href="?{{ . }}">{{ . }}</a>
+            <a href="?{{ $.LinkParamsForPage .}}">{{ . }}</a>
           {{ end }}
         {{ end }}
       {{ end }}
