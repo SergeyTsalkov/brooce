@@ -2,3 +2,6 @@ vendor/src
 pkg/
 bin/
 src/brooce/test/
+
+# if you have a custom redis dump in repo
+dump.rdb
