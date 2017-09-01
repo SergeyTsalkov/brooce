@@ -71,7 +71,7 @@ func newPagedHits(hits []*task.Task, pageSize int, pageWanted int) *PagedHits {
 		start = maxStart
 	}
 
-	if maxEnd > totalHits {
+	if (maxEnd + 1) > totalHits {
 		end = totalHits
 	} else {
 		end = maxEnd + 1
