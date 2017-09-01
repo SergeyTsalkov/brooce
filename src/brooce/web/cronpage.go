@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"brooce/cron"
@@ -61,6 +62,26 @@ func enableCronHandler(req *http.Request, rep *httpReply) (err error) {
 		err = redisClient.Rename(srcKey, dstKey).Err()
 	}
 
+	return
+}
+
+func scheduleCronHandler(req *http.Request, rep *httpReply) (err error) {
+	if name := req.FormValue("item"); name != "" {
+		// log.Printf("GOT ITEM NAMED %+v", name)
+		keyPrefix := fmt.Sprintf("%s:cron:jobs", redisHeader)
+		val := redisClient.Get(fmt.Sprintf("%s:%s", keyPrefix, name)).Val()
+
+		job, err := cron.ParseCronLine(name, val)
+		if err != nil {
+			log.Printf("Error loading cron named %s with val: %s", name, val)
+			return err
+		}
+
+		// log.Printf("Can schedule cron %s on queue %s with command: %s", name, job.Queue, job.Task().Json())
+		// pendingList := strings.Join([]string{redisHeader, "queue", job.Queue, "pending"}, ":")
+		pendingList := fmt.Sprintf("%s:queue:%s:pending", redisHeader, job.Queue)
+		redisClient.LPush(pendingList, job.Task().Json())
+	}
 	return
 }
 

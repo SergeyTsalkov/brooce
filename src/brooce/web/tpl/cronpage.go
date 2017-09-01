@@ -25,6 +25,10 @@ var cronPageTpl = `
           Enable
         </button>
       {{ else }}
+        <button type="submit" formaction="/schedulecron" class="btn btn-success btn-xs">
+          <span class="glyphicon glyphicon-repeat"></span>
+          Enqueue Now
+        </button>      
         <button type="submit" formaction="/disablecron" class="btn btn-warning btn-xs">
           <span class="glyphicon glyphicon-remove"></span>
           Disable

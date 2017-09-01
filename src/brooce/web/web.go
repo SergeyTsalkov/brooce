@@ -79,6 +79,7 @@ func Start() {
 	reqHandler.HandleFunc("/deletecron", makeHandler(deleteCronHandler, "POST"))
 	reqHandler.HandleFunc("/disablecron", makeHandler(disableCronHandler, "POST"))
 	reqHandler.HandleFunc("/enablecron", makeHandler(enableCronHandler, "POST"))
+	reqHandler.HandleFunc("/schedulecron", makeHandler(scheduleCronHandler, "POST"))
 
 	go func() {
 		var err error
