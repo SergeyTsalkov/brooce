@@ -21,11 +21,10 @@ type CronType struct {
 	Month      string
 	DayOfWeek  string
 
-	Queue         string
-	Command       string
-	SkipIfRunning bool
-	Locks         []string
-	Disabled      bool
+	Queue    string
+	Command  string
+	Locks    []string
+	Disabled bool
 
 	Raw string
 }
@@ -63,8 +62,6 @@ func ParseCronLine(name, line string) (*CronType, error) {
 		switch strings.ToLower(key) {
 		case "queue":
 			cron.Queue = value
-		case "skipifrunning":
-			cron.SkipIfRunning = (value == "true" || value == "1")
 		case "locks":
 			cron.Locks = strings.Split(value, ",")
 		default:

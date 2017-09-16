@@ -113,18 +113,6 @@ func scheduleCronsForTimeRange(pipe *redis.Pipeline, start time.Time, end time.T
 	}
 
 	for cronName, cronJob := range toSchedule {
-
-		if cronJob.SkipIfRunning {
-			isRunning, err := CronIsRunning(cronJob)
-			if err != nil {
-				log.Println("redis error:", err)
-			}
-			if err != nil || isRunning {
-				log.Printf("Skipping already-running job %s", cronName)
-				continue
-			}
-		}
-
 		log.Printf("Scheduling job %s", cronName)
 
 		pendingList := strings.Join([]string{redisHeader, "queue", cronJob.Queue, "pending"}, ":")
