@@ -30,8 +30,6 @@ type RunnableTask struct {
 }
 
 func (task *RunnableTask) Run() (exitCode int, err error) {
-	task.Tried += 1
-
 	if len(task.Command) == 0 {
 		return
 	}
@@ -63,6 +61,8 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 		return
 	}
 	defer lock.ReleaseLocks(task.Locks)
+
+	task.Tried += 1
 
 	task.StartFlushingLog()
 	defer func() {
