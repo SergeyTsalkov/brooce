@@ -5,10 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
-	"runtime"
 )
 
 func SleepUntilNextMinute() {
@@ -29,7 +30,7 @@ func Md5sum(data interface{}) string {
 	case []byte:
 		hasher.Write(data)
 	default:
-		panic("Invalid type passed to md5sum()")
+		log.Fatalln("Invalid type passed to md5sum()")
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil))

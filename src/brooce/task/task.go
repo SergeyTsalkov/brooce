@@ -11,12 +11,13 @@ import (
 )
 
 type Task struct {
-	Id       string   `json:"id,omitempty"`
-	Command  string   `json:"command"`
-	Timeout  int64    `json:"timeout,omitempty"`
-	MaxTries int      `json:"max_tries"`
-	Tried    int      `json:"tried"`
-	Locks    []string `json:"locks,omitempty"`
+	Id          string   `json:"id,omitempty"`
+	Command     string   `json:"command"`
+	Timeout     int64    `json:"timeout,omitempty"`
+	MaxTries    int      `json:"max_tries"`
+	Tried       int      `json:"tried"`
+	Locks       []string `json:"locks,omitempty"`
+	KillOnDelay *bool    `json:"killondelay,omitempty"`
 
 	Cron      string `json:"cron,omitempty"`
 	StartTime int64  `json:"start_time,omitempty"`
@@ -51,10 +52,14 @@ func NewFromJson(str string, defaultOpts config.JobOptions) (*Task, error) {
 		task.MaxTries = defaultOpts.MaxTries
 	}
 
+	if task.KillOnDelay == nil {
+		task.KillOnDelay = defaultOpts.KillOnDelay
+	}
+
 	return task, nil
 }
 
-func (task *Task) TimeoutSeconds() time.Duration {
+func (task *Task) TimeoutDuration() time.Duration {
 	return time.Duration(task.Timeout) * time.Second
 }
 

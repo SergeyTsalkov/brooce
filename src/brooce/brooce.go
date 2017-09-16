@@ -172,7 +172,9 @@ func runner(queue string, ct int) {
 					}
 				}
 			case "delayed":
-				pipe.LPush(delayedList, task.Json())
+				if task.KillOnDelay == nil || !*task.KillOnDelay {
+					pipe.LPush(delayedList, task.Json())
+				}
 			}
 
 			pipe.RPop(workingList)

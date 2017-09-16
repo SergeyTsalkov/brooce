@@ -18,9 +18,10 @@ import (
 var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
 
 type JobOptions struct {
-	Timeout  int      `json:"timeout,omitempty"`
-	MaxTries int      `json:"max_tries,omitempty"`
-	Locks    []string `json:"locks,omitempty"`
+	Timeout     int      `json:"timeout,omitempty"`
+	MaxTries    int      `json:"max_tries,omitempty"`
+	Locks       []string `json:"locks,omitempty"`
+	KillOnDelay *bool    `json:"killondelay,omitempty"`
 }
 
 type Queue struct {
@@ -102,7 +103,7 @@ func (c *ConfigType) LocalOptionsForQueue(queue string) (opts JobOptions) {
 
 	// destination (first-arg) wins conflicts;
 	if err := mergo.Merge(&opts, c.GlobalJobOptions); err != nil {
-		panic(fmt.Sprintf("wtf getting options! %+v", err))
+		log.Fatalf("wtf getting options! %+v", err)
 	}
 
 	return opts

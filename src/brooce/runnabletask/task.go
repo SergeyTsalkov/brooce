@@ -99,13 +99,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 		done <- cmd.Wait()
 	}()
 
-	// timeoutSeconds := task.Timeout
-	// if timeoutSeconds == 0 {
-
-	// 	timeoutSeconds = int64(config.Config.GlobalJobOptions.Timeout)
-	// }
-	// timeout := time.Duration(timeoutSeconds) * time.Second
-	timeout := task.TimeoutSeconds()
+	timeout := task.TimeoutDuration()
 
 	select {
 	case err = <-done:
