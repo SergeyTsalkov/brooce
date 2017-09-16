@@ -19,7 +19,7 @@ var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
 
 type JobOptions struct {
 	Timeout     int      `json:"timeout,omitempty"`
-	MaxTries    int      `json:"max_tries,omitempty"`
+	MaxTries    int      `json:"maxtries,omitempty"`
 	Locks       []string `json:"locks,omitempty"`
 	KillOnDelay *bool    `json:"killondelay,omitempty"`
 }
