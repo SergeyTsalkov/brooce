@@ -6,7 +6,8 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
   "cluster_name": "brooce",
   "global_job_options": {
     "timeout": 3600,
-    "max_tries": 1
+    "maxtries": 1,
+    "killondelay": false
   },
   "web": {
     "addr": ":8080",
@@ -45,7 +46,8 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
       "workers": 1,
       "job_options": {
         "timeout": 60,
-        max_tries: 2
+        "maxtries": 2,
+        "killondelay": true
       }
     }
   ],
@@ -61,8 +63,13 @@ How long jobs can run before they're killed. The global default is 1 hour (3600 
 
 Queues and jobs can override this (per-job values override per-queue values which override global values). 
 
-### `global_job_options.max_tries`
-How many times to try a job in case it fails. If max_tries is greater than 1 a failed job will be put in the delayed queue to try again, until max_tries has been reached. 
+### `global_job_options.maxtries`
+How many times to try a job in case it fails. If maxtries is greater than 1 a failed job will be put in the delayed queue to try again, until maxtries has been reached. 
+
+Queues and jobs can override this (per-job values override per-queue values which override global values). 
+
+### `global_job_options.killondelay`
+If set to true, any job that is going to be delayed (because it can't acquire a lock) is just deleted instead.
 
 Queues and jobs can override this (per-job values override per-queue values which override global values).
 
@@ -120,7 +127,8 @@ You can also set per-queue job options. Per-queue options override `global_job_o
       "workers": 2,
       "job_options": {
         "timeout": 7200,
-        "max_tries": 5
+        "maxtries": 5,
+        "killondelay": true
       }
     }
   ]
