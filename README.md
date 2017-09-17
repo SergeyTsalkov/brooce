@@ -141,9 +141,25 @@ redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-accou
 ```
 The `account:671` lock must be exclusively held by this job, but the `3:server:5` lock means that up to 3 jobs can act on server 5 at the same time.
 
+### Delete Instead Of Delaying
+Instead of delaying a job that can't acquire the locks it needs, you can just have it deleted by adding the `killondelay` option. This is useful if you have a job that
+gets scheduled very frequently and will take an unpredictable amount of time -- any extra instances of it that get scheduled can just
+be deleted instead.
+
+```shell
+redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671","3:server:5"],"killondelay":true}'
+```
+
 ### Locking Things Yourself
 Sometimes you don't know which locks a job will need until after it starts running -- maybe you have a script called `~/bin/bill-all-accounts.sh` and you want it to lock all accounts that it's about to bill. In that case, your script will need to implement its own locking system. If it determines that it can't grab the locks it needs, it should return exit code 75 (temp failure). All other non-0 exit codes cause your job to be marked as failed, but 75 causes it to be pushed to the delayed queue and later re-tried.
 
+## Automatic Retrying
+If a job fails, you sometimes want it to be retried a few times before you give up and put it in the failed column. If you add `maxtries` to your job and set it to a value above 1, the job will be tried that many times in total. If they have any retries left, failed jobs will be divered to the delayed column instead and then requeued one minute later. This is helpful if a temporary error (like a network glitch) was
+causing the failure, because the problem will hopefully be gone a minute later.
+
+```shell
+redis-cli LPUSH brooce:queue:common:pending '{"command":"ls -l /doesnotexist","maxtries":3}'
+```
 
 ## Cron Jobs
 Cron jobs work much the same way they do on Linux, except you're setting them up as redis keys and specifying a queue to run in. Let's say you want to bill all your users every day at midnight. You might do this:
@@ -155,12 +171,22 @@ redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common ~/bin/bill
 You can see any pending cron jobs on the Cron Jobs page in the web interface.
 
 
-### Timeouts and Locking in a Cron Job
-Timeouts and locking are available to cron jobs. Here is an example that uses both:
+### Timeouts, Locking, Max Tries, and KillOnDelay in Cron Jobs
+All non-standard job features are available in cron jobs, too.
 ```shell
 redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common timeout:600 locks:server:5,server:8 ~/bin/bill-all-accounts.sh"
 ```
-In this case, we want `~/bin/bill-all-accounts.sh` to run daily, finish in under 10 minutes, and hold locks on `server:5` and `server:8`.
+We want `~/bin/bill-all-accounts.sh` to run daily, finish in under 10 minutes, and hold locks on `server:5` and `server:8`.
+
+```shell
+redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true ~/bin/bill-all-accounts.sh"
+```
+If the job can't get the locks it needs (perhaps because another instance of it is running), don't delay and requeue it -- just delete it instead.
+
+```shell
+redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true maxtries:5 ~/bin/bill-all-accounts.sh"
+```
+In addition to the rules in the previous example, try the job as many as 5 times if it fails.
 
 ### Don't Schedule Cron Job If It's Already Running
 Let's say you want to run a job once per minute, but not schedule another one if the last one is still running. This is different than a lock, which would cause additional jobs to be delayed and pile up. There is a `skipifrunning` option that will do this.
