@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"brooce/config"
@@ -13,7 +12,7 @@ import (
 )
 
 func (task *RunnableTask) WriteLog(str string) {
-	log.Printf("[%s] %s", task.WorkerThreadName(), strings.TrimSpace(str))
+	//log.Printf("[%s] %s", task.WorkerThreadName(), strings.TrimSpace(str))
 	task.Write([]byte(str))
 }
 

@@ -112,8 +112,8 @@ func scheduleCronsForTimeRange(pipe *redis.Pipeline, start time.Time, end time.T
 		log.Println("Cron is catching up! Scheduling jobs for the period from", start, "to", end)
 	}
 
-	for cronName, cronJob := range toSchedule {
-		log.Printf("Scheduling job %s", cronName)
+	for _, cronJob := range toSchedule {
+		//log.Printf("Scheduling job %s", cronName)
 
 		pendingList := strings.Join([]string{redisHeader, "queue", cronJob.Queue, "pending"}, ":")
 		pipe.LPush(pendingList, cronJob.Task().Json())
