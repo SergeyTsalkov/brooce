@@ -135,7 +135,7 @@ func runner(queue string, ct int) {
 			}
 		}
 
-		redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
 			result := "failed"
 
 			if err != nil {
@@ -181,8 +181,19 @@ func runner(queue string, ct int) {
 			return nil
 		})
 
+		if err != nil {
+			log.Println("Error while pipelining job from", workingList, ":", err)
+		}
+
 		// workingList should be empty by this point
 		// if it's not, something went wrong earlier
+		length := redisClient.LLen(workingList)
+		if length.Err() != nil {
+			log.Println("Error while checking length of", workingList, ":", err)
+		}
+		if length.Val() != 0 {
+			log.Println(workingList, "should be empty but has", length.Val(), "entries! They'll be flushed to", failedList)
+		}
 		err = myredis.FlushList(workingList, failedList)
 		if err != nil {
 			log.Println("Error while flushing", workingList, "to", failedList, ":", err)
