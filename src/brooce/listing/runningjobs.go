@@ -28,11 +28,19 @@ func RunningJobs() (jobs []*task.Task, err error) {
 		}
 		return nil
 	})
+	// it's possible for an item to vanish between the KEYS and LINDEX steps -- this is not fatal!
+	if err == redis.Nil {
+		err = nil
+	}
 	if err != nil {
 		return
 	}
 
 	for i, value := range values {
+		if value.Err() != nil {
+			// possible to get a redis.Nil error here if a job vanished between the KEYS and LINDEX steps
+			continue
+		}
 		job, err := task.NewFromJson(value.Val(), config.JobOptions{})
 		if err != nil {
 			continue
