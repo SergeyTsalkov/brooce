@@ -130,7 +130,7 @@ func runner(queue string, ct int) {
 			exitCode, err = rTask.Run()
 			suicide.ThreadIsWaiting(threadName)
 
-			if err != nil {
+			if err != nil && !strings.HasPrefix(err.Error(), "timeout after") {
 				log.Printf("Error in task %v: %v", rTask.Id, err)
 			}
 		}
