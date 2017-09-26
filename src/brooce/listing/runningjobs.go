@@ -49,6 +49,10 @@ func RunningJobs() (jobs []*task.Task, err error) {
 		jobs = append(jobs, job)
 	}
 
+	if len(jobs) == 0 {
+		return
+	}
+
 	hasLog := make([]*redis.BoolCmd, len(jobs))
 	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
 		for i, job := range jobs {
