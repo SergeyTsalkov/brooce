@@ -177,7 +177,7 @@ func runner(queue string, ct int) {
 				}
 			}
 
-			pipe.RPop(workingList)
+			pipe.LRem(workingList, 1, taskStr)
 			return nil
 		})
 
@@ -192,11 +192,11 @@ func runner(queue string, ct int) {
 			log.Println("Error while checking length of", workingList, ":", err)
 		}
 		if length.Val() != 0 {
-			log.Println(workingList, "should be empty but has", length.Val(), "entries! They'll be flushed to", failedList)
+			log.Println(workingList, "should be empty but has", length.Val(), "entries! They'll be flushed to", pendingList)
 		}
-		err = myredis.FlushList(workingList, failedList)
+		err = myredis.FlushList(workingList, pendingList)
 		if err != nil {
-			log.Println("Error while flushing", workingList, "to", failedList, ":", err)
+			log.Println("Error while flushing", workingList, "to", pendingList, ":", err)
 		}
 
 	}
