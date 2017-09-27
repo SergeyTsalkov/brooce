@@ -13,7 +13,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/util"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 var heartbeatEvery = 30 * time.Second
@@ -103,7 +103,7 @@ func auditHeartbeats() {
 	}
 
 	heartbeats := map[string]*redis.StringCmd{}
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, key := range keys {
 			result := pipe.Get(key)
 			heartbeats[key] = result

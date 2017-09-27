@@ -10,7 +10,7 @@ import (
 	"brooce/config"
 	myredis "brooce/redis"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 var redisClient = myredis.Get()
@@ -24,7 +24,7 @@ func GrabLocks(locks []string) (success bool, err error) {
 
 	results := make([]*redis.IntCmd, len(locks))
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for i, lock := range locks {
 			results[i] = pipe.LPush(lockRedisKey(lock), actor)
 		}
@@ -52,7 +52,7 @@ func ReleaseLocks(locks []string) (err error) {
 		return
 	}
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, lock := range locks {
 			pipe.LRem(lockRedisKey(lock), 1, actor)
 		}
@@ -88,7 +88,7 @@ func cleanup(actor string) (err error) {
 		return
 	}
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, key := range keys {
 			pipe.LRem(key, 0, actor)
 		}
@@ -106,7 +106,7 @@ func cleanupAll() (err error) {
 	}
 
 	lrangeResults := make([]*redis.StringSliceCmd, len(lockKeys))
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for i, key := range lockKeys {
 			lrangeResults[i] = pipe.LRange(key, 0, -1)
 		}
@@ -141,7 +141,7 @@ func cleanupAll() (err error) {
 		return
 	}
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for actor, _ := range actors {
 			for _, key := range lockKeys {
 				pipe.LRem(key, 0, actor)

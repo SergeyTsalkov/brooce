@@ -13,7 +13,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 type PagedHits struct {
@@ -132,8 +132,8 @@ func searchQueueForCommand(queueKey string, query string) []*task.Task {
 }
 
 func addLogsToSearchHits(hits []*task.Task) []*task.Task {
-	hasLog := make([]*redis.BoolCmd, len(hits))
-	_, err := redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	hasLog := make([]*redis.IntCmd, len(hits))
+	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for i, job := range hits {
 			k := fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id)
 			hasLog[i] = pipe.Exists(k)
@@ -145,7 +145,7 @@ func addLogsToSearchHits(hits []*task.Task) []*task.Task {
 	}
 
 	for i, result := range hasLog {
-		hits[i].HasLog = result.Val()
+		hits[i].HasLog = result.Val() > 0
 	}
 
 	return hits

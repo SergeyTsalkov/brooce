@@ -5,7 +5,7 @@ import (
 
 	"brooce/cron"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 func Crons() (map[string]*cron.CronType, error) {
@@ -31,7 +31,7 @@ func crons(disabled bool) (crons map[string]*cron.CronType, err error) {
 	}
 
 	cronValues := make([]*redis.StringCmd, len(keys))
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for i, key := range keys {
 			cronValues[i] = pipe.Get(key)
 		}

@@ -13,7 +13,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/util"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 var redisHeader = config.Config.ClusterName
@@ -41,7 +41,7 @@ func scheduleCrons() error {
 	maxSchedCatchup := 24 * time.Hour
 
 	var lockValueCmd *redis.StringCmd
-	_, err := redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		pipe.SetNX(lockKey, config.Config.ProcName, lockttl)
 		lockValueCmd = pipe.Get(lockKey)
 		return nil
@@ -70,7 +70,7 @@ func scheduleCrons() error {
 		start = end
 	}
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		scheduleCronsForTimeRange(pipe, start, end)
 		pipe.Set(schedThroughKey, end.Unix(), maxSchedCatchup)
 		pipe.Expire(lockKey, lockttl)
@@ -91,7 +91,7 @@ func zeroOutSeconds(t time.Time) time.Time {
 	return t
 }
 
-func scheduleCronsForTimeRange(pipe *redis.Pipeline, start time.Time, end time.Time) {
+func scheduleCronsForTimeRange(pipe redis.Pipeliner, start time.Time, end time.Time) {
 	crons, err := listing.Crons()
 	if err != nil {
 		log.Println("redis error:", err)

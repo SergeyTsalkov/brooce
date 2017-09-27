@@ -8,7 +8,7 @@ import (
 
 	"brooce/config"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 func (task *RunnableTask) WriteLog(str string) {
@@ -42,7 +42,7 @@ func (task *RunnableTask) Flush() {
 
 	key := fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id)
 
-	_, err := redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		pipe.Append(key, task.buffer.String())
 		pipe.Expire(key, time.Duration(config.Config.RedisOutputLog.ExpireAfter)*time.Second)
 		return nil

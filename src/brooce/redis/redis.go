@@ -7,7 +7,7 @@ import (
 
 	"brooce/config"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 var redisClient *redis.Client

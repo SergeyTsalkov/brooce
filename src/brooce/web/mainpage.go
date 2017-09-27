@@ -9,7 +9,7 @@ import (
 	"brooce/listing"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 type mainpageOutputType struct {
@@ -80,7 +80,7 @@ func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*lis
 		}
 	}
 
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, queue := range list {
 			queue.pendingResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue.QueueName))
 			queue.runningResult = pipe.Keys(fmt.Sprintf("%s:queue:%s:working:*", redisHeader, queue.QueueName))

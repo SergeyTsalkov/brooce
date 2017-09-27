@@ -5,7 +5,7 @@ import (
 
 	"brooce/heartbeat"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
@@ -16,7 +16,7 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
 	}
 
 	var heartbeatStrs []*redis.StringCmd
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, key := range keys {
 			result := pipe.Get(key)
 			heartbeatStrs = append(heartbeatStrs, result)

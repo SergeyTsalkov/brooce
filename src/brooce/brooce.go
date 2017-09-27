@@ -22,7 +22,7 @@ import (
 	"brooce/web"
 
 	daemon "github.com/sevlyar/go-daemon"
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 var redisClient = myredis.Get()
@@ -116,6 +116,22 @@ func runner(queue string, ct int) {
 			continue
 		}
 
+		// workingList should have 1 item now
+		// if it has more, something went wrong!
+		length := redisClient.LLen(workingList)
+		if length.Err() != nil {
+			log.Println("Error while checking length of", workingList, ":", err)
+		}
+		if length.Val() != 1 {
+			log.Println(workingList, "should have length 1 but has length", length.Val(), "! It'll be flushed to", pendingList)
+
+			err = myredis.FlushList(workingList, pendingList)
+			if err != nil {
+				log.Println("Error while flushing", workingList, "to", pendingList, ":", err)
+			}
+			continue
+		}
+
 		var exitCode int
 		task, err := tasklib.NewFromJson(taskStr, config.Config.LocalOptionsForQueue(queue))
 		if err != nil {
@@ -135,7 +151,7 @@ func runner(queue string, ct int) {
 			}
 		}
 
-		_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+		_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 			result := "failed"
 
 			if err != nil {
@@ -177,26 +193,12 @@ func runner(queue string, ct int) {
 				}
 			}
 
-			pipe.LRem(workingList, 1, taskStr)
+			pipe.LPop(workingList)
 			return nil
 		})
 
 		if err != nil {
 			log.Println("Error while pipelining job from", workingList, ":", err)
-		}
-
-		// workingList should be empty by this point
-		// if it's not, something went wrong earlier
-		length := redisClient.LLen(workingList)
-		if length.Err() != nil {
-			log.Println("Error while checking length of", workingList, ":", err)
-		}
-		if length.Val() != 0 {
-			log.Println(workingList, "should be empty but has", length.Val(), "entries! They'll be flushed to", pendingList)
-		}
-		err = myredis.FlushList(workingList, pendingList)
-		if err != nil {
-			log.Println("Error while flushing", workingList, "to", pendingList, ":", err)
 		}
 
 	}

@@ -13,7 +13,7 @@ import (
 	"brooce/config"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v5"
+	redis "gopkg.in/redis.v6"
 )
 
 type joblistOutputType struct {
@@ -100,7 +100,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 
 	var lengthResult *redis.IntCmd
 	var rangeResult *redis.StringSliceCmd
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		lengthResult = pipe.LLen(redisKey)
 		rangeResult = pipe.LRange(redisKey, rangeStart, rangeEnd)
 		return nil
@@ -139,8 +139,8 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 		}
 	}
 
-	hasLog := make([]*redis.BoolCmd, len(output.Jobs))
-	_, err = redisClient.Pipelined(func(pipe *redis.Pipeline) error {
+	hasLog := make([]*redis.IntCmd, len(output.Jobs))
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for i, job := range output.Jobs {
 			hasLog[i] = pipe.Exists(fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id))
 		}
@@ -151,7 +151,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	}
 
 	for i, result := range hasLog {
-		output.Jobs[i].HasLog = result.Val()
+		output.Jobs[i].HasLog = result.Val() > 0
 	}
 
 	return
