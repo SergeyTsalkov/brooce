@@ -188,14 +188,6 @@ redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common locks:serv
 ```
 In addition to the rules in the previous example, try the job as many as 5 times if it fails.
 
-### Don't Schedule Cron Job If It's Already Running
-Let's say you want to run a job once per minute, but not schedule another one if the last one is still running. This is different than a lock, which would cause additional jobs to be delayed and pile up. There is a `skipifrunning` option that will do this.
-```shell
-# Clear cache once per minute, but don't schedule if the last one is still running
-redis-cli SET "brooce:cron:jobs:clear-cache" "* * * * * queue:common skipifrunning:true ~/bin/clear-cache.sh"
-```
-
-
 ### Fancy Cron Jobs
 Most of the standard cron features are implemented. Here are some examples.
 ```shell
