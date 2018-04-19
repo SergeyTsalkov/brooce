@@ -1,15 +1,15 @@
 package requeue
 
 import (
+	"fmt"
 	"log"
-	"strings"
 
 	"brooce/config"
+	"brooce/listing"
 	myredis "brooce/redis"
 	"brooce/util"
 )
 
-var redisClient = myredis.Get()
 var redisHeader = config.Config.ClusterName
 
 func Start() {
@@ -25,14 +25,16 @@ func Start() {
 }
 
 func requeue() (err error) {
-	var keys []string
-	keys, err = redisClient.Keys(redisHeader + ":queue:*:delayed").Result()
+	var queues map[string]*listing.QueueInfoType
+	queues, err = listing.Queues(true)
 	if err != nil {
 		return
 	}
 
-	for _, delayedKey := range keys {
-		pendingKey := strings.TrimSuffix(delayedKey, ":delayed") + ":pending"
+	for name, _ := range queues {
+		pendingKey := fmt.Sprintf("%s:queue:%s:pending", redisHeader, name)
+		delayedKey := fmt.Sprintf("%s:queue:%s:delayed", redisHeader, name)
+
 		err = myredis.FlushList(delayedKey, pendingKey)
 		if err != nil {
 			return
