@@ -51,7 +51,7 @@ func IsDir(path string) bool {
 }
 
 func ProcessExists(pid int) bool {
-	// TODO: better corss-system process exists handling
+	// TODO: better cross-system process exists handling
 	if runtime.GOOS != "darwin" {
 		return FileExists(fmt.Sprintf("/proc/%v", pid))
 	}

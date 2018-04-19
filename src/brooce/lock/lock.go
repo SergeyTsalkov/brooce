@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"brooce/config"
+	"brooce/heartbeat"
+	"brooce/listing"
 	myredis "brooce/redis"
 
 	redis "gopkg.in/redis.v6"
@@ -123,18 +125,14 @@ func cleanupAll() (err error) {
 		}
 	}
 
-	var workerKeys []string
-	workerKeys, err = redisClient.Keys(redisHeader + ":workerprocs:*").Result()
+	var workers []*heartbeat.HeartbeatType
+	workers, err = listing.RunningWorkers()
 	if err != nil {
 		return
 	}
-	for _, key := range workerKeys {
-		parts := strings.SplitN(key, ":", 3)
-		if len(parts) < 3 {
-			continue
-		}
 
-		delete(actors, parts[2])
+	for _, worker := range workers {
+		delete(actors, worker.ProcName)
 	}
 
 	if len(actors) == 0 {

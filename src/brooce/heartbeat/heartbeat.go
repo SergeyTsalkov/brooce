@@ -12,23 +12,21 @@ import (
 	"brooce/myip"
 	myredis "brooce/redis"
 	"brooce/util"
-
-	redis "gopkg.in/redis.v6"
 )
 
 var heartbeatEvery = 30 * time.Second
 var assumeDeadAfter = 95 * time.Second
 
 var redisClient = myredis.Get()
-var heartbeatStr = makeHeartbeat()
 var once sync.Once
 
 type HeartbeatType struct {
-	ProcName string         `json:"procname"`
-	Hostname string         `json:"hostname"`
-	IP       string         `json:"ip"`
-	PID      int            `json:"pid"`
-	Queues   []config.Queue `json:"queues"`
+	ProcName  string         `json:"procname"`
+	Hostname  string         `json:"hostname"`
+	IP        string         `json:"ip"`
+	PID       int            `json:"pid"`
+	Timestamp int64          `json:"timestamp"`
+	Queues    []config.Queue `json:"queues"`
 }
 
 func (hb *HeartbeatType) TotalThreads() (total int) {
@@ -42,12 +40,35 @@ func (hb *HeartbeatType) TotalThreads() (total int) {
 	return
 }
 
+func (hb *HeartbeatType) HeartbeatAge() time.Duration {
+	return time.Since(time.Unix(hb.Timestamp, 0))
+}
+
+func (hb *HeartbeatType) HeartbeatTooOld() bool {
+	return hb.HeartbeatAge() > assumeDeadAfter
+}
+
+// if heartbeat is for worker on the same machine, we can determine
+// if the PID corresponds to a running process
+func (hb *HeartbeatType) IsLocalZombie() bool {
+	if hb.IP != myip.PublicIPv4() {
+		return false
+	}
+
+	if hb.PID == 0 || hb.PID == os.Getpid() {
+		return false
+	}
+
+	return !util.ProcessExists(hb.PID)
+}
+
 func makeHeartbeat() string {
 	hb := &HeartbeatType{
-		ProcName: config.Config.ProcName,
-		IP:       myip.PublicIPv4(),
-		PID:      os.Getpid(),
-		Queues:   config.Config.Queues,
+		ProcName:  config.Config.ProcName,
+		IP:        myip.PublicIPv4(),
+		PID:       os.Getpid(),
+		Timestamp: time.Now().Unix(),
+		Queues:    config.Config.Queues,
 	}
 
 	var err error
@@ -67,73 +88,19 @@ func makeHeartbeat() string {
 func Start() {
 	// need to send a single heartbeat FOR SURE before we grab a job!
 	heartbeat()
-	auditHeartbeats()
 
 	go func() {
 		for {
 			time.Sleep(heartbeatEvery)
 			heartbeat()
-			auditHeartbeats()
 		}
 	}()
 }
 
 func heartbeat() {
-	key := fmt.Sprintf("%s:workerprocs:%s", config.Config.ClusterName, config.Config.ProcName)
-	err := redisClient.Set(key, heartbeatStr, assumeDeadAfter).Err()
+	key := fmt.Sprintf("%s:workerprocs", config.Config.ClusterName)
+	err := redisClient.HSet(key, config.Config.ProcName, makeHeartbeat()).Err()
 	if err != nil {
 		log.Println("redis heartbeat error:", err)
-	}
-}
-
-// check other processes on same IP, make sure they're actually there
-func auditHeartbeats() {
-	var err error
-	defer func() {
-		if err != nil {
-			log.Println("redis audit heartbeat error:", err)
-		}
-	}()
-
-	keyMatch := fmt.Sprintf("%s:workerprocs:%v-*", config.Config.ClusterName, myip.PublicIPv4())
-	var keys []string
-	keys, err = redisClient.Keys(keyMatch).Result()
-	if err != nil || len(keys) == 0 {
-		return
-	}
-
-	heartbeats := map[string]*redis.StringCmd{}
-	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for _, key := range keys {
-			result := pipe.Get(key)
-			heartbeats[key] = result
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for key, str := range heartbeats {
-		worker := &HeartbeatType{}
-		err = json.Unmarshal([]byte(str.Val()), worker)
-		if err != nil {
-			return
-		}
-
-		if worker.PID == 0 || worker.PID == os.Getpid() {
-			continue
-		}
-
-		if !util.ProcessExists(worker.PID) {
-			//log.Printf("Purging dead worker, was PID %v", worker.PID)
-			err = redisClient.Del(key).Err()
-			if err != nil {
-				return
-			}
-		} else {
-			log.Println("Warning: Running multiple instances of brooce on the same machine is not recommended. Use threads in one instance instead!")
-		}
-
 	}
 }
