@@ -89,6 +89,10 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 	cmd.Stdout = &runnableTaskStdoutLog{RunnableTask: task}
 	cmd.Stderr = cmd.Stdout
 
+	// give process its own PGID so we can kill its children as well below
+	// https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	done := make(chan error)
 	err = cmd.Start()
 	if err != nil {
@@ -106,7 +110,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 		//finished normally, do nothing!
 	case <-time.After(timeout):
 		//timed out!
-		cmd.Process.Kill()
+		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 		err = fmt.Errorf("timeout after %v", timeout)
 	}
 
