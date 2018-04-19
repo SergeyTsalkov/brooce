@@ -6,11 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"brooce/config"
+	myredis "brooce/redis"
 	tasklib "brooce/task"
+
+	redis "gopkg.in/redis.v6"
 )
 
-// Example cron entry:
-// SET "brooce:cron:jobs:schedule_postprocess" "* * * * * queue:common gorunjob schedule_postprocess"
+var redisClient = myredis.Get()
+var redisHeader = config.Config.ClusterName
+var RedisKeyEnabled = redisHeader + ":cron:jobs"
+var RedisKeyDisabled = redisHeader + ":cron:disabledjobs"
 
 type CronType struct {
 	Name string
@@ -30,6 +36,62 @@ type CronType struct {
 	Disabled    bool
 
 	Raw string
+}
+
+func (cron *CronType) Disable() (err error) {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		pipe.HDel(RedisKeyEnabled, cron.Name)
+		pipe.HSet(RedisKeyDisabled, cron.Name, cron.Raw)
+		return nil
+	})
+	return
+}
+
+func (cron *CronType) Enable() (err error) {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		pipe.HDel(RedisKeyDisabled, cron.Name)
+		pipe.HSet(RedisKeyEnabled, cron.Name, cron.Raw)
+		return nil
+	})
+	return
+}
+
+func (cron *CronType) Delete() (err error) {
+	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		pipe.HDel(RedisKeyDisabled, cron.Name)
+		pipe.HDel(RedisKeyEnabled, cron.Name)
+		return nil
+	})
+	return
+}
+
+func (cron *CronType) Run() (err error) {
+	pendingList := fmt.Sprintf("%s:queue:%s:pending", redisHeader, cron.Queue)
+	err = redisClient.LPush(pendingList, cron.Task().Json()).Err()
+	return
+}
+
+func Get(name string) (cron *CronType, err error) {
+	var line string
+	disabled := false
+
+	line, err = redisClient.HGet(RedisKeyEnabled, name).Result()
+	if err != nil {
+		line, err = redisClient.HGet(RedisKeyDisabled, name).Result()
+
+		if err != nil {
+			return
+		}
+		disabled = true
+	}
+
+	cron, err = ParseCronLine(name, line)
+	if err != nil {
+		return
+	}
+
+	cron.Disabled = disabled
+	return
 }
 
 func ParseCronLine(name, line string) (*CronType, error) {
