@@ -146,7 +146,7 @@ func runner(queue string, ct int) {
 			exitCode, err = rTask.Run()
 			suicide.ThreadIsWaiting(threadName)
 
-			if err != nil && !strings.HasPrefix(err.Error(), "timeout after") {
+			if err != nil && !strings.HasPrefix(err.Error(), "timeout after") && !strings.HasPrefix(err.Error(), "exit status") {
 				log.Printf("Error in task %v: %v", rTask.Id, err)
 			}
 		}
@@ -154,13 +154,13 @@ func runner(queue string, ct int) {
 		_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 			result := "failed"
 
-			if err != nil {
-				result = "failed"
-			} else if exitCode == 0 {
-				result = "done"
-			} else if exitCode == 75 {
+			if exitCode == 75 {
 				// Unix standard "temp fail" code
 				result = "delayed"
+			} else if err != nil || exitCode != 0 {
+				result = "failed"
+			} else {
+				result = "done"
 			}
 
 			switch result {
