@@ -162,9 +162,9 @@ redis-cli LPUSH brooce:queue:common:pending '{"command":"ls -l /doesnotexist","m
 ```
 
 ## Cron Jobs
-Cron jobs work much the same way they do on Linux, except you're setting them up as redis keys and specifying a queue to run in. Let's say you want to bill all your users every day at midnight. You might do this:
+Cron jobs work much the same way they do on Linux, except you're setting them up as a redis hash and specifying a queue to run in. Let's say you want to bill all your users every day at midnight. You might do this:
 ```shell
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
 ```
 **Cron job times are always UTC, regardless of your local time zone!** This was unavoidable since brooce instances could be running on multiple servers in different time zones.
 
@@ -174,17 +174,17 @@ You can see any pending cron jobs on the Cron Jobs page in the web interface.
 ### Timeouts, Locking, Max Tries, and KillOnDelay in Cron Jobs
 All non-standard job features are available in cron jobs, too.
 ```shell
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common timeout:600 locks:server:5,server:8 ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common timeout:600 locks:server:5,server:8 ~/bin/bill-all-accounts.sh"
 ```
 We want `~/bin/bill-all-accounts.sh` to run daily, finish in under 10 minutes, and hold locks on `server:5` and `server:8`.
 
 ```shell
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true ~/bin/bill-all-accounts.sh"
 ```
 If the job can't get the locks it needs (perhaps because another instance of it is running), don't delay and requeue it -- just delete it instead.
 
 ```shell
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true maxtries:5 ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common locks:server:5,server:8 killondelay:true maxtries:5 ~/bin/bill-all-accounts.sh"
 ```
 In addition to the rules in the previous example, try the job as many as 5 times if it fails.
 
@@ -192,13 +192,13 @@ In addition to the rules in the previous example, try the job as many as 5 times
 Most of the standard cron features are implemented. Here are some examples.
 ```shell
 # Bill accounts twice a day
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 */12 * * * queue:common ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 */12 * * * queue:common ~/bin/bill-all-accounts.sh"
 
 # Rotate logs 4 times an hour, but only during the night
-redis-cli SET "brooce:cron:jobs:log-rotate" "0,15,30,45 0-8 * * * queue:common ~/bin/rotate-logs.sh"
+redis-cli HSET "brooce:cron:jobs" "log-rotate" "0,15,30,45 0-8 * * * queue:common ~/bin/rotate-logs.sh"
 
 # I have no idea why you'd want to do this
-redis-cli SET "brooce:cron:jobs:log-rotate" "0-15,45-59 */3,*/4 * * * queue:common ~/bin/delete-customer-data.sh"
+redis-cli HSET "brooce:cron:jobs" "log-rotate" "0-15,45-59 */3,*/4 * * * queue:common ~/bin/delete-customer-data.sh"
 ```
 
 ### Storing Cron Jobs in your Git Repo
@@ -207,10 +207,10 @@ We store cron jobs in redis rather than a config file because multiple brooce in
 However, nothing prevents you from creating a shell script called cron.sh that clears out and resets your cron jobs. You can then commit that script to your Git repo, and run it as part of your deploy process. It might look like this:
 ```shell
 #!/bin/bash
-redis-cli KEYS "brooce:cron:jobs:*" | xargs redis-cli DEL
-redis-cli SET "brooce:cron:jobs:daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
-redis-cli SET "brooce:cron:jobs:hourly-log-rotater" "0 * * * * queue:common ~/bin/rotate-logs.sh"
-redis-cli SET "brooce:cron:jobs:twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
+redis-cli DEL "brooce:cron:jobs"
+redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
+redis-cli HSET "brooce:cron:jobs" "hourly-log-rotater" "0 * * * * queue:common ~/bin/rotate-logs.sh"
+redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
 ```
 
 ## Hacking on brooce
