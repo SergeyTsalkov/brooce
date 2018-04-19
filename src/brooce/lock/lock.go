@@ -85,7 +85,7 @@ func Start() {
 
 func cleanup(actor string) (err error) {
 	var keys []string
-	keys, err = redisClient.Keys(redisHeader + ":lock:*").Result()
+	keys, err = myredis.ScanKeys(redisHeader + ":lock:*")
 	if err != nil || len(keys) == 0 {
 		return
 	}
@@ -102,7 +102,7 @@ func cleanup(actor string) (err error) {
 
 func cleanupAll() (err error) {
 	var lockKeys []string
-	lockKeys, err = redisClient.Keys(redisHeader + ":lock:*").Result()
+	lockKeys, err = myredis.ScanKeys(redisHeader + ":lock:*")
 	if err != nil || len(lockKeys) == 0 {
 		return
 	}

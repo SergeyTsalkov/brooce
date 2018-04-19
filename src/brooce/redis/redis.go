@@ -53,3 +53,25 @@ func FlushList(src, dst string) (err error) {
 
 	return
 }
+
+func ScanKeys(match string) (keys []string, err error) {
+	redisClient := Get()
+	cursor := uint64(0)
+
+	for {
+		var result []string
+		result, cursor, err = redisClient.Scan(cursor, match, 1000).Result()
+
+		if err != nil {
+			return
+		}
+
+		keys = append(keys, result...)
+
+		if cursor == 0 {
+			break
+		}
+	}
+
+	return
+}
