@@ -84,6 +84,14 @@ func (output *joblistOutputType) LinkParamsForPage(page int64) template.URL {
 	return template.URL(q.Encode())
 }
 
+func (output *joblistOutputType) LinkParamsForPrevPage(page int64) template.URL {
+	return output.LinkParamsForPage(page - 1)
+}
+
+func (output *joblistOutputType) LinkParamsForNextPage(page int64) template.URL {
+	return output.LinkParamsForPage(page + 1)
+}
+
 func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	var perPage int64 = 10
 	output.Start = (output.Page-1)*perPage + 1

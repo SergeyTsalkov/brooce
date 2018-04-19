@@ -100,15 +100,19 @@ var jobListTpl = `
     
     <div class="pages">
       <i>Showing results {{ .Start }}-{{ .End }} of {{ .Length }}</i>
+      
+      {{ if eq $.Page 1 }}
+        <span class="prevnext"><<= Prev</span>
+      {{ else }}
+        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}"><<= Prev</a>
+      {{ end }}
 
-      {{ if gt .Pages 1 }}
-        {{ range Iter 1 .Pages }}
-          {{ if eq $.Page . }}
-            {{ . }}
-          {{ else }}
-            <a href="?{{ $.LinkParamsForPage .}}">{{ . }}</a>
-          {{ end }}
-        {{ end }}
+      Page {{ $.Page }} of {{ .Pages }}
+
+      {{ if eq $.Page $.Pages }}
+        <span class="prevnext">Next =>></span>
+      {{ else }}
+        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}">Next =>></a>
       {{ end }}
     </div>
     

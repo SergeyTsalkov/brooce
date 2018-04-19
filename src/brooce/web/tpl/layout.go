@@ -43,6 +43,10 @@ var headerTpl = `
       div.pages i {
         display: block;
       }
+      div.pages .prevnext {
+        font-weight: bold;
+        margin: 0 1em;
+      }
 
       td.buttons, th.buttons {
         text-align: right;
