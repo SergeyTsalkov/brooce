@@ -1,9 +1,7 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"brooce/heartbeat"
 	"brooce/listing"
@@ -13,7 +11,7 @@ import (
 )
 
 type mainpageOutputType struct {
-	Queues         map[string]*listQueueType
+	Queues         map[string]*listing.QueueInfoType
 	RunningJobs    []*task.Task
 	RunningWorkers []*heartbeat.HeartbeatType
 	TotalThreads   int
@@ -22,7 +20,7 @@ type mainpageOutputType struct {
 func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	output := &mainpageOutputType{}
 
-	output.RunningJobs, err = listing.RunningJobs()
+	output.RunningJobs, err = listing.RunningJobs(true)
 	if err != nil {
 		return
 	}
@@ -30,13 +28,13 @@ func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 	if err != nil {
 		return
 	}
-	output.Queues, err = listQueues(output.RunningWorkers)
+	output.Queues, err = listing.Queues(false)
 	if err != nil {
 		return
 	}
 
 	for _, worker := range output.RunningWorkers {
-		output.TotalThreads += worker.TotalThreads()
+		output.TotalThreads += len(worker.Threads)
 	}
 
 	err = templates.ExecuteTemplate(rep, "mainpage", output)
@@ -55,52 +53,4 @@ type listQueueType struct {
 	doneResult    *redis.IntCmd
 	failedResult  *redis.IntCmd
 	delayedResult *redis.IntCmd
-}
-
-func listQueues(runningWorkers []*heartbeat.HeartbeatType) (list map[string]*listQueueType, err error) {
-	list = map[string]*listQueueType{}
-	var results []string
-	results, err = redisClient.Keys(redisHeader + ":queue:*").Result()
-	if err != nil || len(results) == 0 {
-		return
-	}
-
-	for _, result := range results {
-		parts := strings.Split(result, ":")
-		if len(parts) < 3 {
-			continue
-		}
-
-		list[parts[2]] = &listQueueType{QueueName: parts[2]}
-	}
-
-	for _, worker := range runningWorkers {
-		for _, queue := range worker.Queues {
-			list[queue.Name] = &listQueueType{QueueName: queue.Name}
-		}
-	}
-
-	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for _, queue := range list {
-			queue.pendingResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:pending", redisHeader, queue.QueueName))
-			queue.runningResult = pipe.Keys(fmt.Sprintf("%s:queue:%s:working:*", redisHeader, queue.QueueName))
-			queue.doneResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:done", redisHeader, queue.QueueName))
-			queue.failedResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:failed", redisHeader, queue.QueueName))
-			queue.delayedResult = pipe.LLen(fmt.Sprintf("%s:queue:%s:delayed", redisHeader, queue.QueueName))
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for _, queue := range list {
-		queue.Pending = queue.pendingResult.Val()
-		queue.Running = len(queue.runningResult.Val())
-		queue.Done = queue.doneResult.Val()
-		queue.Failed = queue.failedResult.Val()
-		queue.Delayed = queue.delayedResult.Val()
-	}
-
-	return
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"brooce/heartbeat"
+	"brooce/task"
 
 	redis "gopkg.in/redis.v6"
 )
@@ -17,7 +18,6 @@ type QueueInfoType struct {
 	Failed        int64
 	Delayed       int64
 	pendingResult *redis.IntCmd
-	//runningResult *redis.StringSliceCmd
 	doneResult    *redis.IntCmd
 	failedResult  *redis.IntCmd
 	delayedResult *redis.IntCmd
@@ -32,15 +32,15 @@ func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {
 
 	queueHash = map[string]*QueueInfoType{}
 	for _, worker := range workers {
-		for _, queue := range worker.Queues {
+		for _, thread := range worker.Threads {
 
-			if queueHash[queue.Name] == nil {
-				queueHash[queue.Name] = &QueueInfoType{}
+			if queueHash[thread.Queue] == nil {
+				queueHash[thread.Queue] = &QueueInfoType{}
 			}
 
-			queueInfo := queueHash[queue.Name]
-			queueInfo.Name = queue.Name
-			queueInfo.Workers += int64(queue.Workers)
+			queueInfo := queueHash[thread.Queue]
+			queueInfo.Name = thread.Queue
+			queueInfo.Workers += 1
 		}
 	}
 
@@ -61,6 +61,18 @@ func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {
 		return
 	}
 
+	var jobs []*task.Task
+	jobs, err = RunningJobs(true)
+	if err != nil {
+		return
+	}
+	for _, job := range jobs {
+		queueName := job.QueueName()
+		if queueInfo := queueHash[queueName]; queueInfo != nil {
+			queueInfo.Running += 1
+		}
+	}
+
 	for _, queue := range queueHash {
 		queue.Pending = queue.pendingResult.Val()
 		queue.Done = queue.doneResult.Val()
@@ -70,23 +82,3 @@ func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {
 
 	return
 }
-
-/*
-func QueueList(short bool) (queueList []*QueueInfoType, err error) {
-	var queueHash map[string]*QueueInfoType
-	queueHash, err = QueueHash(short)
-	if err != nil {
-		return
-	}
-
-	for _, queue := range queueHash {
-		queueList = append(queueList, queue)
-	}
-
-	sort.Slice(queueList, func(i, j int) bool {
-		return queueList[i].Name < queueList[j].Name
-	})
-
-	return
-}
-*/

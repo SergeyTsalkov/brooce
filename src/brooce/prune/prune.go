@@ -31,7 +31,7 @@ func prunejobs() error {
 		return err
 	}
 
-	jobs, err := listing.RunningJobs()
+	jobs, err := listing.RunningJobs(false)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package cronsched
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -118,23 +117,4 @@ func scheduleCronsForTimeRange(pipe redis.Pipeliner, start time.Time, end time.T
 		pendingList := strings.Join([]string{redisHeader, "queue", cronJob.Queue, "pending"}, ":")
 		pipe.LPush(pendingList, cronJob.Task().Json())
 	}
-}
-
-func CronIsRunning(c *cron.CronType) (bool, error) {
-	if c.Name == "" {
-		return false, fmt.Errorf("cron has no name, can't determine if it's running")
-	}
-
-	jobs, err := listing.RunningJobs()
-	if err != nil {
-		return false, err
-	}
-
-	for _, job := range jobs {
-		if c.Name == job.Cron {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

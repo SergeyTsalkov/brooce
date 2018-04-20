@@ -10,6 +10,7 @@ var mainPageTpl = `
       <thead>
         <tr>
           <th>Queue</th>
+          <th>Workers</th>
           <th>Pending</th>
           <th>Running</th>
           <th>Done</th>
@@ -20,12 +21,13 @@ var mainPageTpl = `
       <tbody>
         {{ range $i, $Queue := .Queues }}
           <tr>
-            <td>{{ $Queue.QueueName }}</td>
-            <td><a href="/pending/{{ $Queue.QueueName }}">{{ $Queue.Pending }}</a></td>
+            <td>{{ $Queue.Name }}</td>
+            <td>{{ $Queue.Workers }}</td>
+            <td><a href="/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
             <td>{{ $Queue.Running }}</td>
-            <td><a href="/done/{{ $Queue.QueueName }}">{{ $Queue.Done }}</a></td>
-            <td><a href="/failed/{{ $Queue.QueueName }}">{{ $Queue.Failed }}</a></td>
-            <td><a href="/delayed/{{ $Queue.QueueName }}">{{ $Queue.Delayed }}</a></td>
+            <td><a href="/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>
+            <td><a href="/failed/{{ $Queue.Name }}">{{ $Queue.Failed }}</a></td>
+            <td><a href="/delayed/{{ $Queue.Name }}">{{ $Queue.Delayed }}</a></td>
           </tr>
         {{ end }}
       </tbody>
@@ -57,8 +59,8 @@ var mainPageTpl = `
             <td>{{ $Worker.IP }}</td>
             <td>{{ $Worker.PID }}</td>
             <td>
-              {{ range $j, $Queue := $Worker.Queues }}
-                {{ $Queue.Workers }}x<tt>{{ $Queue.Name }}</tt>
+              {{ range $queueName, $ct := $Worker.Queues }}
+                {{ $ct }}x<tt>{{ $queueName }}</tt>
               {{ end }}
             </td>
           </tr>

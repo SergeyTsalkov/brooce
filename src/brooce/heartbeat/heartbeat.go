@@ -21,23 +21,12 @@ var redisClient = myredis.Get()
 var once sync.Once
 
 type HeartbeatType struct {
-	ProcName  string         `json:"procname"`
-	Hostname  string         `json:"hostname"`
-	IP        string         `json:"ip"`
-	PID       int            `json:"pid"`
-	Timestamp int64          `json:"timestamp"`
-	Queues    []config.Queue `json:"queues"`
-}
-
-func (hb *HeartbeatType) TotalThreads() (total int) {
-	if hb.Queues == nil {
-		return
-	}
-
-	for _, q := range hb.Queues {
-		total += q.Workers
-	}
-	return
+	ProcName  string              `json:"procname"`
+	Hostname  string              `json:"hostname"`
+	IP        string              `json:"ip"`
+	PID       int                 `json:"pid"`
+	Timestamp int64               `json:"timestamp"`
+	Threads   []config.ThreadType `json:"threads"`
 }
 
 func (hb *HeartbeatType) HeartbeatAge() time.Duration {
@@ -62,13 +51,23 @@ func (hb *HeartbeatType) IsLocalZombie() bool {
 	return !util.ProcessExists(hb.PID)
 }
 
+func (hb *HeartbeatType) Queues() (queues map[string]int) {
+	queues = map[string]int{}
+
+	for _, thread := range hb.Threads {
+		queues[thread.Queue] += 1
+	}
+
+	return
+}
+
 func makeHeartbeat() string {
 	hb := &HeartbeatType{
 		ProcName:  config.Config.ProcName,
 		IP:        myip.PublicIPv4(),
 		PID:       os.Getpid(),
 		Timestamp: time.Now().Unix(),
-		Queues:    config.Config.Queues,
+		Threads:   config.Threads,
 	}
 
 	var err error

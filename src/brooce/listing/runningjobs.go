@@ -1,10 +1,12 @@
 package listing
 
 import (
+	"fmt"
+
 	"brooce/config"
+	"brooce/heartbeat"
 	myredis "brooce/redis"
 	"brooce/task"
-	"fmt"
 
 	redis "gopkg.in/redis.v6"
 )
@@ -12,12 +14,38 @@ import (
 var redisClient = myredis.Get()
 var redisHeader = config.Config.ClusterName
 
-func RunningJobs() (jobs []*task.Task, err error) {
+// SCAN takes about 0.5s per million total items in redis
+// we skip it by guessing the possible working list names
+// from worker heartbeat data
+// this is much faster, but the prune functions still need
+// the true list to find any zombie working lists
+func RunningJobs(fast bool) (jobs []*task.Task, err error) {
 	jobs = []*task.Task{}
 
 	var keys []string
-	keys, err = redisClient.Keys(redisHeader + ":queue:*:working:*").Result()
-	if err != nil || len(keys) == 0 {
+
+	if fast {
+		var workers []*heartbeat.HeartbeatType
+
+		workers, err = RunningWorkers()
+		if err != nil {
+			return
+		}
+
+		for _, worker := range workers {
+			for _, thread := range worker.Threads {
+				keys = append(keys, thread.WorkingList())
+			}
+		}
+
+	} else {
+		keys, err = myredis.ScanKeys(redisHeader + ":queue:*:working:*")
+		if err != nil {
+			return
+		}
+	}
+
+	if len(keys) == 0 {
 		return
 	}
 

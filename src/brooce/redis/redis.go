@@ -12,10 +12,11 @@ import (
 
 var redisClient *redis.Client
 var once sync.Once
-var threads = config.Config.TotalThreads() + 10
 
 func Get() *redis.Client {
 	once.Do(func() {
+		threads := len(config.Threads) + 10
+
 		redisClient = redis.NewClient(&redis.Options{
 			Addr:         config.Config.Redis.Host,
 			Password:     config.Config.Redis.Password,

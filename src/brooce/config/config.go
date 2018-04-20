@@ -81,13 +81,6 @@ type ConfigType struct {
 
 var Config = ConfigType{}
 
-func (c *ConfigType) TotalThreads() (threads int) {
-	for _, queue := range Config.Queues {
-		threads += queue.Workers
-	}
-	return
-}
-
 func (c *ConfigType) CSRF() string {
 	return util.Md5sum(c.Web.Username + ":" + c.Web.Password)
 }
@@ -141,6 +134,8 @@ func init() {
 			}
 		}
 	}
+
+	init_threads()
 }
 
 func init_defaults() {
