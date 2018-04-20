@@ -10,7 +10,7 @@ var mainPageTpl = `
       <thead>
         <tr>
           <th>Queue</th>
-          <th>Workers</th>
+          <th>Threads</th>
           <th>Pending</th>
           <th>Running</th>
           <th>Done</th>
@@ -22,7 +22,7 @@ var mainPageTpl = `
         {{ range $i, $Queue := .Queues }}
           <tr>
             <td>{{ $Queue.Name }}</td>
-            <td>{{ $Queue.Workers }}</td>
+            <td>{{ $Queue.Threads }}</td>
             <td><a href="/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
             <td>{{ $Queue.Running }}</td>
             <td><a href="/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>

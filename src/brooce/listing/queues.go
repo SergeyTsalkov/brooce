@@ -11,7 +11,7 @@ import (
 
 type QueueInfoType struct {
 	Name          string
-	Workers       int64
+	Threads       int64
 	Pending       int64
 	Running       int64
 	Done          int64
@@ -40,7 +40,7 @@ func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {
 
 			queueInfo := queueHash[thread.Queue]
 			queueInfo.Name = thread.Queue
-			queueInfo.Workers += 1
+			queueInfo.Threads += 1
 		}
 	}
 
