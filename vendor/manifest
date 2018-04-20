@@ -2,11 +2,10 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/go-redis/redis/internal",
+			"importpath": "github.com/go-redis/redis",
 			"repository": "https://github.com/go-redis/redis",
-			"revision": "34ce349cb7b166233b5b56f441a6c0ac38c3da68",
-			"branch": "master",
-			"path": "/internal"
+			"revision": "9ccc23344a52164531ed90362e2516b798e3296c",
+			"branch": "master"
 		},
 		{
 			"importpath": "github.com/imdario/mergo",
@@ -24,12 +23,6 @@
 			"importpath": "github.com/sevlyar/go-daemon",
 			"repository": "https://github.com/sevlyar/go-daemon",
 			"revision": "8577c7ddef908e104dae56c9e46f0956cb33c844",
-			"branch": "master"
-		},
-		{
-			"importpath": "gopkg.in/redis.v6",
-			"repository": "https://gopkg.in/redis.v6",
-			"revision": "975882d73d21759d45a4eb49652064083bc23e61",
 			"branch": "master"
 		}
 	]

@@ -12,7 +12,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/util"
 
-	redis "gopkg.in/redis.v6"
+	"github.com/go-redis/redis"
 )
 
 var redisHeader = config.Config.ClusterName

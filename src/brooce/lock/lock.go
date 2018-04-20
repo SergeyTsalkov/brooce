@@ -12,7 +12,7 @@ import (
 	"brooce/listing"
 	myredis "brooce/redis"
 
-	redis "gopkg.in/redis.v6"
+	"github.com/go-redis/redis"
 )
 
 var redisClient = myredis.Get()

@@ -8,7 +8,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v6"
+	"github.com/go-redis/redis"
 )
 
 var redisClient = myredis.Get()

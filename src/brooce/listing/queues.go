@@ -6,7 +6,7 @@ import (
 	"brooce/heartbeat"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v6"
+	"github.com/go-redis/redis"
 )
 
 type QueueInfoType struct {

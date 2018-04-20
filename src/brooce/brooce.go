@@ -21,8 +21,8 @@ import (
 	tasklib "brooce/task"
 	"brooce/web"
 
+	"github.com/go-redis/redis"
 	daemon "github.com/sevlyar/go-daemon"
-	redis "gopkg.in/redis.v6"
 )
 
 var redisClient = myredis.Get()

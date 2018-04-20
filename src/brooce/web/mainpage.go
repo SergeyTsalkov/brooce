@@ -7,7 +7,7 @@ import (
 	"brooce/listing"
 	"brooce/task"
 
-	redis "gopkg.in/redis.v6"
+	"github.com/go-redis/redis"
 )
 
 type mainpageOutputType struct {
