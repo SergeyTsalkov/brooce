@@ -17,7 +17,7 @@ type JobOptions struct {
 	MaxTries_    *int  `json:"maxtries,omitempty"`
 	KillOnDelay_ *bool `json:"killondelay,omitempty"`
 	NoFail_      *bool `json:"nofail,omitempty"`
-	PruneDone_   *int  `json:"prunedone,omitempty"`
+	//PruneDone_   *int  `json:"prunedone,omitempty"`
 
 	NoRedisLog_          *bool `json:"noredislog,omitempty"`
 	NoRedisLogOnSuccess_ *bool `json:"noredislogonsuccess,omitempty"`
@@ -67,12 +67,14 @@ func (j *JobOptions) NoFail() bool {
 	return j.NoFail_ != nil && *j.NoFail_
 }
 
+/*
 func (j *JobOptions) PruneDone() int {
 	if j.PruneDone_ != nil && *j.PruneDone_ > 0 {
 		return *j.PruneDone_
 	}
 	return 0
 }
+*/
 
 func (j *JobOptions) NoRedisLog() bool {
 	if j.NoRedisLogOnSuccess() && j.NoRedisLogOnFail() {

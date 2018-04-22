@@ -21,21 +21,24 @@ var RedisKeyDisabled = redisHeader + ":cron:disabledjobs"
 type CronType struct {
 	Name string
 
+	// cron time
 	Minute     string
 	Hour       string
 	DayOfMonth string
 	Month      string
 	DayOfWeek  string
 
-	Queue       string
-	Command     string
-	Locks       []string
-	Timeout     int
-	MaxTries    int
-	KillOnDelay bool
-	Disabled    bool
+	// command
+	Queue   string
+	Command string
+	Locks   []string
 
-	Raw string
+	// user-settable job options
+	config.JobOptions
+
+	// internal
+	Disabled bool
+	Raw      string
 }
 
 func (cron *CronType) Disable() (err error) {
@@ -94,6 +97,16 @@ func Get(name string) (cron *CronType, err error) {
 	return
 }
 
+func parseInt(value string) *int {
+	i, _ := strconv.Atoi(value)
+	return &i
+}
+
+func parseBool(value string) *bool {
+	b, _ := strconv.ParseBool(value)
+	return &b
+}
+
 func ParseCronLine(name, line string) (*CronType, error) {
 	if len(name) == 0 {
 		return nil, fmt.Errorf("cron name can't be empty")
@@ -129,13 +142,31 @@ func ParseCronLine(name, line string) (*CronType, error) {
 			cron.Queue = value
 		case "locks":
 			cron.Locks = strings.Split(value, ",")
+
 		case "timeout":
-			timeout, _ := strconv.ParseInt(value, 10, 64)
-			cron.Timeout = int(timeout)
+			cron.Timeout_ = parseInt(value)
 		case "maxtries":
-			cron.MaxTries, _ = strconv.Atoi(value)
+			cron.MaxTries_ = parseInt(value)
 		case "killondelay":
-			cron.KillOnDelay, _ = strconv.ParseBool(value)
+			cron.KillOnDelay_ = parseBool(value)
+		case "nofail":
+			cron.NoFail_ = parseBool(value)
+
+		case "noredislog":
+			cron.NoRedisLog_ = parseBool(value)
+		case "noredislogonsuccess":
+			cron.NoRedisLogOnSuccess_ = parseBool(value)
+		case "noredislogonfail":
+			cron.NoRedisLogOnFail_ = parseBool(value)
+		case "redislogexpireafter":
+			cron.RedisLogExpireAfter_ = parseInt(value)
+
+		case "drop":
+			cron.Drop_ = parseBool(value)
+		case "droponsuccess":
+			cron.DropOnSuccess_ = parseBool(value)
+		case "droponfail":
+			cron.DropOnFail_ = parseBool(value)
 
 		default:
 			//nothing yet!
@@ -213,9 +244,6 @@ func (cron *CronType) Task() (task *tasklib.Task) {
 	task.Command = cron.Command
 	task.Cron = cron.Name
 	task.Locks = cron.Locks
-	task.Timeout_ = &cron.Timeout
-	task.MaxTries_ = &cron.MaxTries
-	task.KillOnDelay_ = &cron.KillOnDelay
-
+	task.JobOptions = cron.JobOptions
 	return
 }
