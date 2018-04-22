@@ -65,6 +65,7 @@ func ReleaseLocks(locks []string) (err error) {
 }
 
 func Start() {
+	// before we grab a job, cleanup any lingering locks for our own process name
 	err := cleanup(config.Config.ProcName)
 	if err != nil {
 		log.Fatalln("redis error:", err)

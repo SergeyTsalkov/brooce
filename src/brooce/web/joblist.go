@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"brooce/config"
 	"brooce/task"
 
 	"github.com/go-redis/redis"
@@ -134,8 +133,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	}
 
 	for i, value := range rangeResult.Val() {
-		opts := config.Config.LocalOptionsForQueue(output.QueueName)
-		job, err := task.NewFromJson(value, opts)
+		job, err := task.NewFromJson(value, output.QueueName)
 		if err != nil {
 			continue
 		}
@@ -147,20 +145,6 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 		}
 	}
 
-	hasLog := make([]*redis.IntCmd, len(output.Jobs))
-	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for i, job := range output.Jobs {
-			hasLog[i] = pipe.Exists(fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id))
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for i, result := range hasLog {
-		output.Jobs[i].HasLog = result.Val() > 0
-	}
-
+	task.PopulateHasLog(output.Jobs)
 	return
 }

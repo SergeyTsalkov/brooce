@@ -11,30 +11,14 @@ import (
 
 	"brooce/myip"
 	"brooce/util"
-
-	"github.com/imdario/mergo"
 )
 
 var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
-
-type JobOptions struct {
-	Timeout     int      `json:"timeout,omitempty"`
-	MaxTries    int      `json:"maxtries,omitempty"`
-	Locks       []string `json:"locks,omitempty"`
-	KillOnDelay *bool    `json:"killondelay,omitempty"`
-}
-
-type Queue struct {
-	Name       string `json:"name"`
-	Workers    int    `json:"workers"`
-	JobOptions `json:"job_options"`
-}
 
 type ConfigType struct {
 	ClusterName string `json:"cluster_name"`
 	ProcName    string `json:"-"`
 
-	// Timeout int `json:"timeout"`
 	GlobalJobOptions JobOptions `json:"global_job_options"`
 
 	Web struct {
@@ -50,17 +34,6 @@ type ConfigType struct {
 	FileOutputLog struct {
 		Enable bool `json:"enable"`
 	} `json:"file_output_log"`
-
-	RedisOutputLog struct {
-		DropDone    bool  `json:"drop_done"`
-		DropFailed  bool  `json:"drop_failed"`
-		ExpireAfter int64 `json:"expire_after"`
-	} `json:"redis_output_log"`
-
-	JobResults struct {
-		DropDone   bool `json:"drop_done"`
-		DropFailed bool `json:"drop_failed"`
-	} `json:"job_results"`
 
 	Redis struct {
 		Host     string `json:"host"`
@@ -79,29 +52,31 @@ type ConfigType struct {
 	Path string `json:"path"`
 }
 
+type Queue struct {
+	Name       string `json:"name"`
+	Workers    int    `json:"workers"`
+	JobOptions `json:"job_options"`
+}
+
 var Config = ConfigType{}
 
 func (c *ConfigType) CSRF() string {
 	return util.Md5sum(c.Web.Username + ":" + c.Web.Password)
 }
 
-func (c *ConfigType) LocalOptionsForQueue(queue string) (opts JobOptions) {
-
-	// find our queue
+func (c *ConfigType) JobOptionsForQueue(queue string) (opts JobOptions) {
 	for _, q := range c.Queues {
 		if q.Name == queue {
 			opts = q.JobOptions
+			return
 		}
 	}
 
-	// destination (first-arg) wins conflicts;
-	if err := mergo.Merge(&opts, c.GlobalJobOptions); err != nil {
-		log.Fatalf("wtf getting options! %+v", err)
-	}
-
-	return opts
+	return
 }
 
+// this use of init sucks, but we'll have to fix every "var redisClient = myredis.Get()"
+// that is in a header to avoid it -- let's do this later!
 func init() {
 	if !util.IsDir(BrooceDir) {
 		err := os.Mkdir(BrooceDir, 0755)
@@ -118,27 +93,28 @@ func init() {
 	} else {
 		err = json.Unmarshal(bytes, &Config)
 		if err != nil {
-			log.Fatalln(fmt.Sprintf("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file! %s", err))
+			log.Fatalln("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file!")
 		}
 	}
 
-	init_defaults()
+	initDefaultJobOptions()
+	initDefaultConfig()
 
 	if !util.FileExists(configFile) {
 		if bytes, err := json.MarshalIndent(&Config, "", "  "); err == nil {
 			err = ioutil.WriteFile(configFile, bytes, 0744)
 			if err != nil {
-				log.Println("Warning: Unable to write clean config file to", configFile, ", error was:", err)
+				log.Println("Warning: Unable to write default config file to", configFile, ", error was:", err)
 			} else {
 				log.Println("We wrote a default config file to", configFile)
 			}
 		}
 	}
 
-	init_threads()
+	initThreads()
 }
 
-func init_defaults() {
+func initDefaultConfig() {
 	if Config.ClusterName == "" {
 		Config.ClusterName = "brooce"
 	}
@@ -162,10 +138,6 @@ func init_defaults() {
 		Config.Web.KeyFile = cleanpath(Config.Web.KeyFile)
 	}
 
-	if Config.RedisOutputLog.ExpireAfter == 0 {
-		Config.RedisOutputLog.ExpireAfter = 604800 // 7 days
-	}
-
 	if Config.Queues == nil {
 		Config.Queues = []Queue{
 			Queue{
@@ -173,14 +145,6 @@ func init_defaults() {
 				Workers: 1,
 			},
 		}
-	}
-
-	if Config.GlobalJobOptions.Timeout == 0 {
-		Config.GlobalJobOptions.Timeout = 3600
-	}
-
-	if Config.GlobalJobOptions.MaxTries == 0 {
-		Config.GlobalJobOptions.MaxTries = 1
 	}
 
 	if Config.Redis.Host == "" {
@@ -203,6 +167,10 @@ func init_defaults() {
 
 	if Config.Path != "" {
 		os.Setenv("PATH", os.Getenv("PATH")+":"+Config.Path)
+	}
+
+	if Config.GlobalJobOptions == (JobOptions{}) {
+		Config.GlobalJobOptions = DefaultJobOptions
 	}
 }
 

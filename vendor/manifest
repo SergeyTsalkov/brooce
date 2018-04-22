@@ -10,13 +10,25 @@
 		{
 			"importpath": "github.com/imdario/mergo",
 			"repository": "https://github.com/imdario/mergo",
-			"revision": "e3000cb3d28c72b837601cac94debd91032d19fe",
+			"revision": "9d5f1277e9a8ed20c3684bda8fde67c05628518c",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/kardianos/osext",
 			"repository": "https://github.com/kardianos/osext",
 			"revision": "9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mitchellh/copystructure",
+			"repository": "https://github.com/mitchellh/copystructure",
+			"revision": "d23ffcb85de31694d6ccaa23ccb4a03e55c1303f",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mitchellh/reflectwalk",
+			"repository": "https://github.com/mitchellh/reflectwalk",
+			"revision": "63d60e9d0dbc60cf9164e6510889b0db6683d98c",
 			"branch": "master"
 		},
 		{

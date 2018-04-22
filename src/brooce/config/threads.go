@@ -6,10 +6,9 @@ import (
 )
 
 type ThreadType struct {
-	Id      int        `json:"id"`
-	Name    string     `json:"name"`
-	Queue   string     `json:"queue"`
-	Options JobOptions `json:"-"`
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Queue string `json:"queue"`
 }
 
 func (t *ThreadType) PendingList() string {
@@ -35,17 +34,16 @@ func (t *ThreadType) DelayedList() string {
 var Threads = []ThreadType{}
 var ThreadString string
 
-func init_threads() {
+func initThreads() {
 	strQueueList := []string{}
 
 	for _, q := range Config.Queues {
 		for i := 0; i < q.Workers; i++ {
 
 			thread := ThreadType{
-				Id:      i,
-				Name:    fmt.Sprintf("%v-%v-%v", Config.ProcName, q.Name, i),
-				Queue:   q.Name,
-				Options: Config.LocalOptionsForQueue(q.Name),
+				Id:    i,
+				Name:  fmt.Sprintf("%v-%v-%v", Config.ProcName, q.Name, i),
+				Queue: q.Name,
 			}
 
 			Threads = append(Threads, thread)

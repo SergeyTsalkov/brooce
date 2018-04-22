@@ -30,9 +30,9 @@ type CronType struct {
 	Queue       string
 	Command     string
 	Locks       []string
-	Timeout     int64
+	Timeout     int
 	MaxTries    int
-	KillOnDelay *bool
+	KillOnDelay bool
 	Disabled    bool
 
 	Raw string
@@ -130,12 +130,12 @@ func ParseCronLine(name, line string) (*CronType, error) {
 		case "locks":
 			cron.Locks = strings.Split(value, ",")
 		case "timeout":
-			cron.Timeout, _ = strconv.ParseInt(value, 10, 64)
+			timeout, _ := strconv.ParseInt(value, 10, 64)
+			cron.Timeout = int(timeout)
 		case "maxtries":
 			cron.MaxTries, _ = strconv.Atoi(value)
 		case "killondelay":
-			killondelay, _ := strconv.ParseBool(value)
-			cron.KillOnDelay = &killondelay
+			cron.KillOnDelay, _ = strconv.ParseBool(value)
 
 		default:
 			//nothing yet!
@@ -208,13 +208,14 @@ func cronTimeCompare(cronstr string, timeval int) bool {
 	return false
 }
 
-func (cron *CronType) Task() *tasklib.Task {
-	return &tasklib.Task{
-		Command:     cron.Command,
-		Cron:        cron.Name,
-		Locks:       cron.Locks,
-		Timeout:     cron.Timeout,
-		MaxTries:    cron.MaxTries,
-		KillOnDelay: cron.KillOnDelay,
-	}
+func (cron *CronType) Task() (task *tasklib.Task) {
+	task = &tasklib.Task{}
+	task.Command = cron.Command
+	task.Cron = cron.Name
+	task.Locks = cron.Locks
+	task.Timeout_ = &cron.Timeout
+	task.MaxTries_ = &cron.MaxTries
+	task.KillOnDelay_ = &cron.KillOnDelay
+
+	return
 }

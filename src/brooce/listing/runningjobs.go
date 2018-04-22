@@ -1,8 +1,6 @@
 package listing
 
 import (
-	"fmt"
-
 	"brooce/config"
 	"brooce/heartbeat"
 	myredis "brooce/redis"
@@ -69,7 +67,7 @@ func RunningJobs(fast bool) (jobs []*task.Task, err error) {
 			// possible to get a redis.Nil error here if a job vanished between the KEYS and LINDEX steps
 			continue
 		}
-		job, err := task.NewFromJson(value.Val(), config.JobOptions{})
+		job, err := task.NewFromJson(value.Val(), task.QueueNameFromRedisKey(keys[i]))
 		if err != nil {
 			continue
 		}
@@ -77,24 +75,6 @@ func RunningJobs(fast bool) (jobs []*task.Task, err error) {
 		jobs = append(jobs, job)
 	}
 
-	if len(jobs) == 0 {
-		return
-	}
-
-	hasLog := make([]*redis.IntCmd, len(jobs))
-	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for i, job := range jobs {
-			hasLog[i] = pipe.Exists(fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id))
-		}
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
-	for i, result := range hasLog {
-		jobs[i].HasLog = result.Val() > 0
-	}
-
+	task.PopulateHasLog(jobs)
 	return
 }

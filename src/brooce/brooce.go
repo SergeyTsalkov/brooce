@@ -115,7 +115,7 @@ func runner(thread config.ThreadType) {
 		}
 
 		var exitCode int
-		task, err := tasklib.NewFromJson(taskStr, thread.Options)
+		task, err := tasklib.NewFromJson(taskStr, thread.Queue)
 		if err != nil {
 			log.Println("Failed to decode task:", err)
 		} else {
@@ -134,44 +134,37 @@ func runner(thread config.ThreadType) {
 		}
 
 		_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-			result := "failed"
 
+			// Unix standard "temp fail" code
 			if exitCode == 75 {
-				// Unix standard "temp fail" code
-				result = "delayed"
-			} else if err != nil || exitCode != 0 {
-				result = "failed"
-			} else {
-				result = "done"
-			}
-
-			switch result {
-			case "done":
-				if !config.Config.JobResults.DropDone {
-					pipe.LPush(thread.DoneList(), task.Json())
+				// DELAYED
+				if !task.KillOnDelay() {
+					pipe.LPush(thread.DelayedList(), task.Json())
 				}
 
-				if config.Config.RedisOutputLog.DropDone {
-					pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
-				}
-
-			case "failed":
-				// log.Printf("Failed and try %d/%d", task.Tried, task.MaxTries)
-				if task.MaxTries > task.Tried {
-					log.Printf("Failed attempt %d of %d; re-queuing!", task.Tried, task.MaxTries)
+			} else if (err != nil || exitCode != 0) && !task.NoFail() {
+				// FAILED
+				if task.MaxTries() > task.Tried {
 					pipe.LPush(thread.DelayedList(), task.Json())
 				} else {
-					if !config.Config.JobResults.DropFailed {
+					if !task.DropOnFail() {
 						pipe.LPush(thread.FailedList(), task.Json())
 					}
 
-					if config.Config.RedisOutputLog.DropFailed {
-						pipe.Del(fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id))
+					if task.NoRedisLogOnFail() && task.LogKey() != "" {
+						pipe.Del(task.LogKey())
 					}
 				}
-			case "delayed":
-				if task.KillOnDelay == nil || !*task.KillOnDelay {
-					pipe.LPush(thread.DelayedList(), task.Json())
+
+			} else {
+				// DONE
+
+				if !task.DropOnSuccess() {
+					pipe.LPush(thread.DoneList(), task.Json())
+				}
+
+				if task.NoRedisLogOnSuccess() && task.LogKey() != "" {
+					pipe.Del(task.LogKey())
 				}
 			}
 

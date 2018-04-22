@@ -49,7 +49,7 @@ func Get() *template.Template {
 
 			return util.HumanDuration(time.Unix(end, 0).Sub(time.Unix(start, 0)), 1)
 		},
-		"TimeDuration": func(seconds int64) string {
+		"TimeDuration": func(seconds int) string {
 			if seconds == 0 {
 				return ""
 			}

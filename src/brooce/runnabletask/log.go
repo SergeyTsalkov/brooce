@@ -6,8 +6,6 @@ import (
 	"log"
 	"time"
 
-	"brooce/config"
-
 	"github.com/go-redis/redis"
 )
 
@@ -25,7 +23,7 @@ func (task *RunnableTask) Write(p []byte) (lenP int, err error) {
 		task.FileWriter.Write(p)
 	}
 
-	if task.Id != "" && (!config.Config.RedisOutputLog.DropDone || !config.Config.RedisOutputLog.DropFailed) {
+	if task.Id != "" && !task.NoRedisLog() {
 		_, err = task.buffer.Write(p)
 	}
 
@@ -40,11 +38,18 @@ func (task *RunnableTask) Flush() {
 		return
 	}
 
-	key := fmt.Sprintf("%s:jobs:%s:log", redisHeader, task.Id)
+	if task.LogKey() == "" {
+		log.Println("Warning: trying to flush log but we have no task id!")
+		task.buffer.Reset()
+		return
+	}
 
 	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		pipe.Append(key, task.buffer.String())
-		pipe.Expire(key, time.Duration(config.Config.RedisOutputLog.ExpireAfter)*time.Second)
+		pipe.Append(task.LogKey(), task.buffer.String())
+
+		if task.RedisLogExpireAfter() > 0 {
+			pipe.Expire(task.LogKey(), time.Duration(task.RedisLogExpireAfter())*time.Second)
+		}
 		return nil
 	})
 

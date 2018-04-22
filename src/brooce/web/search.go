@@ -9,11 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"brooce/config"
 	myredis "brooce/redis"
 	"brooce/task"
-
-	"github.com/go-redis/redis"
 )
 
 type PagedHits struct {
@@ -26,15 +23,14 @@ type PagedHits struct {
 }
 
 func searchHandler(req *http.Request, rep *httpReply) (err error) {
-	query, queue, listType, page := searchQueryParams(req.URL.RawQuery)
+	query, queueName, listType, page := searchQueryParams(req.URL.RawQuery)
 
-	key := fmt.Sprintf("%s:queue:%s:%s", redisHeader, queue, listType)
-
-	hits := searchQueueForCommand(key, query)
+	hits := searchQueueForCommand(query, queueName, listType)
 	pagedHits := newPagedHits(hits, 10, page)
+	task.PopulateHasLog(pagedHits.Hits)
 
 	output := &joblistOutputType{
-		QueueName: queue,
+		QueueName: queueName,
 		ListType:  listType,
 		Query:     query,
 		Page:      int64(page),
@@ -104,16 +100,15 @@ func searchQueryParams(rq string) (query string, queue string, listType string, 
 	return query, queue, listType, page
 }
 
-func searchQueueForCommand(queueKey string, query string) []*task.Task {
-	// log.Printf("Searching %s for %s", queueKey, query)
+func searchQueueForCommand(query, queueName, listType string) []*task.Task {
 	r := myredis.Get()
+	queueKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, queueName, listType)
 
 	found := []*task.Task{}
 	vals := r.LRange(queueKey, 0, -1).Val()
 
 	for _, v := range vals {
-		// log.Printf("%s: %+v", queueKey, v)
-		t, err := task.NewFromJson(v, config.JobOptions{})
+		t, err := task.NewFromJson(v, queueName)
 
 		if err != nil {
 			log.Printf("Couldn't construct task.Task from %+v", v)
@@ -125,28 +120,5 @@ func searchQueueForCommand(queueKey string, query string) []*task.Task {
 		}
 	}
 
-	// log.Printf("Search of %s for %s got %d hits", queueKey, query, len(found))
-
-	found = addLogsToSearchHits(found)
 	return found
-}
-
-func addLogsToSearchHits(hits []*task.Task) []*task.Task {
-	hasLog := make([]*redis.IntCmd, len(hits))
-	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for i, job := range hits {
-			k := fmt.Sprintf("%s:jobs:%s:log", redisHeader, job.Id)
-			hasLog[i] = pipe.Exists(k)
-		}
-		return nil
-	})
-	if err != nil {
-		return []*task.Task{}
-	}
-
-	for i, result := range hasLog {
-		hits[i].HasLog = result.Val() > 0
-	}
-
-	return hits
 }
