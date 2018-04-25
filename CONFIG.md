@@ -21,15 +21,6 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
   "file_output_log": {
     "enable": false
   },
-  "redis_output_log": {
-    "drop_done": false,
-    "drop_failed": false,
-    "expire_after": 604800
-  },
-  "job_results": {
-    "drop_done": false,
-    "drop_failed": false
-  },
   "redis": {
     "host": "localhost:6379",
     "password": "",
@@ -58,21 +49,8 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 ### `cluster_name`
 Leave this alone unless you want multiple sets of workers to share one redis server. Multiple brooce workers on separate machines can normally draw jobs from the same queue, but putting them in separate clusters will make them unaware of each other.
 
-### `global_job_options.timeout`
-How long jobs can run before they're killed. The global default is 1 hour (3600 seconds). The timeout can't be disabled -- you should set it to the most time you expect your jobs to take, so it will automatically kill any that get stuck.
-
-Queues and jobs can override this (per-job values override per-queue values which override global values). 
-
-### `global_job_options.maxtries`
-How many times to try a job in case it fails. If maxtries is greater than 1 a failed job will be put in the delayed queue to try again, until maxtries has been reached. 
-
-Queues and jobs can override this (per-job values override per-queue values which override global values). 
-
-### `global_job_options.killondelay`
-If set to true, any job that is going to be delayed (because it can't acquire a lock) is just deleted instead.
-
-Queues and jobs can override this (per-job values override per-queue values which override global values).
-
+### `global_job_options`
+Job options specified here will apply globally, unless overwritten in the queue job_options hash, or individually in the job. [See the list of all job options in README.md](README.md#job-options).
  
 ### `web.addr`
 Where the web server is hosted. Defaults on port 8080 on all IPs that it can bind to.
@@ -91,15 +69,6 @@ Set to true to disable the web server.
  
 ### `file_output_log.enable`
 By default, job stdout/stderr is only logged to redis for review through the web interface. If you turn this on, the `~/.brooce` folder will get a logfile for every worker.
- 
-### `redis_output_log.drop_done` / `redis_output_log.drop_failed`
-By default, we keep the logs for every job and store those logs in redis for access through the web interface. To save space, you can have those logs purged for jobs that succeed, or jobs that fail, or both.
- 
-### `redis_output_log.expire_after`
-By default, job logs stored in redis expire after a week. You can change that here, in seconds.
- 
-### `job_results.drop_done` / `job_results.drop_failed`
-By default, we store the name of each completed job in redis for later review through the web interface. You can drop those records for succeeded jobs, or failed jobs, or both.
 
 ### `redis.host` / `redis.password`
 The hostname and password to access your redis server. Defaults to localhost and no-password.
@@ -113,7 +82,7 @@ For example, if you enabled suicide and set command to `"sudo shutdown -h now"` 
 ### `queues`
 Brooce is multithreaded, and can listen for commands on multiple queues. For example, you could do the following to run 5 threads on the common queue and 2 more threads on the rare queue.
 
-You can also set per-queue job options. Per-queue options override `global_job_options`, and individual jobs can override the per-queue settings.
+You can set per-queue job options in the `job_options` hash, as shown below. Per-queue options override `global_job_options`, and individual jobs can override the per-queue settings. [See the list of all job options in README.md](README.md#job-options).
 
 ```json
 {

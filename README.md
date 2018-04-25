@@ -105,19 +105,42 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 [View brooce.conf Documentation](CONFIG.md)
 
 
+## Job Options
+So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here are all possible parameters, along with their json data type and the default value if omitted.
+  * **timeout** (int, default 3600) - Number of seconds that a job will be allowed to run for before it is killed. The timeout can't be disabled, but can be set to a very large number.
+  * **maxtries** (int, default 1) - If set to a number greater than 1, the job will be automatically retried on failure that many times.
+  * **killondelay** (bool, default false) - If true, jobs that can't acquire a lock they need will be killed off rather than delayed and retried.
+  * **noredislog** (bool, default false) - Don't log job stdout/stderr to redis.
+  * **noredislogonsuccess** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits successfully.
+  * **noredislogonfail** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits with a non-zero exit code.
+  * **redislogexpireafter** (bool, default false) - How many seconds to retain job stdout/stderr output in redis for. Defaults to 1 week if omitted.
+  * **drop** (bool, default false) - Don't send the job to the done or failed list after it finishes. Jobs that finish running will just vanish.
+  * **droponsuccess** (bool, default false) - If the job exits successfully, don't send it to the done list. Instead, it will just vanish.
+  * **droponfail** (bool, default false) - If the job exits with a non-zero exit code, don't send it to the failed list. Instead, it will just vanish.
+
+Job options can be specified in these places: the global_job_options section of [brooce.conf](CONFIG.md); the per-queue job_options sections of [brooce.conf](CONFIG.md); individual jobs, as in the example below. Options in a more specific location (like the job itself) can override more general ones (like the global job options).
+
+### Job Option: Timeout
+This job will only run for 10 seconds before it is automatically killed:
+```shell
+redis-cli LPUSH brooce:queue:common:pending '{"command":"sleep 11 && touch ~/done.txt","timeout":10}'
+```
+In this example, the done.txt file will never be created because the job will be killed too soon. If you go into the web interface, you'll be able to see it under failed jobs.
+
+### Job Option: Maxtries
+If a job fails, you sometimes want it to be retried a few times before you give up and put it in the failed column. If you add `maxtries` to your job and set it to a value above 1, the job will be tried that many times in total. If they have any retries left, failed jobs will be divered to the delayed column instead and then requeued one minute later. This is helpful if a temporary error (like a network glitch) was
+causing the failure, because the problem will hopefully be gone a minute later.
+
+```shell
+redis-cli LPUSH brooce:queue:common:pending '{"command":"ls -l /doesnotexist","maxtries":3}'
+```
+
 ## Concurrency
 ### Multiple Threads
 Brooce is multi-threaded, and can run many jobs at once from multiple queues. To set up multiple queues, edit the [queues section of brooce.conf](CONFIG.md#queues).
 
 ### Multiple VPSes/Servers
 You can deploy brooce on multiple servers. Make sure they all connect to the same redis server, and have the same cluster_name set in [brooce.conf](CONFIG.md#queues). They can all work on jobs from the same queues, if desired.
-
-## Timeouts
-So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here is a job that overwrites the [default 1-hour timeout in brooce.conf](CONFIG.md#timeout) and runs for only 10 seconds:
-```shell
-redis-cli LPUSH brooce:queue:common:pending '{"command":"sleep 11 && touch ~/done.txt","timeout":10}'
-```
-In this example, the done.txt file will never be created because the job will be killed too soon. If you go into the web interface, you'll be able to see it under failed jobs.
 
 
 ## Locking
@@ -153,13 +176,6 @@ redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-accou
 ### Locking Things Yourself
 Sometimes you don't know which locks a job will need until after it starts running -- maybe you have a script called `~/bin/bill-all-accounts.sh` and you want it to lock all accounts that it's about to bill. In that case, your script will need to implement its own locking system. If it determines that it can't grab the locks it needs, it should return exit code 75 (temp failure). All other non-0 exit codes cause your job to be marked as failed, but 75 causes it to be pushed to the delayed queue and later re-tried.
 
-## Automatic Retrying
-If a job fails, you sometimes want it to be retried a few times before you give up and put it in the failed column. If you add `maxtries` to your job and set it to a value above 1, the job will be tried that many times in total. If they have any retries left, failed jobs will be divered to the delayed column instead and then requeued one minute later. This is helpful if a temporary error (like a network glitch) was
-causing the failure, because the problem will hopefully be gone a minute later.
-
-```shell
-redis-cli LPUSH brooce:queue:common:pending '{"command":"ls -l /doesnotexist","maxtries":3}'
-```
 
 ## Cron Jobs
 Cron jobs work much the same way they do on Linux, except you're setting them up as a redis hash and specifying a queue to run in. Let's say you want to bill all your users every day at midnight. You might do this:
