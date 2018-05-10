@@ -1,4 +1,4 @@
-// +build !cluster
+// +build cluster
 
 package redis
 
@@ -6,21 +6,22 @@ import (
 	"log"
 	"sync"
 	"time"
+	"strings"
 
 	"brooce/config"
 
 	"github.com/go-redis/redis"
 )
 
-var redisClient *redis.Client
+var redisClient *redis.ClusterClient
 var once sync.Once
 
-func Get() *redis.Client {
+func Get() *redis.ClusterClient {
 	once.Do(func() {
 		threads := len(config.Threads) + 10
 
-		redisClient = redis.NewClient(&redis.Options{
-			Addr:         config.Config.Redis.Host,
+		redisClient = redis.NewClusterClient(&redis.ClusterOptions{
+			Addrs:        strings.Split(config.Config.Redis.Host, ","),
 			Password:     config.Config.Redis.Password,
 			MaxRetries:   10,
 			PoolSize:     threads,
@@ -28,7 +29,6 @@ func Get() *redis.Client {
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 5 * time.Second,
 			PoolTimeout:  1 * time.Second,
-			DB:           config.Config.Redis.DB,
 		})
 
 		for {
