@@ -28,6 +28,7 @@ type ConfigType struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 		NoAuth   bool   `json:"no_auth"`
+		NoLog    bool   `json:"no_log"`
 		Disable  bool   `json:"disable"`
 	} `json:"web"`
 

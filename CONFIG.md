@@ -16,6 +16,7 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
     "username": "admin",
     "password": "eoioszzi",
     "no_auth": false,
+    "no_log": false,
     "disable": false
   },
   "file_output_log": {
@@ -63,6 +64,9 @@ We generate random login credentials the first time you run brooce, but you can 
  
 ### `web.no_auth`
 To run the web server with no authentication, leave username/password (above) blank, and set this to true. This is not recommended if you're having the web server listen on an internet-connected IP.
+ 
+### `web.no_log`
+By default, web interface access is logged to `~/.brooce/web.log`. Set this to true to disable web access logging.
  
 ### `web.disable`
 Set to true to disable the web server.
