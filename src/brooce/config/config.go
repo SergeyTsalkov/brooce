@@ -48,6 +48,10 @@ type ConfigType struct {
 		Time    int    `json:"time"`
 	} `json:"suicide"`
 
+	Requeue struct {
+		Interval int `json:"interval"`
+	} `json:"requeue"`
+
 	Queues []Queue `json:"queues"`
 
 	Path string `json:"path"`
@@ -161,9 +165,13 @@ func initDefaultConfig() {
 			Config.Suicide.Command = "sudo shutdown -h now"
 		}
 
-		if Config.Suicide.Time == 0 {
+		if Config.Suicide.Time <= 0 {
 			Config.Suicide.Time = 600
 		}
+	}
+
+	if Config.Requeue.Interval <= 0 {
+		Config.Requeue.Interval = 60
 	}
 
 	if Config.Path != "" {
