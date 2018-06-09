@@ -12,13 +12,17 @@ import (
 	"time"
 )
 
-func SleepUntilNextMinute() {
+func SleepUntilNextInterval(interval int) {
 	now := time.Now().Unix()
-	last_minute := now - now%60
-	next_minute := last_minute + 60
-	sleep_for := next_minute - now
+	last_interval := now - now % int64(interval)
+	next_interval := last_interval + int64(interval)
+	sleep_for := next_interval - now
 
 	time.Sleep(time.Duration(sleep_for) * time.Second)
+}
+
+func SleepUntilNextMinute() {
+	SleepUntilNextInterval(60)
 }
 
 func Md5sum(data interface{}) string {

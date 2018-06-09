@@ -84,12 +84,14 @@ func Start() {
 	go func() {
 		var err error
 
-		filename := filepath.Join(config.BrooceDir, "web.log")
-		webLogWriter, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			log.Fatalln("Unable to open logfile", filename, "for writing! Error was", err)
+		if !config.Config.Web.NoLog {
+			filename := filepath.Join(config.BrooceDir, "web.log")
+			webLogWriter, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+			if err != nil {
+				log.Fatalln("Unable to open logfile", filename, "for writing! Error was", err)
+			}
+			defer webLogWriter.Close()
 		}
-		defer webLogWriter.Close()
 
 		if config.Config.Web.CertFile == "" && config.Config.Web.KeyFile == "" {
 			log.Println("Starting HTTP server on", config.Config.Web.Addr)

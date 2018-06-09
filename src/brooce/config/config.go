@@ -28,6 +28,7 @@ type ConfigType struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 		NoAuth   bool   `json:"no_auth"`
+		NoLog    bool   `json:"no_log"`
 		Disable  bool   `json:"disable"`
 	} `json:"web"`
 
@@ -46,6 +47,10 @@ type ConfigType struct {
 		Command string `json:"command"`
 		Time    int    `json:"time"`
 	} `json:"suicide"`
+
+	Requeue struct {
+		Interval int `json:"interval"`
+	} `json:"requeue"`
 
 	Queues []Queue `json:"queues"`
 
@@ -160,9 +165,13 @@ func initDefaultConfig() {
 			Config.Suicide.Command = "sudo shutdown -h now"
 		}
 
-		if Config.Suicide.Time == 0 {
+		if Config.Suicide.Time <= 0 {
 			Config.Suicide.Time = 600
 		}
+	}
+
+	if Config.Requeue.Interval <= 0 {
+		Config.Requeue.Interval = 60
 	}
 
 	if Config.Path != "" {

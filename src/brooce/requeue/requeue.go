@@ -11,11 +11,12 @@ import (
 )
 
 var redisHeader = config.Config.ClusterName
+var requeueInterval = config.Config.Requeue.Interval
 
 func Start() {
 	go func() {
 		for {
-			util.SleepUntilNextMinute()
+			util.SleepUntilNextInterval(requeueInterval)
 			err := requeue()
 			if err != nil {
 				log.Println("Error trying to requeue delayed jobs:", err)
