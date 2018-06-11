@@ -9,25 +9,25 @@ var mainPageTpl = `
     <table class="table">
       <thead>
         <tr>
-          <th>Queue</th>
-          <th>Threads</th>
-          <th>Pending</th>
-          <th>Running</th>
-          <th>Done</th>
-          <th>Failed</th>
-          <th>Delayed</th>
+          <th class="queuename">Queue</th>
+          <th class="queuenum">Threads</th>
+          <th class="queuenum">Pending</th>
+          <th class="queuenum">Running</th>
+          <th class="queuenum">Done</th>
+          <th class="queuenum">Failed</th>
+          <th class="queuenum">Delayed</th>
         </tr>
       </thead>
       <tbody>
         {{ range $i, $Queue := .Queues }}
           <tr>
-            <td>{{ $Queue.Name }}</td>
-            <td>{{ $Queue.Threads }}</td>
-            <td><a href="/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
-            <td>{{ $Queue.Running }}</td>
-            <td><a href="/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>
-            <td><a href="/failed/{{ $Queue.Name }}">{{ $Queue.Failed }}</a></td>
-            <td><a href="/delayed/{{ $Queue.Name }}">{{ $Queue.Delayed }}</a></td>
+            <td class="queuename">{{ $Queue.Name }}</td>
+            <td class="queuenum">{{ $Queue.Threads }}</td>
+            <td class="queuenum"><a href="/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
+            <td class="queuenum">{{ $Queue.Running }}</td>
+            <td class="queuenum"><a href="/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>
+            <td class="queuenum"><a href="/failed/{{ $Queue.Name }}">{{ $Queue.Failed }}</a></td>
+            <td class="queuenum"><a href="/delayed/{{ $Queue.Name }}">{{ $Queue.Delayed }}</a></td>
           </tr>
         {{ end }}
       </tbody>

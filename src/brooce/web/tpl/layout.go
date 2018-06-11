@@ -82,6 +82,14 @@ var headerTpl = `
         white-space: nowrap;
       }
 
+      th.queuename,td.queuename {
+        text-align: right;
+      }
+
+      th.queuenum,td.queuenum {
+        text-align: center;
+      }
+
 
     </style>
 
