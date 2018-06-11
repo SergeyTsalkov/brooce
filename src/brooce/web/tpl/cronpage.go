@@ -3,8 +3,8 @@ package tpl
 var cronPageTpl = `
 {{ define "cronitem" }}
 <tr {{ if .Disabled }}class="danger"{{ end }}>
-  <td>{{ .Name }}</td>
-  <td><tt>{{ .Raw }}</tt></td>
+  <td class="nowrap">{{ .Name }}</td>
+  <td class="wrap"><code>{{ .Raw }}</code></td>
 
   <td class="buttons">
 

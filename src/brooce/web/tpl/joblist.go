@@ -55,10 +55,10 @@ var jobListTpl = `
         {{ range .Jobs }}
           <tr>
             {{ if eq $.ListType "done" "failed" }}
-              <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }}</span></td>
-              <td>{{ TimeBetween .EndTime .StartTime }}</td>
+              <td class="nowrap"><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }}</span></td>
+              <td class="nowrap">{{ TimeBetween .EndTime .StartTime }}</td>
             {{ end }}
-            <td><code>{{ .Command }}</code></td>
+            <td class="wrap"><code>{{ .Command }}</code></td>
             <td class="params">
               <ul>
                 {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}

@@ -93,8 +93,8 @@ var mainPageTpl = `
           <tr>
             <td>{{ .WorkerThreadName }}</td>
             <td>{{ .QueueName }}</td>
-            <td><span title="{{FormatTime .StartTime}}">{{ TimeSince .StartTime }}</span></td>
-            <td><code>{{ .Command }}</code></td>
+            <td class="nowrap"><span title="{{FormatTime .StartTime}}">{{ TimeSince .StartTime }}</span></td>
+            <td class="wrap"><code>{{ .Command }}</code></td>
             <td class="params">
               <ul>
                 {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}

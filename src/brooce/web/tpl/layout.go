@@ -73,6 +73,15 @@ var headerTpl = `
         padding: 0;
       }
 
+      td.wrap {
+        word-break: break-all;
+        width: 100%;
+      }
+
+      td.nowrap {
+        white-space: nowrap;
+      }
+
 
     </style>
 
