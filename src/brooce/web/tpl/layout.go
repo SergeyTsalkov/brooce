@@ -73,6 +73,23 @@ var headerTpl = `
         padding: 0;
       }
 
+      td.wrap {
+        word-break: break-all;
+        width: 100%;
+      }
+
+      td.nowrap {
+        white-space: nowrap;
+      }
+
+      th.queuename,td.queuename {
+        text-align: right;
+      }
+
+      th.queuenum,td.queuenum {
+        text-align: center;
+      }
+
 
     </style>
 

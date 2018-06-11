@@ -129,6 +129,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	output.Jobs = make([]*task.Task, rangeLength)
 
 	if len(output.Jobs) == 0 {
+		output.Page = 0
 		return
 	}
 

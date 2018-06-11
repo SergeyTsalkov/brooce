@@ -55,10 +55,10 @@ var jobListTpl = `
         {{ range .Jobs }}
           <tr>
             {{ if eq $.ListType "done" "failed" }}
-              <td><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }}</span></td>
-              <td>{{ TimeBetween .EndTime .StartTime }}</td>
+              <td class="nowrap"><span title="{{FormatTime .EndTime}}">{{ TimeSince .EndTime }}</span></td>
+              <td class="nowrap">{{ TimeBetween .EndTime .StartTime }}</td>
             {{ end }}
-            <td><code>{{ .Command }}</code></td>
+            <td class="wrap"><code>{{ .Command }}</code></td>
             <td class="params">
               <ul>
                 {{ if .Timeout }} <li>Timeout: {{ TimeDuration .Timeout }} {{ end }}
@@ -101,18 +101,18 @@ var jobListTpl = `
     <div class="pages">
       <i>Showing results {{ .Start }}-{{ .End }} of {{ .Length }}</i>
       
-      {{ if eq $.Page 1 }}
-        <span class="prevnext"><<= Prev</span>
+      {{ if lt $.Page 2 }}
+        <span class="prevnext">&#10235; Prev</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}"><<= Prev</a>
+        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}">&#10235; Prev</a>
       {{ end }}
 
       Page {{ $.Page }} of {{ .Pages }}
 
       {{ if eq $.Page $.Pages }}
-        <span class="prevnext">Next =>></span>
+        <span class="prevnext">Next &#10236;</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}">Next =>></a>
+        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}">Next &#10236;</a>
       {{ end }}
     </div>
     
