@@ -27,6 +27,15 @@ func searchHandler(req *http.Request, rep *httpReply) (err error) {
 
 	hits := searchQueueForCommand(query, queueName, listType)
 	pagedHits := newPagedHits(hits, 10, page)
+
+	if pagedHits.Pages == 0 {
+		pagedHits.Start = 0
+		page = 0
+	} else if page > pagedHits.Pages {
+		page = pagedHits.Pages
+		pagedHits = newPagedHits(hits, 10, page)
+	}
+
 	task.PopulateHasLog(pagedHits.Hits)
 
 	output := &joblistOutputType{
