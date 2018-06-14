@@ -48,9 +48,21 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 		Page:      int64(page),
 		URL:       req.URL,
 	}
+
 	err = output.listJobs(listType == "pending")
 	if err != nil {
 		return
+	}
+
+	if output.Pages == 0 {
+		output.Page = 0
+	} else if output.Page > output.Pages {
+		output.Page = output.Pages
+
+		err = output.listJobs(listType == "pending")
+		if err != nil {
+			return
+		}
 	}
 
 	err = templates.ExecuteTemplate(rep, "joblist", output)
@@ -129,7 +141,6 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	output.Jobs = make([]*task.Task, rangeLength)
 
 	if len(output.Jobs) == 0 {
-		output.Page = 0
 		return
 	}
 
