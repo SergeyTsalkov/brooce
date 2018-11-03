@@ -113,7 +113,7 @@ So far, we've treated jobs as strings, but they can also be json hashes with add
   * **noredislog** (bool, default false) - Don't log job stdout/stderr to redis.
   * **noredislogonsuccess** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits successfully.
   * **noredislogonfail** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits with a non-zero exit code.
-  * **redislogexpireafter** (bool, default false) - How many seconds to retain job stdout/stderr output in redis for. Defaults to 1 week if omitted.
+  * **redislogexpireafter** (int, default 604800) - How many seconds to retain job stdout/stderr output in redis for. Defaults to 1 week if omitted.
   * **drop** (bool, default false) - Don't send the job to the done or failed list after it finishes. Jobs that finish running will just vanish.
   * **droponsuccess** (bool, default false) - If the job exits successfully, don't send it to the done list. Instead, it will just vanish.
   * **droponfail** (bool, default false) - If the job exits with a non-zero exit code, don't send it to the failed list. Instead, it will just vanish.
