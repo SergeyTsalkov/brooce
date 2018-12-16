@@ -19,6 +19,7 @@ I've been personally relying on brooce with great results! If you try it out, I 
 * **Timeouts** -- To prevent jobs from getting stuck, brooce automatically kills any jobs that don't finish in an hour. You can change this default timeout in [brooce.conf](CONFIG.md), or set per-job timeouts.
 * **Locking** -- Jobs can use brooce's lock system, or implement their own. A job that can't grab a lock it needs will be delayed and put back on the queue a minute later.
 * **Cron Jobs** -- Schedule tasks to run on a schedule.
+* **Safe Shutdown** -- If brooce gets a SIGINT, it will finish up any running jobs before shutting down. Sending the signal again skips that.
 * **Suicide Mode** -- Instruct brooce to run a shell command after it's been idle for a pre-set period. Perfect for having unneeded EC2 workers terminate themselves.
 
 ## Learn Redis First
