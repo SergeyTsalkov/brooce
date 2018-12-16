@@ -37,7 +37,7 @@ func requeue(queue *listing.QueueInfoType, listToRequeue string, interval int) {
 	for {
 		util.SleepUntilNextInterval(interval)
 
-		log.Println("Requeued", listToRequeue, "to", queue.PendingList())
+		//log.Println("Requeued", listToRequeue, "to", queue.PendingList())
 		err := myredis.FlushList(listToRequeue, queue.PendingList())
 		if err != nil {
 			log.Println("Failed to requeue", listToRequeue, "to", queue.PendingList(), ":", err)
