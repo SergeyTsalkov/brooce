@@ -28,10 +28,12 @@ Brooce uses redis as its database. Redis can be accessed from any programming la
 Just a few commands will download brooce and get it running:
 ```shell
 sudo apt-get install redis-server
-wget https://github.com/SergeyTsalkov/brooce/releases/download/v1.2.0/brooce-linux -O brooce
+wget https://github.com/SergeyTsalkov/brooce/releases/download/v1.3.0/brooce-linux -O brooce
 chmod 755 brooce
 ./brooce
 ```
+
+*Note: For the purpose of this tutorial, you're just downloading our binaries. You can [build from source](BUILD.md) if you prefer.*
 
 You'll see the output shown below:
 ```
