@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"brooce/config"
@@ -17,6 +18,7 @@ import (
 	myredis "brooce/redis"
 	"brooce/requeue"
 	"brooce/runnabletask"
+	mysignals "brooce/signals"
 	"brooce/suicide"
 	tasklib "brooce/task"
 	"brooce/web"
@@ -27,6 +29,7 @@ import (
 
 var redisClient = myredis.Get()
 var redisHeader = config.Config.ClusterName
+var threadWg sync.WaitGroup
 
 var daemonizeOpt = flag.Bool("daemonize", false, "Detach and run in the background!")
 var helpOpt = flag.Bool("help", false, "Show these options!")
@@ -63,8 +66,10 @@ func main() {
 	requeue.Start()
 	suicide.Start()
 	lock.Start()
+	mysignals.Start()
 
 	for _, thread := range config.Threads {
+		threadWg.Add(1)
 		go runner(thread)
 	}
 
@@ -74,7 +79,10 @@ func main() {
 		log.Println("Started with NO queues! We won't be doing any jobs!")
 	}
 
-	select {} //sleep forever!
+	mysignals.WaitForShutdownRequest()
+	log.Println("Shutdown requested! Waiting for all threads to finish (repeat signal to skip)..")
+	threadWg.Wait()
+	log.Println("Exiting..")
 }
 
 func runner(thread config.ThreadType) {
@@ -90,6 +98,11 @@ func runner(thread config.ThreadType) {
 	}
 
 	for {
+		if mysignals.WasShutdownRequested() {
+			threadWg.Done()
+			return
+		}
+
 		taskStr, err := redisClient.BRPopLPush(thread.PendingList(), thread.WorkingList(), 15*time.Second).Result()
 		if err != nil {
 			if err != redis.Nil {
