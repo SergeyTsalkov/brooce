@@ -1,7 +1,6 @@
 package requeue
 
 import (
-	"fmt"
 	"log"
 
 	"brooce/config"
@@ -11,36 +10,38 @@ import (
 )
 
 var redisHeader = config.Config.ClusterName
-var requeueInterval = config.Config.Requeue.Interval
 
 func Start() {
-	go func() {
-		for {
-			util.SleepUntilNextInterval(requeueInterval)
-			err := requeue()
-			if err != nil {
-				log.Println("Error trying to requeue delayed jobs:", err)
-			}
-		}
-	}()
+	queues, err := listing.Queues(true)
+	if err != nil {
+		log.Fatalln("Unable to list running queues:", err)
+	}
+
+	for _, queue := range queues {
+		opts := queue.JobOptions()
+
+		go requeue(queue, queue.DelayedList(), opts.RequeueDelayed())
+		go requeue(queue, queue.FailedList(), opts.RequeueFailed())
+	}
 }
 
-func requeue() (err error) {
-	var queues map[string]*listing.QueueInfoType
-	queues, err = listing.Queues(true)
-	if err != nil {
+func requeue(queue *listing.QueueInfoType, listToRequeue string, interval int) {
+	if (listToRequeue == queue.FailedList() && interval > 0) || (listToRequeue == queue.DelayedList() && interval != 60) {
+		log.Println("Will requeue", listToRequeue, "to", queue.PendingList(), "every", interval, "seconds")
+	}
+
+	if interval == 0 {
 		return
 	}
 
-	for name, _ := range queues {
-		pendingKey := fmt.Sprintf("%s:queue:%s:pending", redisHeader, name)
-		delayedKey := fmt.Sprintf("%s:queue:%s:delayed", redisHeader, name)
+	for {
+		util.SleepUntilNextInterval(interval)
 
-		err = myredis.FlushList(delayedKey, pendingKey)
+		log.Println("Requeued", listToRequeue, "to", queue.PendingList())
+		err := myredis.FlushList(listToRequeue, queue.PendingList())
 		if err != nil {
-			return
+			log.Println("Failed to requeue", listToRequeue, "to", queue.PendingList(), ":", err)
 		}
 	}
 
-	return
 }

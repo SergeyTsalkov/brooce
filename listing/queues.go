@@ -3,6 +3,7 @@ package listing
 import (
 	"fmt"
 
+	"brooce/config"
 	"brooce/heartbeat"
 	"brooce/task"
 
@@ -21,6 +22,30 @@ type QueueInfoType struct {
 	doneResult    *redis.IntCmd
 	failedResult  *redis.IntCmd
 	delayedResult *redis.IntCmd
+}
+
+func (q *QueueInfoType) PendingList() string {
+	return fmt.Sprintf("%s:queue:%s:pending", config.Config.ClusterName, q.Name)
+}
+
+func (q *QueueInfoType) DoneList() string {
+	return fmt.Sprintf("%s:queue:%s:done", config.Config.ClusterName, q.Name)
+}
+
+func (q *QueueInfoType) FailedList() string {
+	return fmt.Sprintf("%s:queue:%s:failed", config.Config.ClusterName, q.Name)
+}
+
+func (q *QueueInfoType) DelayedList() string {
+	return fmt.Sprintf("%s:queue:%s:delayed", config.Config.ClusterName, q.Name)
+}
+
+func (q *QueueInfoType) JobOptions() config.JobOptions {
+	opts := config.JobOptions{}
+	opts.Merge(config.Config.JobOptionsForQueue(q.Name))
+	opts.Merge(config.Config.GlobalJobOptions)
+	opts.Merge(config.DefaultJobOptions)
+	return opts
 }
 
 func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {

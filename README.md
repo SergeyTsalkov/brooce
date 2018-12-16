@@ -1,5 +1,5 @@
 # brooce
-Hey Hackers! Brooce is a **language-agnostic job queue** I made in Go. I built it because I like to work on personal projects in a variety of languages, and I want to be able to **use the same job queue regardless of what language I'm writing in**. I like a lot about Resque, but it has the same flaw as many others: you're all-but-forced to write jobs in its preferred language, Ruby.
+Brooce is a **language-agnostic job queue** I made in Go. I built it because I like to work on personal projects in a variety of languages, and I want to be able to **use the same job queue regardless of what language I'm writing in**. I like a lot about Resque, but it has the same flaw as many others: you're all-but-forced to write jobs in its preferred language, Ruby.
 
 Therefore, I built a job queue system where **the jobs themselves are just shell commands**. It's really simple to get started: you just grab the brooce binary and run it on any Linux system. You then use redis to LPUSH some shell commands to a queue, and then brooce will run them in sequence.
 
@@ -108,7 +108,7 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 ## Job Options
 So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here are all possible parameters, along with their json data type and the default value if omitted.
   * **timeout** (int, default 3600) - Number of seconds that a job will be allowed to run for before it is killed. The timeout can't be disabled, but can be set to a very large number.
-  * **maxtries** (int, default 1) - If set to a number greater than 1, the job will be automatically retried on failure that many times.
+  * **maxtries** (int, default 1) - If set to a number greater than 1, failed jobs will be sent to the delayed queue instead of the failed queue until they've failed that many times.
   * **killondelay** (bool, default false) - If true, jobs that can't acquire a lock they need will be killed off rather than delayed and retried.
   * **noredislog** (bool, default false) - Don't log job stdout/stderr to redis.
   * **noredislogonsuccess** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits successfully.
@@ -117,6 +117,8 @@ So far, we've treated jobs as strings, but they can also be json hashes with add
   * **drop** (bool, default false) - Don't send the job to the done or failed list after it finishes. Jobs that finish running will just vanish.
   * **droponsuccess** (bool, default false) - If the job exits successfully, don't send it to the done list. Instead, it will just vanish.
   * **droponfail** (bool, default false) - If the job exits with a non-zero exit code, don't send it to the failed list. Instead, it will just vanish.
+  * **requeuedelayed** (int, default 60) - A job that has been bumped to the delayed queue because it couldn't acquire a lock, will be moved back to the pending queue after this many seconds. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
+  * **requeuefailed** (int, default 0) - If set above 0, failed jobs will be moved back to the pending queue after this many seconds. This allows for indefinite retrying. For limited or job-specific retrying, see the maxtries option. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
 
 Job options can be specified in these places: the global_job_options section of [brooce.conf](CONFIG.md); the per-queue job_options sections of [brooce.conf](CONFIG.md); individual jobs, as in the example below. Options in a more specific location (like the job itself) can override more general ones (like the global job options).
 
@@ -228,7 +230,4 @@ redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/b
 redis-cli HSET "brooce:cron:jobs" "hourly-log-rotater" "0 * * * * queue:common ~/bin/rotate-logs.sh"
 redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
 ```
-
-## Hacking on brooce
-For most users, it should be enough to download our binaries. If you want to hack on the project, you should install Go and the [Gb build tool](https://getgb.io/). Then check out the repo into its own folder, and use gb to build it.
 

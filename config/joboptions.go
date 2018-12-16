@@ -13,10 +13,12 @@ import (
 // only omitted values should be inherited, so we have to use pointers to tell
 // the difference
 type JobOptions struct {
-	Timeout_     *int  `json:"timeout,omitempty"`
-	MaxTries_    *int  `json:"maxtries,omitempty"`
-	KillOnDelay_ *bool `json:"killondelay,omitempty"`
-	NoFail_      *bool `json:"nofail,omitempty"`
+	Timeout_        *int  `json:"timeout,omitempty"`
+	MaxTries_       *int  `json:"maxtries,omitempty"`
+	KillOnDelay_    *bool `json:"killondelay,omitempty"`
+	NoFail_         *bool `json:"nofail,omitempty"`
+	RequeueDelayed_ *int  `json:"requeuedelayed,omitempty"`
+	RequeueFailed_  *int  `json:"requeuefailed,omitempty"`
 	//PruneDone_   *int  `json:"prunedone,omitempty"`
 
 	NoRedisLog_          *bool `json:"noredislog,omitempty"`
@@ -35,6 +37,7 @@ func initDefaultJobOptions() {
 	DefaultJobOptions.Timeout_ = intptr(3600)
 	DefaultJobOptions.MaxTries_ = intptr(1)
 	DefaultJobOptions.RedisLogExpireAfter_ = intptr(604800) // 7 days
+	DefaultJobOptions.RequeueDelayed_ = intptr(60)
 }
 
 func intptr(x int) *int {
@@ -65,6 +68,20 @@ func (j *JobOptions) KillOnDelay() bool {
 
 func (j *JobOptions) NoFail() bool {
 	return j.NoFail_ != nil && *j.NoFail_
+}
+
+func (j *JobOptions) RequeueDelayed() int {
+	if j.RequeueDelayed_ != nil && *j.RequeueDelayed_ > 0 {
+		return *j.RequeueDelayed_
+	}
+	return 60
+}
+
+func (j *JobOptions) RequeueFailed() int {
+	if j.RequeueFailed_ != nil && *j.RequeueFailed_ > 0 {
+		return *j.RequeueFailed_
+	}
+	return 0
 }
 
 /*

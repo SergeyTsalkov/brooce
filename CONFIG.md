@@ -7,14 +7,15 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
   "global_job_options": {
     "timeout": 3600,
     "maxtries": 1,
-    "killondelay": false
+    "requeuedelayed": 60,
+    "redislogexpireafter": 604800
   },
   "web": {
     "addr": ":8080",
     "certfile": "",
     "keyfile": "",
     "username": "admin",
-    "password": "eoioszzi",
+    "password": "afwyczvk",
     "no_auth": false,
     "no_log": false,
     "disable": false
@@ -32,18 +33,11 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
     "command": "",
     "time": 0
   },
-  "requeue": {
-    "interval": 60
-  },
   "queues": [
     {
       "name": "common",
       "workers": 1,
-      "job_options": {
-        "timeout": 60,
-        "maxtries": 2,
-        "killondelay": true
-      }
+      "job_options": {}
     }
   ],
   "path": ""
@@ -85,9 +79,6 @@ The db which will be used by brooce on your redis server. Defaults to 0.
 
 ### `suicide.enable` / `suicide.command` / `suicide.time`
 For example, if you enabled suicide and set command to `"sudo shutdown -h now"` and time to `600`, you could shutdown your server after there haven't been any jobs for some time. Useful for shutting down idle EC2 instances. Keep in mind that the brooce program will need to have proper permissions to execute the given command, without additional prompts for passwords.
-
-### `requeue.interval`
-The interval in seconds which will be used on requeueing delayed jobs. Defaults to 60.
 
 ### `queues`
 Brooce is multithreaded, and can listen for commands on multiple queues. For example, you could do the following to run 5 threads on the common queue and 2 more threads on the rare queue.
