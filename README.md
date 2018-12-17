@@ -25,7 +25,9 @@ I've been personally relying on brooce with great results! If you try it out, I 
 Brooce uses redis as its database. Redis can be accessed from any programming language, but how to do it for each one is beyond the scope of this documentation. All of our examples will use the redis-cli shell commands, and it's up to you to substitute the equavalents in your language of choice! If you're a programmer and you haven't learned redis yet, you owe it to yourself to do so!
 
 # Quick Start
-Just a few commands will download brooce and get it running:
+
+## Option 1: Download our binaries!
+This is simplest, and will get you running immediately.
 ```shell
 sudo apt-get install redis-server
 wget https://github.com/SergeyTsalkov/brooce/releases/download/v1.3.0/brooce-linux -O brooce
@@ -33,7 +35,15 @@ chmod 755 brooce
 ./brooce
 ```
 
-*Note: For the purpose of this tutorial, you're just downloading our binaries. If you prefer to build from source, the instructions are at the end of this file.*
+## Option 2: Build from source!
+You must have Go 1.11 or newer installed.
+```shell
+sudo apt-get install redis-server
+git clone https://github.com/SergeyTsalkov/brooce.git
+cd brooce
+go build
+./brooce
+```
 
 You'll see the output shown below:
 ```
@@ -231,14 +241,4 @@ redis-cli DEL "brooce:cron:jobs"
 redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
 redis-cli HSET "brooce:cron:jobs" "hourly-log-rotater" "0 * * * * queue:common ~/bin/rotate-logs.sh"
 redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
-```
-
-# Build From Source
-We now rely on go modules, so building from source is simple:
-```shell
-sudo apt-get install redis-server
-git clone https://github.com/SergeyTsalkov/brooce.git
-cd brooce
-go build
-./brooce
 ```
