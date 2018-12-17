@@ -1,4 +1,3 @@
-# brooce
 Brooce is a **language-agnostic job queue** I made in Go. I built it because I like to work on personal projects in a variety of languages, and I want to be able to **use the same job queue regardless of what language I'm writing in**. I like a lot about Resque, but it has the same flaw as many others: you're all-but-forced to write jobs in its preferred language, Ruby.
 
 Therefore, I built a job queue system where **the jobs themselves are just shell commands**. It's really simple to get started: you just grab the brooce binary and run it on any Linux system. You then use redis to LPUSH some shell commands to a queue, and then brooce will run them in sequence.
@@ -7,7 +6,7 @@ That's really all you need to know to use it, but there are some advanced featur
 
 I've been personally relying on brooce with great results! If you try it out, I would welcome your feedback!
 
-## Features
+# Features
 
 * **Single Executable** -- Brooce comes as a single executable that runs on any Linux system.
 * **Redis Backend** -- Redis can be accessed from any programming language, or the command line. Schedule jobs from anywhere.
@@ -22,10 +21,10 @@ I've been personally relying on brooce with great results! If you try it out, I 
 * **Safe Shutdown** -- If brooce gets a SIGINT, it will finish up any running jobs before shutting down. Sending the signal again skips that.
 * **Suicide Mode** -- Instruct brooce to run a shell command after it's been idle for a pre-set period. Perfect for having unneeded EC2 workers terminate themselves.
 
-## Learn Redis First
+# Learn Redis First
 Brooce uses redis as its database. Redis can be accessed from any programming language, but how to do it for each one is beyond the scope of this documentation. All of our examples will use the redis-cli shell commands, and it's up to you to substitute the equavalents in your language of choice! If you're a programmer and you haven't learned redis yet, you owe it to yourself to do so!
 
-## Quick Start
+# Quick Start
 Just a few commands will download brooce and get it running:
 ```shell
 sudo apt-get install redis-server
@@ -34,7 +33,7 @@ chmod 755 brooce
 ./brooce
 ```
 
-*Note: For the purpose of this tutorial, you're just downloading our binaries. You can [build from source](BUILD.md) if you prefer.*
+*Note: For the purpose of this tutorial, you're just downloading our binaries. If you prefer to build from source, the instructions are at the end of this file.*
 
 You'll see the output shown below:
 ```
@@ -46,7 +45,7 @@ Started with queues: common (x1)
 ```
 It's telling you that since it couldn't find your config file, it created a default one, and started the web server on port 8080. Since you haven't specified login credentials for the web interface yet, it generated some for you.
 
-### Let's run a job!
+## Let's run a job!
 Now open up another terminal window, and schedule your first command:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending 'ls -l ~ | tee ~/files.txt'
@@ -57,10 +56,10 @@ Give it a sec to run, and see that it actually ran:
 cat ~/files.txt
 ```
 
-### Check out the web interface!
+## Check out the web interface!
 Type `http://<yourIP>:8080` into your browser and you should see the brooce web interface come up. At the top, you'll see the "common" queue with 1 done job. Click on the hyperlinked 1 in the Done column, and you'll see some options to reschedule or delete the job. For now, just click on `Show Log` and see a listing of the files in your home directory.
 
-### What about running jobs in parallel?
+## What about running jobs in parallel?
 Go back to your first terminal window and hit Ctrl+C to kill brooce. Open up its config file, `~/.brooce/brooce.conf`. We have a [whole separate page](CONFIG.md) about all the various options, but for now, let's add another queue with 5 threads. Change the "queues" section to look like this:
 
 ```json
@@ -94,7 +93,7 @@ redis-cli LPUSH brooce:queue:parallel:pending 'sleep 30'
 ```
 Now go back to the web interface, and note that 5 of your jobs are running, with others waiting to run. Go ahead and kill brooce again -- any jobs that are running when it dies will fail.
 
-### Send it to the background!
+## Send it to the background!
 Now that you're convinced that brooce is working, send it to the background:
 ```shell
 ./brooce --daemonize
@@ -102,13 +101,13 @@ Now that you're convinced that brooce is working, send it to the background:
 It'll run until you kill it from the command line. Alternatively, you can use your operating system's launcher to have it run on boot.
 
  
-## Configuration
+# Configuration
 The first time brooce runs, it will create a `~/.brooce` dir in your home directory with a default `~/.brooce/brooce.conf` config file. 
 
 [View brooce.conf Documentation](CONFIG.md)
 
 
-## Job Options
+# Job Options
 So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here are all possible parameters, along with their json data type and the default value if omitted.
   * **timeout** (int, default 3600) - Number of seconds that a job will be allowed to run for before it is killed. The timeout can't be disabled, but can be set to a very large number.
   * **maxtries** (int, default 1) - If set to a number greater than 1, failed jobs will be sent to the delayed queue instead of the failed queue until they've failed that many times.
@@ -125,14 +124,14 @@ So far, we've treated jobs as strings, but they can also be json hashes with add
 
 Job options can be specified in these places: the global_job_options section of [brooce.conf](CONFIG.md); the per-queue job_options sections of [brooce.conf](CONFIG.md); individual jobs, as in the example below. Options in a more specific location (like the job itself) can override more general ones (like the global job options).
 
-### Job Option: Timeout
+## Job Option: Timeout
 This job will only run for 10 seconds before it is automatically killed:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending '{"command":"sleep 11 && touch ~/done.txt","timeout":10}'
 ```
 In this example, the done.txt file will never be created because the job will be killed too soon. If you go into the web interface, you'll be able to see it under failed jobs.
 
-### Job Option: Maxtries
+## Job Option: Maxtries
 If a job fails, you sometimes want it to be retried a few times before you give up and put it in the failed column. If you add `maxtries` to your job and set it to a value above 1, the job will be tried that many times in total. If they have any retries left, failed jobs will be divered to the delayed column instead and then requeued one minute later. This is helpful if a temporary error (like a network glitch) was
 causing the failure, because the problem will hopefully be gone a minute later.
 
@@ -140,15 +139,15 @@ causing the failure, because the problem will hopefully be gone a minute later.
 redis-cli LPUSH brooce:queue:common:pending '{"command":"ls -l /doesnotexist","maxtries":3}'
 ```
 
-## Concurrency
-### Multiple Threads
+# Concurrency
+## Multiple Threads
 Brooce is multi-threaded, and can run many jobs at once from multiple queues. To set up multiple queues, edit the [queues section of brooce.conf](CONFIG.md#queues).
 
-### Multiple VPSes/Servers
+## Multiple VPSes/Servers
 You can deploy brooce on multiple servers. Make sure they all connect to the same redis server, and have the same cluster_name set in [brooce.conf](CONFIG.md#queues). They can all work on jobs from the same queues, if desired.
 
 
-## Locking
+# Locking
 Locks can prevent multiple concurrent jobs from breaking things by touching the same resource at the same time. Let's say you have several kinds of jobs that touch a single account, and you don't want them to interfere with each other by running at the same time. You might schedule:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671"]}'
@@ -156,20 +155,20 @@ redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/bill-account.sh 6
 ```
 Even if there are multiple workers available, only one of these jobs will run at a time. The other will get pushed into the delayed queue, which you can see in the web interface. Once per minute, the contents of the delayed queue are dumped back into the pending queue, where it'll get the chance to run again if it can grab the needed lock.
 
-### Multiple Locks
+## Multiple Locks
 You can pass multiple locks. Your job must grab all the locks to run:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671","server:5"]}'
 ```
 
-### Locks That Multiple Jobs Can Hold
+## Locks That Multiple Jobs Can Hold
 A lock that begins with a number followed by a colon can be held by that many jobs at once. For example, let's say each server can tolerate no more than 3 jobs acting on it at once. You might run:
 ```shell
 redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671","3:server:5"]}'
 ```
 The `account:671` lock must be exclusively held by this job, but the `3:server:5` lock means that up to 3 jobs can act on server 5 at the same time.
 
-### Delete Instead Of Delaying
+## Delete Instead Of Delaying
 Instead of delaying a job that can't acquire the locks it needs, you can just have it deleted by adding the `killondelay` option. This is useful if you have a job that
 gets scheduled very frequently and will take an unpredictable amount of time -- any extra instances of it that get scheduled can just
 be deleted instead.
@@ -178,11 +177,11 @@ be deleted instead.
 redis-cli LPUSH brooce:queue:common:pending '{"command":"~/bin/reconfigure-account.sh 671","locks":["account:671","3:server:5"],"killondelay":true}'
 ```
 
-### Locking Things Yourself
+## Locking Things Yourself
 Sometimes you don't know which locks a job will need until after it starts running -- maybe you have a script called `~/bin/bill-all-accounts.sh` and you want it to lock all accounts that it's about to bill. In that case, your script will need to implement its own locking system. If it determines that it can't grab the locks it needs, it should return exit code 75 (temp failure). All other non-0 exit codes cause your job to be marked as failed, but 75 causes it to be pushed to the delayed queue and later re-tried.
 
 
-## Cron Jobs
+# Cron Jobs
 Cron jobs work much the same way they do on Linux, except you're setting them up as a redis hash and specifying a queue to run in. Let's say you want to bill all your users every day at midnight. You might do this:
 ```shell
 redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/bill-all-accounts.sh"
@@ -192,7 +191,7 @@ redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/b
 You can see any pending cron jobs on the Cron Jobs page in the web interface.
 
 
-### Timeouts, Locking, Max Tries, and KillOnDelay in Cron Jobs
+## Timeouts, Locking, Max Tries, and KillOnDelay in Cron Jobs
 All non-standard job features are available in cron jobs, too.
 ```shell
 redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common timeout:600 locks:server:5,server:8 ~/bin/bill-all-accounts.sh"
@@ -209,7 +208,7 @@ redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common locks:s
 ```
 In addition to the rules in the previous example, try the job as many as 5 times if it fails.
 
-### Fancy Cron Jobs
+## Fancy Cron Jobs
 Most of the standard cron features are implemented. Here are some examples.
 ```shell
 # Bill accounts twice a day
@@ -222,7 +221,7 @@ redis-cli HSET "brooce:cron:jobs" "log-rotate" "0,15,30,45 0-8 * * * queue:commo
 redis-cli HSET "brooce:cron:jobs" "delete-data" "0-15,45-59 */3,*/4 * * * queue:common ~/bin/delete-customer-data.sh"
 ```
 
-### Storing Cron Jobs in your Git Repo
+## Storing Cron Jobs in your Git Repo
 We store cron jobs in redis rather than a config file because multiple brooce instances might be running on separate machines. If there was a cron.conf file, there is a risk that different versions of it might end up on the different machines.
 
 However, nothing prevents you from creating a shell script called cron.sh that clears out and resets your cron jobs. You can then commit that script to your Git repo, and run it as part of your deploy process. It might look like this:
@@ -234,3 +233,12 @@ redis-cli HSET "brooce:cron:jobs" "hourly-log-rotater" "0 * * * * queue:common ~
 redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
 ```
 
+# Build From Source
+We now rely on go modules, so building from source is simple:
+```shell
+sudo apt-get install redis-server
+git clone git@github.com:SergeyTsalkov/brooce.git brooce
+cd brooce
+go build
+./brooce
+```
