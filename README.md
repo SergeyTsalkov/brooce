@@ -26,7 +26,7 @@ Brooce uses redis as its database. Redis can be accessed from any programming la
 
 # Quick Start
 
-## Option 1: Download our binaries!
+## Option 1: Download Our Binaries
 This is simplest, and will get you running immediately.
 ```shell
 sudo apt-get install redis-server
@@ -35,7 +35,7 @@ chmod 755 brooce
 ./brooce
 ```
 
-## Option 2: Build from source!
+## Option 2: Build From Source
 You must have Go 1.11 or newer installed.
 ```shell
 sudo apt-get install redis-server
