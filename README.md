@@ -237,7 +237,7 @@ redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queu
 We now rely on go modules, so building from source is simple:
 ```shell
 sudo apt-get install redis-server
-git clone git@github.com:SergeyTsalkov/brooce.git brooce
+git clone https://github.com/SergeyTsalkov/brooce.git
 cd brooce
 go build
 ./brooce
