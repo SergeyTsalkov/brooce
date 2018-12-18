@@ -5,7 +5,6 @@ require (
 	github.com/go-redis/redis v6.14.1+incompatible
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/hpcloud/tail v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.6
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/onsi/ginkgo v1.6.0 // indirect

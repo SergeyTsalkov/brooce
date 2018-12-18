@@ -76,6 +76,29 @@ func (c *ConfigType) JobOptionsForQueue(queue string) (opts JobOptions) {
 	return
 }
 
+func (q *Queue) DeepJobOptions() (j JobOptions) {
+	j.Merge(q.JobOptions)
+	j.Merge(Config.GlobalJobOptions)
+	j.Merge(DefaultJobOptions)
+	return
+}
+
+func (q *Queue) PendingList() string {
+	return fmt.Sprintf("%s:queue:%s:pending", Config.ClusterName, q.Name)
+}
+
+func (q *Queue) DoneList() string {
+	return fmt.Sprintf("%s:queue:%s:done", Config.ClusterName, q.Name)
+}
+
+func (q *Queue) FailedList() string {
+	return fmt.Sprintf("%s:queue:%s:failed", Config.ClusterName, q.Name)
+}
+
+func (q *Queue) DelayedList() string {
+	return fmt.Sprintf("%s:queue:%s:delayed", Config.ClusterName, q.Name)
+}
+
 // this use of init sucks, but we'll have to fix every "var redisClient = myredis.Get()"
 // that is in a header to avoid it -- let's do this later!
 func init() {

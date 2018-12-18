@@ -40,14 +40,7 @@ func (q *QueueInfoType) DelayedList() string {
 	return fmt.Sprintf("%s:queue:%s:delayed", config.Config.ClusterName, q.Name)
 }
 
-func (q *QueueInfoType) JobOptions() config.JobOptions {
-	opts := config.JobOptions{}
-	opts.Merge(config.Config.JobOptionsForQueue(q.Name))
-	opts.Merge(config.Config.GlobalJobOptions)
-	opts.Merge(config.DefaultJobOptions)
-	return opts
-}
-
+// global list of queues, including those on other machines in our cluster
 func Queues(short bool) (queueHash map[string]*QueueInfoType, err error) {
 	var workers []*heartbeat.HeartbeatType
 	workers, err = RunningWorkers()

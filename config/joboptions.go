@@ -2,10 +2,9 @@ package config
 
 import (
 	"log"
-	"reflect"
 	"time"
 
-	"github.com/imdario/mergo"
+	"brooce/mergo"
 	"github.com/mitchellh/copystructure"
 )
 
@@ -59,7 +58,7 @@ func (j *JobOptions) MaxTries() int {
 	if j.MaxTries_ != nil && *j.MaxTries_ > 0 {
 		return *j.MaxTries_
 	}
-	return 3600
+	return 1
 }
 
 func (j *JobOptions) KillOnDelay() bool {
@@ -159,22 +158,7 @@ func (j *JobOptions) clone() JobOptions {
 func (j *JobOptions) Merge(parent JobOptions) {
 	// don't want to copy pointers to values in parent -- we might change those values later, which would
 	// inadvertently change parent
-	if err := mergo.Merge(j, parent.clone(), mergo.WithTransformers(ptrTransformer{})); err != nil {
+	if err := mergo.Merge(j, parent.clone()); err != nil {
 		log.Fatalf("merge wtf: %+v", err)
 	}
-}
-
-// when merging, a non-nil *bool or *int should be treated as non-zero
-type ptrTransformer struct{}
-
-func (t ptrTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
-	if typ.Kind() == reflect.Ptr && (typ.Elem().Kind() == reflect.Bool || typ.Elem().Kind() == reflect.Int) {
-		return func(dst, src reflect.Value) error {
-			if dst.CanSet() && dst.IsNil() && !src.IsNil() {
-				dst.Set(src)
-			}
-			return nil
-		}
-	}
-	return nil
 }
