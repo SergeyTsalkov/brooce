@@ -75,7 +75,6 @@ var headerTpl = `
 
       td.wrap {
         word-break: break-all;
-        width: 100%;
       }
 
       td.nowrap {
