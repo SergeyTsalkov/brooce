@@ -244,3 +244,12 @@ redis-cli HSET "brooce:cron:jobs" "daily-biller" "0 0 * * * queue:common ~/bin/b
 redis-cli HSET "brooce:cron:jobs" "hourly-log-rotater" "0 * * * * queue:common ~/bin/rotate-logs.sh"
 redis-cli HSET "brooce:cron:jobs" "twice-daily-error-checker" "0 */12 * * * queue:common ~/bin/check-for-errors.sh"
 ```
+
+My Other Projects
+========
+A little shameless self-promotion!
+
+  * [ArkServers.io](https://arkservers.io) -- Ark: Survival Evolved server hosting!
+  * [Best Minecraft Server Hosting](https://bestminecraft.org) -- Ranking and recommendations for minecraft server hosting!
+  * [ChunkHost](https://chunkhost.com) -- VPS Hosting starting at $5/month! We accept bitcoin!
+  * [brooce](https://github.com/SergeyTsalkov/brooce) - Language-agnostic job queue written in Go! Write your jobs in any language, schedule them from any language, run them anywhere!
