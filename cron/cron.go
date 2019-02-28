@@ -160,6 +160,8 @@ func ParseCronLine(name, line string) (*CronType, error) {
 			cron.NoRedisLogOnFail_ = parseBool(value)
 		case "redislogexpireafter":
 			cron.RedisLogExpireAfter_ = parseInt(value)
+		case "redislogfailedexpireafter":
+			cron.RedisLogFailedExpireAfter_ = parseInt(value)
 
 		case "drop":
 			cron.Drop_ = parseBool(value)

@@ -20,10 +20,13 @@ type JobOptions struct {
 	RequeueFailed_  *int  `json:"requeuefailed,omitempty"`
 	//PruneDone_   *int  `json:"prunedone,omitempty"`
 
-	NoRedisLog_          *bool `json:"noredislog,omitempty"`
-	NoRedisLogOnSuccess_ *bool `json:"noredislogonsuccess,omitempty"`
-	NoRedisLogOnFail_    *bool `json:"noredislogonfail,omitempty"`
-	RedisLogExpireAfter_ *int  `json:"redislogexpireafter,omitempty"`
+	NoRedisLog_                 *bool `json:"noredislog,omitempty"`
+	NoRedisLogOnSuccess_        *bool `json:"noredislogonsuccess,omitempty"`
+	NoRedisLogOnFail_           *bool `json:"noredislogonfail,omitempty"`
+	RedisLogExpireAfter_        *int  `json:"redislogexpireafter,omitempty"`
+	RedisLogFailedExpireAfter_  *int  `json:"redislogfailedexpireafter,omitempty"`
+	RedisListDoneExpireAfter_   *int  `json:"redislistdoneexpireafter,omitempty"`
+	RedisListFailedExpireAfter_ *int  `json:"redislistfailedexpireafter,omitempty"`
 
 	Drop_          *bool `json:"drop,omitempty"`
 	DropOnSuccess_ *bool `json:"droponsuccess,omitempty"`
@@ -118,6 +121,27 @@ func (j *JobOptions) NoRedisLogOnFail() bool {
 func (j *JobOptions) RedisLogExpireAfter() int {
 	if j.RedisLogExpireAfter_ != nil && *j.RedisLogExpireAfter_ > 0 {
 		return *j.RedisLogExpireAfter_
+	}
+	return 0
+}
+
+func (j *JobOptions) RedisLogFailedExpireAfter() int {
+	if j.RedisLogFailedExpireAfter_ != nil && *j.RedisLogFailedExpireAfter_ > 0 {
+		return *j.RedisLogFailedExpireAfter_
+	}
+	return 0
+}
+
+func (j *JobOptions) RedisListDoneExpireAfter() int {
+	if j.RedisListDoneExpireAfter_ != nil && *j.RedisListDoneExpireAfter_ > 0 {
+		return *j.RedisListDoneExpireAfter_
+	}
+	return 0
+}
+
+func (j *JobOptions) RedisListFailedExpireAfter() int {
+	if j.RedisListFailedExpireAfter_ != nil && *j.RedisListFailedExpireAfter_ > 0 {
+		return *j.RedisListFailedExpireAfter_
 	}
 	return 0
 }
