@@ -6,8 +6,6 @@ import (
 	"brooce/heartbeat"
 	"brooce/listing"
 	"brooce/task"
-
-	"github.com/go-redis/redis"
 )
 
 type mainpageOutputType struct {
@@ -39,18 +37,4 @@ func mainpageHandler(req *http.Request, rep *httpReply) (err error) {
 
 	err = templates.ExecuteTemplate(rep, "mainpage", output)
 	return
-}
-
-type listQueueType struct {
-	QueueName     string
-	Pending       int64
-	Running       int
-	Done          int64
-	Failed        int64
-	Delayed       int64
-	pendingResult *redis.IntCmd
-	runningResult *redis.StringSliceCmd
-	doneResult    *redis.IntCmd
-	failedResult  *redis.IntCmd
-	delayedResult *redis.IntCmd
 }
