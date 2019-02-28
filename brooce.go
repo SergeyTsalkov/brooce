@@ -160,6 +160,10 @@ func runner(thread config.ThreadType) {
 				if task.MaxTries() > task.Tried {
 					pipe.LPush(thread.DelayedList(), task.Json())
 				} else {
+					if task.RedisLogFailedExpireAfter() > 0 {
+						pipe.Expire(task.LogKey(), time.Duration(task.RedisLogFailedExpireAfter())*time.Second)
+					}
+
 					if !task.DropOnFail() {
 						pipe.LPush(thread.FailedList(), task.Json())
 					}

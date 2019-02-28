@@ -76,6 +76,17 @@ func (c *ConfigType) JobOptionsForQueue(queue string) (opts JobOptions) {
 	return
 }
 
+func (c *ConfigType) DeepJobOptions(queue string) (opts JobOptions) {
+	for _, q := range c.Queues {
+		if q.Name == queue {
+			opts = q.DeepJobOptions()
+			return
+		}
+	}
+
+	return
+}
+
 func (q *Queue) DeepJobOptions() (j JobOptions) {
 	j.Merge(q.JobOptions)
 	j.Merge(Config.GlobalJobOptions)
