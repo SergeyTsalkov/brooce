@@ -107,8 +107,8 @@ var headerTpl = `
   <div class="header clearfix">
     <ul class="nav nav-pills pull-right">
 
-      <li {{ if eq . "overview" }}class="active"{{ end }}><a href="/">Overview</a></li>
-      <li {{ if eq . "cron" }}class="active"{{ end }}><a href="/cron">Cron Jobs</a></li>
+      <li {{ if eq . "overview" }}class="active"{{ end }}><a href="/" accesskey="o" title="Alt+O">Overview</a></li>
+      <li {{ if eq . "cron" }}class="active"{{ end }}><a href="/cron" accesskey="j" title="Alt+J">Cron Jobs</a></li>
     </ul>
 
     <h1 class="text-muted"><a href="/">brooce</a></h1>
