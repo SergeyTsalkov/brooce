@@ -63,7 +63,7 @@ func ScanKeys(match string) (keys []string, err error) {
 
 	for {
 		var result []string
-		result, cursor, err = redisClient.Scan(cursor, match, 1000).Result()
+		result, cursor, err = redisClient.Scan(cursor, match, 10000).Result()
 
 		if err != nil {
 			return
