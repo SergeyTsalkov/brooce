@@ -13,7 +13,7 @@ var jobListTpl = `
           <input type="hidden" name="queue" value="{{ .QueueName }}">
           <input type="hidden" name="listType" value="{{ .ListType }}">
           <div class="input-group">
-          <input name="q" type="text" class="form-control search-query" placeholder="Search by Command" value="{{ .Query }}">
+          <input name="q" type="text" class="form-control search-query" placeholder="Search in jobs" value="{{ .Query }}">
             <div class="input-group-btn">
               <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
             </div>
@@ -34,6 +34,7 @@ var jobListTpl = `
           <th>Command</th>
           <th>Params</th>
           <th class="buttons">
+            {{ if gt .Length 0 }}
             <form action="" method="post">
               <input type="hidden" name="csrf" value="{{CSRF}}">
               {{ if eq .ListType "failed" "delayed" }}
@@ -48,6 +49,7 @@ var jobListTpl = `
                 Delete All
               </button>
             </form>
+            {{ end }}
           </th>
         </tr>
       </thead>
