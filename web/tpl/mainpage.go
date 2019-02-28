@@ -51,8 +51,7 @@ var mainPageTpl = `
         </tr>
       </thead>
       <tbody>
-        <tr>
-          {{ range $i, $Worker := .RunningWorkers }}
+        {{ range $i, $Worker := .RunningWorkers }}
           <tr>
             <td>{{ $Worker.ProcName }}</td>
             <td>{{ $Worker.Hostname }}</td>
@@ -65,7 +64,6 @@ var mainPageTpl = `
             </td>
           </tr>
         {{ end }}
-        </tr>
       </tbody>
     </table>
   </div>
