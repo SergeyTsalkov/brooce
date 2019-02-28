@@ -16,8 +16,9 @@ import (
 var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
 
 type ConfigType struct {
-	ClusterName string `json:"cluster_name"`
-	ProcName    string `json:"-"`
+	ClusterName     string `json:"cluster_name"`
+	ClusterLogName  string `json:"-"`
+	ProcName        string `json:"-"`
 
 	GlobalJobOptions JobOptions `json:"global_job_options"`
 
@@ -141,6 +142,11 @@ func init() {
 func initDefaultConfig() {
 	if Config.ClusterName == "" {
 		Config.ClusterName = "brooce"
+	}
+
+	if Config.ClusterLogName == "" {
+		Config.ClusterLogName = strings.Replace(Config.ClusterName, "{", "", 1)
+		Config.ClusterLogName = strings.Replace(Config.ClusterLogName, "}", "", 1)
 	}
 
 	if Config.ProcName == "" {

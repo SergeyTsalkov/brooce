@@ -120,5 +120,5 @@ func (task *Task) LogKey() string {
 		return ""
 	}
 
-	return fmt.Sprintf("%s:jobs:%s:log", config.Config.ClusterName, task.Id)
+	return fmt.Sprintf("%s:jobs:%s:log", config.Config.ClusterLogName, task.Id)
 }
