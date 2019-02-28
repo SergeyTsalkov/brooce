@@ -13,7 +13,7 @@ var jobListTpl = `
           <input type="hidden" name="queue" value="{{ .QueueName }}">
           <input type="hidden" name="listType" value="{{ .ListType }}">
           <div class="input-group">
-          <input name="q" type="text" class="form-control search-query" placeholder="Search in jobs" value="{{ .Query }}">
+          <input name="q" accesskey="s" title="Alt+S" type="text" class="form-control search-query" placeholder="Search in jobs" value="{{ .Query }}">
             <div class="input-group-btn">
               <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
             </div>
@@ -106,7 +106,7 @@ var jobListTpl = `
       {{ if lt $.Page 2 }}
         <span class="prevnext">&#10235; Prev</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}">&#10235; Prev</a>
+        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}" title="Left arrow">&#10235; Prev</a>
       {{ end }}
 
       Page {{ $.Page }} of {{ .Pages }}
@@ -114,12 +114,30 @@ var jobListTpl = `
       {{ if eq $.Page $.Pages }}
         <span class="prevnext">Next &#10236;</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}">Next &#10236;</a>
+        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}" title="Right arrow">Next &#10236;</a>
       {{ end }}
     </div>
     
   </div>
 </div>
+<script>
+document.addEventListener('keydown', function(e) {
+    var code = e.which || e.keyCode;
+    if (code == 37) {
+      {{ if lt $.Page 2 }}
+        // Left
+      {{ else }}
+        window.location=window.location.pathname + '?{{ $.LinkParamsForPrevPage $.Page}}'
+      {{ end }}
+    } else if (code == 39) {
+      {{ if eq $.Page $.Pages }}
+        // Right
+      {{ else }}
+        window.location=window.location.pathname + '?{{ $.LinkParamsForNextPage $.Page}}'
+      {{ end }}
+    }
+}, false);
+</script>
 {{ template "footer" }}
 {{ end }}
 `
