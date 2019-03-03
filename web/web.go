@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +35,7 @@ var webLogWriter *os.File
 
 type httpReply struct {
 	*bytes.Buffer
+	contentType string
 	statusCode int
 	redirect   string
 }
@@ -48,6 +50,10 @@ func Start() {
 	}
 
 	reqHandler.HandleFunc("/", makeHandler(mainpageHandler, "GET"))
+
+	reqHandler.HandleFunc("/js/", makeHandler(resourceHandler, "GET"))
+	reqHandler.HandleFunc("/css/", makeHandler(resourceHandler, "GET"))
+	reqHandler.HandleFunc("/fonts/", makeHandler(resourceHandler, "GET"))
 
 	reqHandler.HandleFunc("/failed/", makeHandler(joblistHandler, "GET"))
 	reqHandler.HandleFunc("/done/", makeHandler(joblistHandler, "GET"))
@@ -129,6 +135,10 @@ func makeHandler(fn httpHandler, method string) http.HandlerFunc {
 
 		repLength := rep.Len()
 
+		if (rep.contentType != "") {
+			w.Header().Set("Content-Type", rep.contentType)
+		}
+
 		switch rep.statusCode {
 		case http.StatusInternalServerError:
 			http.Error(w, "500 Internal Server Error\n", rep.statusCode)
@@ -144,6 +154,10 @@ func makeHandler(fn httpHandler, method string) http.HandlerFunc {
 				rep.redirect = req.Referer()
 			}
 			http.Redirect(w, req, rep.redirect, http.StatusSeeOther)
+		case http.StatusNotModified:
+			w.Header().Set("Expires", time.Now().AddDate(0, 0, 1).Format(http.TimeFormat))
+			rep.statusCode = http.StatusOK
+			io.Copy(w, rep)
 		default:
 			io.Copy(w, rep)
 		}
@@ -237,4 +251,59 @@ func csrfMiddleware(next httpHandler) httpHandler {
 		err = next(req, rep)
 		return
 	}
+}
+
+func resourceHandler(req *http.Request, rep *httpReply) (err error) {
+	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	if len(path) < 2 {
+		err = fmt.Errorf("Invalid path")
+		return
+	}
+
+	resFileType := path[0]
+	resFileName := path[1]
+	resFilePath := filepath.Join(config.BrooceDir, "resources", filepath.Base(resFileName))
+	if _, err = os.Stat(resFilePath); err == nil {
+		var content []byte
+		content, err = ioutil.ReadFile(resFilePath)
+		if err != nil {
+			rep.statusCode = http.StatusInternalServerError
+			return
+		}
+		rep.Buffer = bytes.NewBuffer(content)
+
+		switch resFileType {
+		case "js":
+			rep.contentType = "application/javascript"
+		case "css":
+			rep.contentType = "text/css"
+		case "fonts":
+			rep.contentType = "font/woff2"
+		}
+
+		rep.statusCode = http.StatusNotModified
+		return
+	} else {
+		err = nil
+	}
+
+	rep.statusCode = http.StatusSeeOther
+	switch resFileName {
+	case "glyphicons-halflings-regular.woff2":
+		rep.redirect = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/fonts/glyphicons-halflings-regular.woff2"
+	case "bootstrap.min.css":
+		rep.redirect = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+	case "bootstrap.min.js":
+		rep.redirect = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+	case "html5shiv.min.js":
+		rep.redirect = "https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"
+	case "respond.min.js":
+		rep.redirect = "https://oss.maxcdn.com/respond/1.4.2/respond.min.js"
+	case "jquery-2.2.4.min.js":
+		rep.redirect = "https://code.jquery.com/jquery-2.2.4.min.js"
+	default:
+		rep.statusCode = http.StatusNotFound
+	}
+
+	return
 }
