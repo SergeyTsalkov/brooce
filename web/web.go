@@ -92,7 +92,7 @@ func Start() {
 		var err error
 
 		if !config.Config.Web.NoLog {
-			filename := filepath.Join(config.BrooceDir, "web.log")
+			filename := filepath.Join(config.BrooceLogDir, "web.log")
 			webLogWriter, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				log.Fatalln("Unable to open logfile", filename, "for writing! Error was", err)
@@ -262,29 +262,31 @@ func resourceHandler(req *http.Request, rep *httpReply) (err error) {
 
 	resFileType := path[0]
 	resFileName := path[1]
-	resFilePath := filepath.Join(config.BrooceDir, "resources", filepath.Base(resFileName))
-	if _, err = os.Stat(resFilePath); err == nil {
-		var content []byte
-		content, err = ioutil.ReadFile(resFilePath)
-		if err != nil {
-			rep.statusCode = http.StatusInternalServerError
+	if config.BrooceResourceDir != "" {
+		resFilePath := filepath.Join(config.BrooceResourceDir, filepath.Base(resFileName))
+		if _, err = os.Stat(resFilePath); err == nil {
+			var content []byte
+			content, err = ioutil.ReadFile(resFilePath)
+			if err != nil {
+				rep.statusCode = http.StatusInternalServerError
+				return
+			}
+			rep.Buffer = bytes.NewBuffer(content)
+
+			switch resFileType {
+			case "js":
+				rep.contentType = "application/javascript"
+			case "css":
+				rep.contentType = "text/css"
+			case "fonts":
+				rep.contentType = "font/woff2"
+			}
+
+			rep.statusCode = http.StatusNotModified
 			return
+		} else {
+			err = nil
 		}
-		rep.Buffer = bytes.NewBuffer(content)
-
-		switch resFileType {
-		case "js":
-			rep.contentType = "application/javascript"
-		case "css":
-			rep.contentType = "text/css"
-		case "fonts":
-			rep.contentType = "font/woff2"
-		}
-
-		rep.statusCode = http.StatusNotModified
-		return
-	} else {
-		err = nil
 	}
 
 	rep.statusCode = http.StatusSeeOther

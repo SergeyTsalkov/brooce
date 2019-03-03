@@ -43,7 +43,7 @@ func main() {
 
 	if *daemonizeOpt {
 		context := &daemon.Context{
-			LogFileName: filepath.Join(config.BrooceDir, "brooce.log"),
+			LogFileName: filepath.Join(config.BrooceLogDir, "brooce.log"),
 			LogFilePerm: 0644,
 		}
 		child, err := context.Reborn()
@@ -89,7 +89,7 @@ func runner(thread config.ThreadType) {
 	var threadOutputLog *os.File
 	if config.Config.FileOutputLog.Enable {
 		var err error
-		filename := filepath.Join(config.BrooceDir, fmt.Sprintf("%s-%s-%d.log", config.Config.ClusterName, thread.Queue, thread.Id))
+		filename := filepath.Join(config.BrooceLogDir, fmt.Sprintf("%s-%s-%d.log", config.Config.ClusterName, thread.Queue, thread.Id))
 		threadOutputLog, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			log.Fatalln("Unable to open logfile", filename, "for writing! Error was", err)

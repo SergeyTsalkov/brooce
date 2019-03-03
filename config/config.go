@@ -13,7 +13,9 @@ import (
 	"brooce/util"
 )
 
-var BrooceDir = filepath.Join(os.Getenv("HOME"), ".brooce")
+var BrooceConfigDir = os.Getenv("BROOCE_CONFIGDIR")
+var BrooceResourceDir = os.Getenv("BROOCE_RESOURCEDIR")
+var BrooceLogDir = os.Getenv("BROOCE_LOGDIR")
 
 type ConfigType struct {
 	ClusterName     string `json:"cluster_name"`
@@ -114,15 +116,10 @@ func (q *Queue) DelayedList() string {
 // this use of init sucks, but we'll have to fix every "var redisClient = myredis.Get()"
 // that is in a header to avoid it -- let's do this later!
 func init() {
-	if !util.IsDir(BrooceDir) {
-		err := os.Mkdir(BrooceDir, 0755)
-		if err != nil {
-			log.Fatalln("Unable to create directory", BrooceDir, ":", err)
-		}
-	}
 
-	configFile := filepath.Join(BrooceDir, "brooce.conf")
+	initDefaultDirs()
 
+	configFile := filepath.Join(BrooceConfigDir, "brooce.conf")
 	bytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Println("Unable to read config file", configFile, "so using defaults!")
@@ -131,6 +128,16 @@ func init() {
 		if err != nil {
 			log.Fatalln("Your config file", configFile, "seem to have invalid json! Please fix it or delete the file!")
 		}
+	}
+
+	if  BrooceConfigDir != "" {
+		log.Println("ConfigDir:", BrooceConfigDir)
+	}
+	if  BrooceResourceDir != "" {
+		log.Println("ResourceDir:", BrooceResourceDir)
+	}
+	if  BrooceLogDir != "" {
+		log.Println("LogDir:", BrooceLogDir)
 	}
 
 	initDefaultJobOptions()
@@ -148,6 +155,39 @@ func init() {
 	}
 
 	initThreads()
+}
+
+func initDefaultDirs() {
+
+	if BrooceConfigDir == "" {
+		BrooceConfigDir = filepath.Join(os.Getenv("HOME"), ".brooce")
+	}
+
+	if !util.IsDir(BrooceConfigDir) {
+		err := os.Mkdir(BrooceConfigDir, 0755)
+		if err != nil {
+			log.Fatalln("Unable to create directory", BrooceConfigDir, ":", err)
+		}
+	}
+
+	if BrooceLogDir == "" {
+		BrooceLogDir = filepath.Join(BrooceConfigDir, "logs")
+	}
+
+	// for backward compatibility, but you can create it instead, or remove this, if you wish
+	if !util.IsDir(BrooceLogDir) {
+		BrooceLogDir = BrooceConfigDir
+	}
+
+	if BrooceResourceDir == "" {
+		BrooceResourceDir = filepath.Join(BrooceConfigDir, "resources")
+	}
+
+	// use local resources only if exists
+	if !util.IsDir(BrooceResourceDir) {
+		BrooceResourceDir = ""
+	}
+
 }
 
 func initDefaultConfig() {
@@ -207,7 +247,7 @@ func initDefaultConfig() {
 	}
 
 	if Config.Path != "" {
-		os.Setenv("PATH", os.Getenv("PATH")+":"+Config.Path)
+		os.Setenv("PATH", os.Getenv("PATH") + string(os.PathListSeparator) + Config.Path)
 	}
 
 	if Config.GlobalJobOptions == (JobOptions{}) {
@@ -216,11 +256,11 @@ func initDefaultConfig() {
 }
 
 func cleanpath(path string) string {
-	if path == "" || strings.HasPrefix(path, "/") {
+	if path == "" || strings.HasPrefix(path, string(os.PathSeparator)) {
 		return path
 	} else if strings.HasPrefix(path, "~/") {
 		return filepath.Join(os.Getenv("HOME"), strings.TrimPrefix(path, "~/"))
 	}
 
-	return filepath.Join(BrooceDir, path)
+	return filepath.Join(BrooceConfigDir, path)
 }
