@@ -9,7 +9,7 @@ var jobListTpl = `
 
     <div class='row'>
       <div class='col-sm-3'>
-        <form class="form-search" method="get" action="/search">
+        <form class="form-search" method="get" action="{{BasePath}}/search">
           <input type="hidden" name="queue" value="{{ .QueueName }}">
           <input type="hidden" name="listType" value="{{ .ListType }}">
           <div class="input-group">
@@ -38,13 +38,13 @@ var jobListTpl = `
             <form action="" method="post">
               <input type="hidden" name="csrf" value="{{CSRF}}">
               {{ if eq .ListType "failed" "delayed" }}
-              <button type="submit" formaction="/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-sm">
+              <button type="submit" formaction="{{BasePath}}/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-sm">
                 <span class="glyphicon glyphicon-repeat"></span>
                 Retry All
               </button>
               {{ end }}
 
-              <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
+              <button type="submit" formaction="{{BasePath}}/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
                 <span class="glyphicon glyphicon-trash"></span>
                 Delete All
               </button>
@@ -71,7 +71,7 @@ var jobListTpl = `
             </td>
             <td class="buttons">
               {{ if .HasLog }}
-                <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
+                <a href="{{BasePath}}/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
                   <span class="glyphicon glyphicon-align-justify"></span>
                   Show Log
                 </a>
@@ -82,14 +82,14 @@ var jobListTpl = `
                 <input type="hidden" name="item" value="{{.Raw}}">
 
                 {{ if eq $.ListType "failed" "delayed" "done" }}
-                <button type="submit" formaction="/retry/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-warning btn-xs">
+                <button type="submit" formaction="{{BasePath}}/retry/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-warning btn-xs">
                   <span class="glyphicon glyphicon-repeat"></span>
                   Retry
                 </button>
                 {{ end }}
 
 
-                <button type="submit" formaction="/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
+                <button type="submit" formaction="{{BasePath}}/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
                   <span class="glyphicon glyphicon-trash"></span>
                   Delete
                 </button>

@@ -23,6 +23,7 @@ type ConfigType struct {
 
 	Web struct {
 		Addr     string `json:"addr"`
+		BasePath string `json:"basepath"`
 		CertFile string `json:"certfile"`
 		KeyFile  string `json:"keyfile"`
 		Username string `json:"username"`
@@ -126,7 +127,7 @@ func init() {
 
 	if !util.FileExists(configFile) {
 		if bytes, err := json.MarshalIndent(&Config, "", "  "); err == nil {
-			err = ioutil.WriteFile(configFile, bytes, 0744)
+			err = ioutil.WriteFile(configFile, bytes, 0644)
 			if err != nil {
 				log.Println("Warning: Unable to write default config file to", configFile, ", error was:", err)
 			} else {

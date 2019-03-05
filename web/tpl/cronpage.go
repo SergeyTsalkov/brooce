@@ -9,7 +9,7 @@ var cronPageTpl = `
   <td class="buttons">
 
     <!--
-    <a class="btn btn-info btn-xs" href="/cron?edit={{ .Name }}">
+    <a class="btn btn-info btn-xs" href="{{BasePath}}/cron?edit={{ .Name }}">
       <span class="glyphicon glyphicon-edit"></span>
       Edit
     </a>
@@ -20,22 +20,22 @@ var cronPageTpl = `
       <input type="hidden" name="item" value="{{.Name}}">
 
       {{ if .Disabled }}
-        <button type="submit" formaction="/enablecron" class="btn btn-warning btn-xs">
+        <button type="submit" formaction="{{BasePath}}/enablecron" class="btn btn-warning btn-xs">
           <span class="glyphicon glyphicon-plus"></span>
           Enable
         </button>
       {{ else }}
-        <button type="submit" formaction="/schedulecron" class="btn btn-success btn-xs">
+        <button type="submit" formaction="{{BasePath}}/schedulecron" class="btn btn-success btn-xs">
           <span class="glyphicon glyphicon-repeat"></span>
           Enqueue Now
         </button>      
-        <button type="submit" formaction="/disablecron" class="btn btn-warning btn-xs">
+        <button type="submit" formaction="{{BasePath}}/disablecron" class="btn btn-warning btn-xs">
           <span class="glyphicon glyphicon-remove"></span>
           Disable
         </button>
       {{ end }}
 
-      <button type="submit" formaction="/deletecron" onclick="return confirm('Delete Cron Job?')" class="btn btn-danger btn-xs">
+      <button type="submit" formaction="{{BasePath}}/deletecron" onclick="return confirm('Delete Cron Job?')" class="btn btn-danger btn-xs">
         <span class="glyphicon glyphicon-trash"></span>
         Delete
       </button>
@@ -45,9 +45,9 @@ var cronPageTpl = `
 {{ end }}
 
 {{ define "cronitemedit" }}
-<form action="/savecron" method="post">
+<form action="{{BasePath}}/savecron" method="post">
   <input type="hidden" name="csrf" value="{{CSRF}}">
-  <input type="hidden" name="redirect" value="/cron">
+  <input type="hidden" name="redirect" value="{{BasePath}}/cron">
   <input type="hidden" name="oldname" value="{{ .Name }}">
   <input type="hidden" name="disabled" value="{{ .Disabled }}">
 
@@ -65,7 +65,7 @@ var cronPageTpl = `
         Save
       </button>
 
-      <a class="btn btn-warning btn-sm" href="/cron">
+      <a class="btn btn-warning btn-sm" href="{{BasePath}}/cron">
         <span class="glyphicon glyphicon-remove"></span>
         Cancel
       </a>
@@ -89,7 +89,7 @@ var cronPageTpl = `
           <th class="buttons">
 
             {{ if eq .Edit "" }}
-            <!-- <a class="btn btn-success btn-sm" href="/cron?new=1">
+            <!-- <a class="btn btn-success btn-sm" href="{{BasePath}}/cron?new=1">
               <span class="glyphicon glyphicon-plus"></span>
               New
             </button> -->
