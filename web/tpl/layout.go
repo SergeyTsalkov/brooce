@@ -14,7 +14,7 @@ var headerTpl = `
 
     <title>Brooce Job Queue</title>
 
-    <link rel="stylesheet" href="/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{BasePath}}/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
     <style>
       div.header {
@@ -96,8 +96,8 @@ var headerTpl = `
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
-      <script src="/js/html5shiv.min.js"></script>
-      <script src="/js/respond.min.js"></script>
+      <script src="{{BasePath}}/js/html5shiv.min.js"></script>
+      <script src="{{BasePath}}/js/respond.min.js"></script>
     <![endif]-->
 
   </head>
@@ -107,11 +107,11 @@ var headerTpl = `
   <div class="header clearfix">
     <ul class="nav nav-pills pull-right">
 
-      <li {{ if eq . "overview" }}class="active"{{ end }}><a href="/" accesskey="o" title="Alt+O">Overview</a></li>
-      <li {{ if eq . "cron" }}class="active"{{ end }}><a href="/cron" accesskey="j" title="Alt+J">Cron Jobs</a></li>
+      <li {{ if eq . "overview" }}class="active"{{ end }}><a href="{{BasePath}}/" accesskey="o" title="Alt+O">Overview</a></li>
+      <li {{ if eq . "cron" }}class="active"{{ end }}><a href="{{BasePath}}/cron" accesskey="j" title="Alt+J">Cron Jobs</a></li>
     </ul>
 
-    <h1 class="text-muted"><a href="/">brooce</a></h1>
+    <h1 class="text-muted"><a href="{{BasePath}}/">brooce</a></h1>
   </div>
 {{ end }}
 `
@@ -122,8 +122,8 @@ var footerTpl = `
 </body>
 
 <!--
-<script src="/js/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-<script src="/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="{{BasePath}}/js/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+<script src="{{BasePath}}/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 -->
 
 </html>

@@ -33,6 +33,9 @@ func Get() *template.Template {
 		"CSRF": func() string {
 			return config.Config.CSRF()
 		},
+		"BasePath": func() string {
+			return config.Config.Web.BasePath
+		},
 		"TimeSince": func(timestamp int64) string {
 			if timestamp == 0 {
 				return ""

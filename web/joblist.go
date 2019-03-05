@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"brooce/task"
 
@@ -31,7 +30,7 @@ type joblistOutputType struct {
 }
 
 func joblistHandler(req *http.Request, rep *httpReply) (err error) {
-	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	path := splitUrlPath(req.URL.Path)
 	if len(path) < 2 {
 		err = fmt.Errorf("Invalid path")
 		return
