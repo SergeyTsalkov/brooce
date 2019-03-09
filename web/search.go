@@ -13,8 +13,6 @@ import (
 	"brooce/task"
 )
 
-var hitsJson []string
-
 type PagedHits struct {
 	Hits       []*task.Task
 	Start      int
@@ -27,9 +25,7 @@ type PagedHits struct {
 func searchHandler(req *http.Request, rep *httpReply) (err error) {
 	query, queueName, listType, page := searchQueryParams(req.URL.RawQuery)
 
-	if page < 2 {
-		hitsJson = searchQueueForCommand(query, queueName, listType)
-	}
+	hitsJson := searchQueueForCommand(query, queueName, listType)
 	pagedHits := newPagedHits(hitsJson, 10, page, queueName)
 
 	if pagedHits.Pages == 0 {
