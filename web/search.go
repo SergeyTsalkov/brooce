@@ -25,15 +25,15 @@ type PagedHits struct {
 func searchHandler(req *http.Request, rep *httpReply) (err error) {
 	query, queueName, listType, page := searchQueryParams(req.URL.RawQuery)
 
-	hits := searchQueueForCommand(query, queueName, listType)
-	pagedHits := newPagedHits(hits, 10, page)
+	hitsJson := searchQueueForCommand(query, queueName, listType)
+	pagedHits := newPagedHits(hitsJson, 10, page, queueName)
 
 	if pagedHits.Pages == 0 {
 		pagedHits.Start = 0
 		page = 0
 	} else if page > pagedHits.Pages {
 		page = pagedHits.Pages
-		pagedHits = newPagedHits(hits, 10, page)
+		pagedHits = newPagedHits(hitsJson, 10, page, queueName)
 	}
 
 	task.PopulateHasLog(pagedHits.Hits)
@@ -47,7 +47,7 @@ func searchHandler(req *http.Request, rep *httpReply) (err error) {
 		Jobs:      pagedHits.Hits,
 		Start:     int64(pagedHits.Start),
 		End:       int64(pagedHits.End),
-		Length:    int64(len(hits)),
+		Length:    int64(len(hitsJson)),
 
 		URL: req.URL,
 	}
@@ -56,7 +56,7 @@ func searchHandler(req *http.Request, rep *httpReply) (err error) {
 	return
 }
 
-func newPagedHits(hits []*task.Task, pageSize int, pageWanted int) *PagedHits {
+func newPagedHits(hits []string, pageSize int, pageWanted int, queueName string) *PagedHits {
 	if pageWanted < 1 {
 		pageWanted = 1
 	}
@@ -82,9 +82,20 @@ func newPagedHits(hits []*task.Task, pageSize int, pageWanted int) *PagedHits {
 		end = maxEnd + 1
 	}
 
+	hitsTask := []*task.Task{}
+	for _, taskJson := range hits[start:end] {
+		t, err := task.NewFromJson(taskJson, queueName)
+		if err != nil {
+			log.Printf("Couldn't construct task.Task from %+v", taskJson)
+			continue
+		}
+
+		hitsTask = append(hitsTask, t)
+	}
+
 	// log.Printf("page %d: start: %d end: %d total pages: %d", pageWanted, start, end, totalPages)
 
-	return &PagedHits{Hits: hits[start:end], Start: start + 1, End: end, PageWanted: pageWanted, Pages: totalPages}
+	return &PagedHits{Hits: hitsTask, Start: start + 1, End: end, PageWanted: pageWanted, Pages: totalPages}
 }
 
 func searchQueryParams(rq string) (query string, queue string, listType string, page int) {
@@ -109,23 +120,16 @@ func searchQueryParams(rq string) (query string, queue string, listType string, 
 	return query, queue, listType, page
 }
 
-func searchQueueForCommand(query, queueName, listType string) []*task.Task {
+func searchQueueForCommand(query, queueName, listType string) []string {
 	r := myredis.Get()
 	queueKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, queueName, listType)
 
-	found := []*task.Task{}
+	found := []string{}
 	vals := r.LRange(queueKey, 0, -1).Val()
 
 	for _, v := range vals {
-		t, err := task.NewFromJson(v, queueName)
-
-		if err != nil {
-			log.Printf("Couldn't construct task.Task from %+v", v)
-			continue
-		}
-
-		if strings.Contains(t.Command, query) {
-			found = append(found, t)
+		if strings.Contains(v, query) {
+			found = append(found, v)
 		}
 	}
 
