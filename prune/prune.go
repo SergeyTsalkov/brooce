@@ -81,20 +81,15 @@ func jobHasWorker(job *task.Task, workers []*heartbeat.HeartbeatType) bool {
 }
 
 func prunequeues() error {
-	queueHash, err := listing.Queues(true)
-	if err != nil {
-		return err
-	}
+	for _, q := range config.Config.Queues {
+		opts := q.DeepJobOptions()
 
-	for name, _ := range queueHash {
-		opts := config.Config.DeepJobOptions(name)
-
-		err = expireList(fmt.Sprintf("%s:queue:%s:done",   redisHeader, name), opts.RedisListDoneExpireAfter())
+		err := expireList(q.DoneList(), opts.RedisListDoneExpireAfter())
 		if err != nil {
 			return err
 		}
 
-		err = expireList(fmt.Sprintf("%s:queue:%s:failed", redisHeader, name), opts.RedisListFailedExpireAfter())
+		err = expireList(q.FailedList(), opts.RedisListFailedExpireAfter())
 		if err != nil {
 			return err
 		}
@@ -108,11 +103,11 @@ func expireList(list string, expire int) error {
 	var taskStr string
 
 	if expire == 0 {
-	    return nil
+		return nil
 	}
 
 	queueName := task.QueueNameFromRedisKey(list)
-	for lastExpired := true; lastExpired; {
+	for {
 		taskStr, err = redisClient.LIndex(list, -1).Result()
 		// empty list
 		if err == redis.Nil {
@@ -127,33 +122,33 @@ func expireList(list string, expire int) error {
 			return err
 		}
 
+		if !jobHasExpired(job, expire) {
+			break
+		}
+
 		// grab the job...
-		if jobHasExpired(job, expire) {
-			taskStr, err = redisClient.RPop(list).Result()
-			// it's possible for an item to vanish between the LINDEX and RPOP steps -- this is not fatal!
-			if err == redis.Nil {
-				break
-			}
+		taskStr, err = redisClient.RPop(list).Result()
+
+		// it's possible for an item to vanish between the LINDEX and RPOP steps -- this is not fatal!
+		if err == redis.Nil {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		job, err = task.NewFromJson(taskStr, queueName)
+		if err != nil {
+			return err
+		}
+
+		// ...and recheck for sure, this could be an another job too
+		if !jobHasExpired(job, expire) {
+			err = redisClient.RPush(list, taskStr).Err()
 			if err != nil {
 				return err
 			}
-
-			job, err = task.NewFromJson(taskStr, queueName)
-			if err != nil {
-				return err
-			}
-
-			// ...and recheck for sure, this could be an another job too
-			if !jobHasExpired(job, expire) {
-				err = redisClient.RPush(list, taskStr).Err()
-				if err != nil {
-					return err
-				}
-				lastExpired = false
-			}
-
-		} else {
-			lastExpired = false
+			break
 		}
 	}
 
@@ -161,7 +156,7 @@ func expireList(list string, expire int) error {
 }
 
 func jobHasExpired(job *task.Task, expire int) bool {
-	if job.EndTime > 0 && job.EndTime < time.Now().Unix() - int64(expire) {
+	if job.EndTime > 0 && job.EndTime < time.Now().Unix()-int64(expire) {
 		return true
 	}
 

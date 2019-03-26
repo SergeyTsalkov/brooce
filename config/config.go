@@ -17,9 +17,9 @@ var BrooceConfigDir = os.Getenv("BROOCE_CONFIGDIR")
 var BrooceLogDir = os.Getenv("BROOCE_LOGDIR")
 
 type ConfigType struct {
-	ClusterName     string `json:"cluster_name"`
-	ClusterLogName  string `json:"-"`
-	ProcName        string `json:"-"`
+	ClusterName    string `json:"cluster_name"`
+	ClusterLogName string `json:"-"`
+	ProcName       string `json:"-"`
 
 	GlobalJobOptions JobOptions `json:"global_job_options"`
 
@@ -79,17 +79,6 @@ func (c *ConfigType) JobOptionsForQueue(queue string) (opts JobOptions) {
 	return
 }
 
-func (c *ConfigType) DeepJobOptions(queue string) (opts JobOptions) {
-	for _, q := range c.Queues {
-		if q.Name == queue {
-			opts = q.DeepJobOptions()
-			return
-		}
-	}
-
-	return
-}
-
 func (q *Queue) DeepJobOptions() (j JobOptions) {
 	j.Merge(q.JobOptions)
 	j.Merge(Config.GlobalJobOptions)
@@ -130,10 +119,10 @@ func init() {
 		}
 	}
 
-	if  BrooceConfigDir != "" {
+	if BrooceConfigDir != "" {
 		log.Println("ConfigDir:", BrooceConfigDir)
 	}
-	if  BrooceLogDir != "" {
+	if BrooceLogDir != "" {
 		log.Println("LogDir:", BrooceLogDir)
 	}
 
@@ -235,7 +224,7 @@ func initDefaultConfig() {
 	}
 
 	if Config.Path != "" {
-		os.Setenv("PATH", os.Getenv("PATH") + string(os.PathListSeparator) + Config.Path)
+		os.Setenv("PATH", os.Getenv("PATH")+string(os.PathListSeparator)+Config.Path)
 	}
 
 	if Config.GlobalJobOptions == (JobOptions{}) {

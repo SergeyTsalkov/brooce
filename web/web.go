@@ -49,40 +49,40 @@ func Start() {
 
 	basePath := config.Config.Web.BasePath
 
-	reqHandler.HandleFunc(basePath + "/", makeHandler(mainpageHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/", makeHandler(mainpageHandler, "GET"))
 
-	reqHandler.HandleFunc(basePath + "/failed/", makeHandler(joblistHandler, "GET"))
-	reqHandler.HandleFunc(basePath + "/done/", makeHandler(joblistHandler, "GET"))
-	reqHandler.HandleFunc(basePath + "/delayed/", makeHandler(joblistHandler, "GET"))
-	reqHandler.HandleFunc(basePath + "/pending/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/failed/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/done/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/delayed/", makeHandler(joblistHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/pending/", makeHandler(joblistHandler, "GET"))
 
-	reqHandler.HandleFunc(basePath + "/search", makeHandler(searchHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/search", makeHandler(searchHandler, "GET"))
 
-	reqHandler.HandleFunc(basePath + "/retry/failed/", makeHandler(retryHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/retry/done/", makeHandler(retryHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/retry/delayed/", makeHandler(retryHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/retry/failed/", makeHandler(retryHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/retry/done/", makeHandler(retryHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/retry/delayed/", makeHandler(retryHandler, "POST"))
 
-	reqHandler.HandleFunc(basePath + "/retryall/failed/", makeHandler(retryAllHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/retryall/delayed/", makeHandler(retryAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/retryall/failed/", makeHandler(retryAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/retryall/delayed/", makeHandler(retryAllHandler, "POST"))
 
-	reqHandler.HandleFunc(basePath + "/delete/failed/", makeHandler(deleteHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/delete/done/", makeHandler(deleteHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/delete/delayed/", makeHandler(deleteHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/delete/pending/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/delete/failed/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/delete/done/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/delete/delayed/", makeHandler(deleteHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/delete/pending/", makeHandler(deleteHandler, "POST"))
 
-	reqHandler.HandleFunc(basePath + "/deleteall/failed/", makeHandler(deleteAllHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/deleteall/done/", makeHandler(deleteAllHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/deleteall/pending/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/deleteall/failed/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/deleteall/done/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/deleteall/delayed/", makeHandler(deleteAllHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/deleteall/pending/", makeHandler(deleteAllHandler, "POST"))
 
-	reqHandler.HandleFunc(basePath + "/showlog/", makeHandler(showlogHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/showlog/", makeHandler(showlogHandler, "GET"))
 
-	reqHandler.HandleFunc(basePath + "/cron", makeHandler(cronpageHandler, "GET"))
+	reqHandler.HandleFunc(basePath+"/cron", makeHandler(cronpageHandler, "GET"))
 	//reqHandler.HandleFunc(basePath + "/savecron", makeHandler(saveCronHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/deletecron", makeHandler(deleteCronHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/disablecron", makeHandler(disableCronHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/enablecron", makeHandler(enableCronHandler, "POST"))
-	reqHandler.HandleFunc(basePath + "/schedulecron", makeHandler(scheduleCronHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/deletecron", makeHandler(deleteCronHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/disablecron", makeHandler(disableCronHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/enablecron", makeHandler(enableCronHandler, "POST"))
+	reqHandler.HandleFunc(basePath+"/schedulecron", makeHandler(scheduleCronHandler, "POST"))
 
 	go func() {
 		var err error
@@ -97,10 +97,10 @@ func Start() {
 		}
 
 		if config.Config.Web.CertFile == "" && config.Config.Web.KeyFile == "" {
-			log.Println("Starting HTTP server on", config.Config.Web.Addr, "with basepath", basePath)
+			announceHttpStart("HTTP", config.Config.Web.Addr, basePath)
 			err = serv.ListenAndServe()
 		} else {
-			log.Println("Starting HTTPS server on", config.Config.Web.Addr, "with basepath", basePath)
+			announceHttpStart("HTTPS", config.Config.Web.Addr, basePath)
 			err = serv.ListenAndServeTLS(config.Config.Web.CertFile, config.Config.Web.KeyFile)
 		}
 
@@ -108,6 +108,14 @@ func Start() {
 			log.Println("Warning: Unable to start web server, error was:", err)
 		}
 	}()
+}
+
+func announceHttpStart(serverType, address, basePath string) {
+	if basePath != "" {
+		log.Println("Starting", serverType, "server on", address, "with basepath", basePath)
+	} else {
+		log.Println("Starting", serverType, "server on", address)
+	}
 }
 
 func makeHandler(fn httpHandler, method string) http.HandlerFunc {
