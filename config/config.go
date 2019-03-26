@@ -198,7 +198,7 @@ func initDefaultConfig() {
 
 	if Config.Queues == nil {
 		Config.Queues = []Queue{
-			Queue{
+			{
 				Name:    "common",
 				Workers: 1,
 			},

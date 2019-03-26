@@ -141,7 +141,7 @@ func cleanupAll() (err error) {
 	}
 
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for actor, _ := range actors {
+		for actor := range actors {
 			for _, key := range lockKeys {
 				pipe.LRem(key, 0, actor)
 			}

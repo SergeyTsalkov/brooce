@@ -14,7 +14,7 @@ import (
 
 func SleepUntilNextInterval(interval int) {
 	now := time.Now().Unix()
-	last_interval := now - now % int64(interval)
+	last_interval := now - now%int64(interval)
 	next_interval := last_interval + int64(interval)
 	sleep_for := next_interval - now
 

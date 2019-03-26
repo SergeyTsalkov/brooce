@@ -4,9 +4,9 @@ package redis
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
-	"strings"
 
 	"brooce/config"
 
