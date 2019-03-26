@@ -9,11 +9,11 @@ var jobListTpl = `
 
     <div class='row'>
       <div class='col-sm-3'>
-        <form class="form-search" method="get" action="/search">
+        <form class="form-search" method="get" action="{{BasePath}}/search">
           <input type="hidden" name="queue" value="{{ .QueueName }}">
           <input type="hidden" name="listType" value="{{ .ListType }}">
           <div class="input-group">
-          <input name="q" type="text" class="form-control search-query" placeholder="Search by Command" value="{{ .Query }}">
+          <input name="q" accesskey="s" title="Alt+S" type="text" class="form-control search-query" placeholder="Search in jobs" value="{{ .Query }}">
             <div class="input-group-btn">
               <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
             </div>
@@ -34,20 +34,22 @@ var jobListTpl = `
           <th>Command</th>
           <th>Params</th>
           <th class="buttons">
+            {{ if gt .Length 0 }}
             <form action="" method="post">
               <input type="hidden" name="csrf" value="{{CSRF}}">
               {{ if eq .ListType "failed" "delayed" }}
-              <button type="submit" formaction="/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-sm">
+              <button type="submit" formaction="{{BasePath}}/retryall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-warning btn-sm">
                 <span class="glyphicon glyphicon-repeat"></span>
                 Retry All
               </button>
               {{ end }}
 
-              <button type="submit" formaction="/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
+              <button type="submit" formaction="{{BasePath}}/deleteall/{{ .ListType }}/{{ .QueueName }}" class="btn btn-danger btn-sm">
                 <span class="glyphicon glyphicon-trash"></span>
                 Delete All
               </button>
             </form>
+            {{ end }}
           </th>
         </tr>
       </thead>
@@ -69,7 +71,7 @@ var jobListTpl = `
             </td>
             <td class="buttons">
               {{ if .HasLog }}
-                <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
+                <a href="{{BasePath}}/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
                   <span class="glyphicon glyphicon-align-justify"></span>
                   Show Log
                 </a>
@@ -80,14 +82,14 @@ var jobListTpl = `
                 <input type="hidden" name="item" value="{{.Raw}}">
 
                 {{ if eq $.ListType "failed" "delayed" "done" }}
-                <button type="submit" formaction="/retry/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-warning btn-xs">
+                <button type="submit" formaction="{{BasePath}}/retry/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-warning btn-xs">
                   <span class="glyphicon glyphicon-repeat"></span>
                   Retry
                 </button>
                 {{ end }}
 
 
-                <button type="submit" formaction="/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
+                <button type="submit" formaction="{{BasePath}}/delete/{{ $.ListType }}/{{ $.QueueName }}" class="btn btn-danger btn-xs">
                   <span class="glyphicon glyphicon-trash"></span>
                   Delete
                 </button>
@@ -104,7 +106,7 @@ var jobListTpl = `
       {{ if lt $.Page 2 }}
         <span class="prevnext">&#10235; Prev</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}">&#10235; Prev</a>
+        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}" title="Left arrow">&#10235; Prev</a>
       {{ end }}
 
       Page {{ $.Page }} of {{ .Pages }}
@@ -112,12 +114,30 @@ var jobListTpl = `
       {{ if eq $.Page $.Pages }}
         <span class="prevnext">Next &#10236;</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}">Next &#10236;</a>
+        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}" title="Right arrow">Next &#10236;</a>
       {{ end }}
     </div>
     
   </div>
 </div>
+<script>
+document.addEventListener('keydown', function(e) {
+    var code = e.which || e.keyCode;
+    if (code == 37) {
+      {{ if lt $.Page 2 }}
+        // Left
+      {{ else }}
+        window.location=window.location.pathname + '?{{ $.LinkParamsForPrevPage $.Page}}'
+      {{ end }}
+    } else if (code == 39) {
+      {{ if eq $.Page $.Pages }}
+        // Right
+      {{ else }}
+        window.location=window.location.pathname + '?{{ $.LinkParamsForNextPage $.Page}}'
+      {{ end }}
+    }
+}, false);
+</script>
 {{ template "footer" }}
 {{ end }}
 `

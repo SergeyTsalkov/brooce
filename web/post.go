@@ -3,13 +3,12 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	myredis "brooce/redis"
 )
 
 func retryHandler(req *http.Request, rep *httpReply) (err error) {
-	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	path := splitUrlPath(req.URL.Path)
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
 		return
@@ -36,7 +35,7 @@ func retryHandler(req *http.Request, rep *httpReply) (err error) {
 }
 
 func deleteHandler(req *http.Request, rep *httpReply) (err error) {
-	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	path := splitUrlPath(req.URL.Path)
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
 		return
@@ -55,7 +54,7 @@ func deleteHandler(req *http.Request, rep *httpReply) (err error) {
 }
 
 func retryAllHandler(req *http.Request, rep *httpReply) (err error) {
-	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	path := splitUrlPath(req.URL.Path)
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
 		return
@@ -72,7 +71,7 @@ func retryAllHandler(req *http.Request, rep *httpReply) (err error) {
 }
 
 func deleteAllHandler(req *http.Request, rep *httpReply) (err error) {
-	path := strings.Split(strings.Trim(req.URL.Path, "/"), "/")
+	path := splitUrlPath(req.URL.Path)
 	if len(path) < 3 {
 		err = fmt.Errorf("Invalid path")
 		return

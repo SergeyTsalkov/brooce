@@ -23,11 +23,11 @@ var mainPageTpl = `
           <tr>
             <td class="queuename">{{ $Queue.Name }}</td>
             <td class="queuenum">{{ $Queue.Threads }}</td>
-            <td class="queuenum"><a href="/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
+            <td class="queuenum"><a href="{{BasePath}}/pending/{{ $Queue.Name }}">{{ $Queue.Pending }}</a></td>
             <td class="queuenum">{{ $Queue.Running }}</td>
-            <td class="queuenum"><a href="/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>
-            <td class="queuenum"><a href="/failed/{{ $Queue.Name }}">{{ $Queue.Failed }}</a></td>
-            <td class="queuenum"><a href="/delayed/{{ $Queue.Name }}">{{ $Queue.Delayed }}</a></td>
+            <td class="queuenum"><a href="{{BasePath}}/done/{{ $Queue.Name }}">{{ $Queue.Done }}</a></td>
+            <td class="queuenum"><a href="{{BasePath}}/failed/{{ $Queue.Name }}">{{ $Queue.Failed }}</a></td>
+            <td class="queuenum"><a href="{{BasePath}}/delayed/{{ $Queue.Name }}">{{ $Queue.Delayed }}</a></td>
           </tr>
         {{ end }}
       </tbody>
@@ -51,8 +51,7 @@ var mainPageTpl = `
         </tr>
       </thead>
       <tbody>
-        <tr>
-          {{ range $i, $Worker := .RunningWorkers }}
+        {{ range $i, $Worker := .RunningWorkers }}
           <tr>
             <td>{{ $Worker.ProcName }}</td>
             <td>{{ $Worker.Hostname }}</td>
@@ -65,7 +64,6 @@ var mainPageTpl = `
             </td>
           </tr>
         {{ end }}
-        </tr>
       </tbody>
     </table>
   </div>
@@ -106,7 +104,7 @@ var mainPageTpl = `
 
             <td class="buttons">
               {{ if .HasLog }}
-                <a href="/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
+                <a href="{{BasePath}}/showlog/{{ .Id }}" target="_new" class="btn btn-info btn-xs">
                   <span class="glyphicon glyphicon-align-justify"></span>
                   Show Log
                 </a>
