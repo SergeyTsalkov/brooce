@@ -87,7 +87,7 @@ func Start() {
 		var err error
 
 		if !config.Config.Web.NoLog {
-			filename := filepath.Join(config.BrooceDir, "web.log")
+			filename := filepath.Join(config.BrooceLogDir, "web.log")
 			webLogWriter, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				log.Fatalln("Unable to open logfile", filename, "for writing! Error was", err)
