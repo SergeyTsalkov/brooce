@@ -15,7 +15,7 @@ func showlogHandler(req *http.Request, rep *httpReply) (err error) {
 	jobId := path[1]
 
 	var output string
-	output, err = redisClient.Get(fmt.Sprintf("%s:jobs:%s:log", redisHeader, jobId)).Result()
+	output, err = redisClient.Get(fmt.Sprintf("%s:jobs:%s:log", redisLogHeader, jobId)).Result()
 	if err != nil {
 		return
 	}

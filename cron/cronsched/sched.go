@@ -62,7 +62,10 @@ func scheduleCrons() error {
 	start = zeroOutSeconds(start)
 	start = start.Add(time.Minute)
 
-	end := time.Now()
+	end, err := redisClient.Time().Result()
+	if err != nil {
+		end = time.Now()
+	}
 	end = zeroOutSeconds(end)
 
 	if end.Sub(start) > maxSchedCatchup || start.After(end) {
