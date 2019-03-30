@@ -112,10 +112,11 @@ func runner(thread config.ThreadType) {
 		}
 
 		// thread.WorkingList() should have 1 item now
-		// if it has more, something went wrong!
+		// if it has less or more, something went wrong!
 		length := redisClient.LLen(thread.WorkingList())
 		if length.Err() != nil {
 			log.Println("Error while checking length of", thread.WorkingList(), ":", err)
+			continue;
 		}
 		if length.Val() != 1 {
 			log.Println(thread.WorkingList(), "should have length 1 but has length", length.Val(), "! It'll be flushed to", thread.PendingList())
