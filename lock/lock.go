@@ -91,7 +91,6 @@ func cleanupOwn() (err error) {
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, thread := range config.Threads {
 			for _, key := range keys {
-				log.Println("Pruning orphaned lock", thread.Name, "from", key)
 				pipe.LRem(key, 0, thread.Name)
 			}
 		}
