@@ -143,8 +143,8 @@ func cleanupAll() (err error) {
 
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for actor := range actors {
+			log.Println("Pruning orphaned lock actor", actor)
 			for _, key := range lockKeys {
-				log.Println("Pruning orphaned lock", actor, "from", key)
 				pipe.LRem(key, 0, actor)
 			}
 		}
