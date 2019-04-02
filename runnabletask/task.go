@@ -51,7 +51,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 	}
 
 	var gotLock bool
-	gotLock, err = lock.GrabLocks(task.Locks)
+	gotLock, err = lock.GrabLocks(task.Locks, task.WorkerThreadName())
 	if err != nil {
 		err = fmt.Errorf("Error grabbing locks: %v", err)
 		return
@@ -60,7 +60,7 @@ func (task *RunnableTask) Run() (exitCode int, err error) {
 		exitCode = 75
 		return
 	}
-	defer lock.ReleaseLocks(task.Locks)
+	defer lock.ReleaseLocks(task.Locks, task.WorkerThreadName())
 
 	task.Tried += 1
 

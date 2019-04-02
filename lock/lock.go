@@ -18,8 +18,7 @@ import (
 var redisClient = myredis.Get()
 var redisHeader = config.Config.ClusterName
 
-func GrabLocks(locks []string) (success bool, err error) {
-	actor := config.Config.ProcName
+func GrabLocks(locks []string, actor string) (success bool, err error) {
 	if len(locks) == 0 {
 		return true, nil
 	}
@@ -38,7 +37,7 @@ func GrabLocks(locks []string) (success bool, err error) {
 
 	for i, result := range results {
 		if result.Val() > lockDepth(locks[i]) {
-			err = ReleaseLocks(locks)
+			err = ReleaseLocks(locks, actor)
 			return
 		}
 	}
@@ -47,16 +46,14 @@ func GrabLocks(locks []string) (success bool, err error) {
 	return
 }
 
-func ReleaseLocks(locks []string) (err error) {
-	actor := config.Config.ProcName
-
+func ReleaseLocks(locks []string, actor string) (err error) {
 	if len(locks) == 0 {
 		return
 	}
 
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, lock := range locks {
-			pipe.LRem(lockRedisKey(lock), 1, actor)
+			pipe.LRem(lockRedisKey(lock), 0, actor)
 		}
 		return nil
 	})
@@ -65,8 +62,8 @@ func ReleaseLocks(locks []string) (err error) {
 }
 
 func Start() {
-	// before we grab a job, cleanup any lingering locks for our own process name
-	err := cleanup(config.Config.ProcName)
+	// before we grab a job, cleanup any lingering locks for our own threads
+	err := cleanupOwn()
 	if err != nil {
 		log.Fatalln("redis error:", err)
 	}
@@ -84,7 +81,7 @@ func Start() {
 
 }
 
-func cleanup(actor string) (err error) {
+func cleanupOwn() (err error) {
 	var keys []string
 	keys, err = myredis.ScanKeys(redisHeader + ":lock:*")
 	if err != nil || len(keys) == 0 {
@@ -92,8 +89,10 @@ func cleanup(actor string) (err error) {
 	}
 
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		for _, key := range keys {
-			pipe.LRem(key, 0, actor)
+		for _, thread := range config.Threads {
+			for _, key := range keys {
+				pipe.LRem(key, 0, thread.Name)
+			}
 		}
 		return nil
 	})
@@ -133,7 +132,9 @@ func cleanupAll() (err error) {
 	}
 
 	for _, worker := range workers {
-		delete(actors, worker.ProcName)
+		for _, thread := range worker.Threads {
+			delete(actors, thread.Name)
+		}
 	}
 
 	if len(actors) == 0 {
@@ -142,6 +143,7 @@ func cleanupAll() (err error) {
 
 	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for actor := range actors {
+			log.Println("Pruning orphaned lock actor", actor)
 			for _, key := range lockKeys {
 				pipe.LRem(key, 0, actor)
 			}
