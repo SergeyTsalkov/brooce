@@ -2,6 +2,7 @@ package listing
 
 import (
 	"encoding/json"
+	"sort"
 
 	"brooce/heartbeat"
 )
@@ -29,6 +30,14 @@ func RunningWorkers() (workers []*heartbeat.HeartbeatType, err error) {
 
 		workers = append(workers, worker)
 	}
+
+	sort.Slice(workers, func(i, j int) bool {
+		if workers[i].Hostname == workers[j].Hostname {
+			return workers[i].ProcName < workers[j].ProcName
+		} else {
+			return workers[i].Hostname < workers[j].Hostname
+		}
+	})
 
 	return
 }
