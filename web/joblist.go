@@ -40,6 +40,7 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 	queueName := path[1]
 
 	page := joblistQueryParams(req.URL.RawQuery)
+	perpage := joblistPerPage(req)
 
 	output := &joblistOutputType{
 		QueueName: queueName,
@@ -48,7 +49,7 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 		URL:       req.URL,
 	}
 
-	err = output.listJobs(listType == "pending")
+	err = output.listJobs(listType == "pending", perpage)
 	if err != nil {
 		return
 	}
@@ -58,7 +59,7 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 	} else if output.Page > output.Pages {
 		output.Page = output.Pages
 
-		err = output.listJobs(listType == "pending")
+		err = output.listJobs(listType == "pending", perpage)
 		if err != nil {
 			return
 		}
@@ -83,6 +84,22 @@ func joblistQueryParams(rq string) (page int) {
 	return page
 }
 
+func joblistPerPage(req *http.Request) (perpage int64) {
+	perpage = 10
+
+	perpageCookie, err := req.Cookie("perpage")
+	if err != nil {
+		return
+	}
+
+	perpage, _ = strconv.ParseInt(perpageCookie.Value, 10, 0)
+	if perpage < 1 || perpage > 100 {
+		perpage = 10
+	}
+
+	return
+}
+
 func (output *joblistOutputType) LinkParamsForPage(page int64) template.URL {
 	if output.URL == nil {
 		return template.URL("")
@@ -102,15 +119,14 @@ func (output *joblistOutputType) LinkParamsForNextPage(page int64) template.URL 
 	return output.LinkParamsForPage(page + 1)
 }
 
-func (output *joblistOutputType) listJobs(reverse bool) (err error) {
-	var perPage int64 = 10
-	output.Start = (output.Page-1)*perPage + 1
-	output.End = output.Page * perPage
+func (output *joblistOutputType) listJobs(reverse bool, perpage int64) (err error) {
+	output.Start = (output.Page-1)*perpage + 1
+	output.End = output.Page * perpage
 
 	redisKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, output.QueueName, output.ListType)
 
-	rangeStart := (output.Page - 1) * perPage
-	rangeEnd := output.Page*perPage - 1
+	rangeStart := (output.Page - 1) * perpage
+	rangeEnd := output.Page*perpage - 1
 
 	if reverse {
 		rangeStart, rangeEnd = (rangeEnd+1)*-1, (rangeStart+1)*-1
@@ -128,7 +144,7 @@ func (output *joblistOutputType) listJobs(reverse bool) (err error) {
 	}
 
 	output.Length = lengthResult.Val()
-	output.Pages = int64(math.Ceil(float64(output.Length) / float64(perPage)))
+	output.Pages = int64(math.Ceil(float64(output.Length) / float64(perpage)))
 	if output.End > output.Length {
 		output.End = output.Length
 	}

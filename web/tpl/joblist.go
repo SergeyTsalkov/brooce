@@ -101,12 +101,17 @@ var jobListTpl = `
     </table>
     
     <div class="pages">
-      <i>Showing results {{ .Start }}-{{ .End }} of {{ .Length }}</i>
+      <i>
+        Showing results
+        <a title="Set Results Per Page" href="#" class="setresults-link">{{ .Start }}-{{ .End }}</a> 
+        of {{ .Length }}
+        </a>
+      </i>
       
       {{ if lt $.Page 2 }}
         <span class="prevnext">&#10235; Prev</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForPrevPage $.Page}}" title="Left arrow">&#10235; Prev</a>
+        <a class="prevnext prev-link" href="?{{ $.LinkParamsForPrevPage $.Page}}" title="Left arrow">&#10235; Prev</a>
       {{ end }}
 
       Page {{ $.Page }} of {{ .Pages }}
@@ -114,30 +119,13 @@ var jobListTpl = `
       {{ if eq $.Page $.Pages }}
         <span class="prevnext">Next &#10236;</span>
       {{ else }}
-        <a class="prevnext" href="?{{ $.LinkParamsForNextPage $.Page}}" title="Right arrow">Next &#10236;</a>
+        <a class="prevnext next-link" href="?{{ $.LinkParamsForNextPage $.Page}}" title="Right arrow">Next &#10236;</a>
       {{ end }}
     </div>
     
   </div>
 </div>
-<script>
-document.addEventListener('keydown', function(e) {
-    var code = e.which || e.keyCode;
-    if (code == 37) {
-      {{ if lt $.Page 2 }}
-        // Left
-      {{ else }}
-        window.location=window.location.pathname + '?{{ $.LinkParamsForPrevPage $.Page}}'
-      {{ end }}
-    } else if (code == 39) {
-      {{ if eq $.Page $.Pages }}
-        // Right
-      {{ else }}
-        window.location=window.location.pathname + '?{{ $.LinkParamsForNextPage $.Page}}'
-      {{ end }}
-    }
-}, false);
-</script>
-{{ template "footer" }}
+
+{{ template "footer" "joblist" }}
 {{ end }}
 `

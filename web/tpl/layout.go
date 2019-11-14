@@ -14,7 +14,7 @@ var headerTpl = `
 
     <title>Brooce Job Queue</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
     <style>
       div.header {
@@ -37,7 +37,7 @@ var headerTpl = `
       }
 
       div.pages {
-        margin-top: 3em;
+        margin: 3em 0 1em 0;
         text-align: center;
       }
       div.pages i {
@@ -121,9 +121,34 @@ var footerTpl = `
 </div> <!-- container -->
 </body>
 
+{{ if . }}
+{{ if eq . "joblist" }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js" integrity="sha256-9Nt2r+tJnSd2A2CRUvnjgsD+ES1ExvjbjBNqidm9doI=" crossorigin="anonymous"></script>
+  <script>
+    $(document).keydown(function(evt) {
+      var target = null
+      if (evt.which == 37) target = $('a.prev-link')
+      else if (evt.which == 39) target = $('a.next-link')
+      else return
+
+      if (target && target.length > 0) {
+        window.location.href = target.attr('href')
+      }
+    })
+
+    $('a.setresults-link').click(function(evt) {
+      evt.preventDefault()
+      var perpage = prompt("How may results per page? (1-100, default 10)")
+      Cookies.set('perpage', parseInt(perpage))
+      location.reload()
+    })
+  </script>
+{{ end }}
+{{ end }}
+
 <!--
-<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 -->
 
 </html>
