@@ -10,8 +10,6 @@ import (
 	"strconv"
 
 	"brooce/task"
-
-	"github.com/go-redis/redis"
 )
 
 type joblistOutputType struct {
@@ -19,6 +17,7 @@ type joblistOutputType struct {
 	QueueName string
 	Page      int64
 	Pages     int64
+	PerPage   int64
 	Length    int64
 	Start     int64
 	End       int64
@@ -40,29 +39,18 @@ func joblistHandler(req *http.Request, rep *httpReply) (err error) {
 	queueName := path[1]
 
 	page := joblistQueryParams(req.URL.RawQuery)
-	perpage := joblistPerPage(req)
 
 	output := &joblistOutputType{
 		QueueName: queueName,
 		ListType:  listType,
 		Page:      int64(page),
+		PerPage:   joblistPerPage(req),
 		URL:       req.URL,
 	}
 
-	err = output.listJobs(listType == "pending", perpage)
+	err = output.listJobs()
 	if err != nil {
 		return
-	}
-
-	if output.Pages == 0 {
-		output.Page = 0
-	} else if output.Page > output.Pages {
-		output.Page = output.Pages
-
-		err = output.listJobs(listType == "pending", perpage)
-		if err != nil {
-			return
-		}
 	}
 
 	err = templates.ExecuteTemplate(rep, "joblist", output)
@@ -119,54 +107,41 @@ func (output *joblistOutputType) LinkParamsForNextPage(page int64) template.URL 
 	return output.LinkParamsForPage(page + 1)
 }
 
-func (output *joblistOutputType) listJobs(reverse bool, perpage int64) (err error) {
-	output.Start = (output.Page-1)*perpage + 1
-	output.End = output.Page * perpage
-
+func (output *joblistOutputType) listJobs() (err error) {
+	reverse := (output.ListType == "pending")
 	redisKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, output.QueueName, output.ListType)
 
-	rangeStart := (output.Page - 1) * perpage
-	rangeEnd := output.Page*perpage - 1
+	output.Length, err = redisClient.LLen(redisKey).Result()
+	if err != nil {
+		return err
+	}
+
+	output.pageCalculate()
+
+	if output.Length == 0 {
+		return
+	}
+
+	rangeStart := output.Start - 1
+	rangeEnd := output.End - 1
 
 	if reverse {
 		rangeStart, rangeEnd = (rangeEnd+1)*-1, (rangeStart+1)*-1
 	}
 
-	var lengthResult *redis.IntCmd
-	var rangeResult *redis.StringSliceCmd
-	_, err = redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		lengthResult = pipe.LLen(redisKey)
-		rangeResult = pipe.LRange(redisKey, rangeStart, rangeEnd)
-		return nil
-	})
-	if err != nil {
-		return
-	}
+	var jobs []string
+	jobs, err = redisClient.LRange(redisKey, rangeStart, rangeEnd).Result()
 
-	output.Length = lengthResult.Val()
-	output.Pages = int64(math.Ceil(float64(output.Length) / float64(perpage)))
-	if output.End > output.Length {
-		output.End = output.Length
-	}
-	if output.Start > output.Length {
-		output.Start = output.Length
-	}
+	output.Jobs = make([]*task.Task, len(jobs))
 
-	rangeLength := len(rangeResult.Val())
-	output.Jobs = make([]*task.Task, rangeLength)
-
-	if len(output.Jobs) == 0 {
-		return
-	}
-
-	for i, value := range rangeResult.Val() {
+	for i, value := range jobs {
 		job, err := task.NewFromJson(value, output.QueueName)
 		if err != nil {
 			continue
 		}
 
 		if reverse {
-			output.Jobs[rangeLength-i-1] = job
+			output.Jobs[len(jobs)-i-1] = job
 		} else {
 			output.Jobs[i] = job
 		}
@@ -174,4 +149,38 @@ func (output *joblistOutputType) listJobs(reverse bool, perpage int64) (err erro
 
 	task.PopulateHasLog(output.Jobs)
 	return
+}
+
+func (output *joblistOutputType) pageCalculate() {
+	if output.Page < 1 {
+		output.Page = 1
+	}
+	if output.PerPage < 1 {
+		output.PerPage = 1
+	}
+
+	output.Pages = int64(math.Ceil(float64(output.Length) / float64(output.PerPage)))
+
+	if output.Length == 0 {
+		output.Start = 0
+		output.End = 0
+		output.Page = 0
+		return
+	}
+
+	for {
+		output.Start = (output.Page-1)*output.PerPage + 1
+		output.End = output.Page * output.PerPage
+
+		if output.Start > output.Length {
+			output.Page = output.Pages
+			continue
+		}
+
+		break
+	}
+
+	if output.End > output.Length {
+		output.End = output.Length
+	}
 }

@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,92 +12,53 @@ import (
 	"brooce/task"
 )
 
-type PagedHits struct {
-	Hits       []*task.Task
-	Start      int
-	End        int
-	Pages      int
-	PageSize   int
-	PageWanted int
-}
-
 func searchHandler(req *http.Request, rep *httpReply) (err error) {
 	query, queueName, listType, page := searchQueryParams(req.URL.RawQuery)
-
-	hitsJson := searchQueueForCommand(query, queueName, listType)
-	pagedHits := newPagedHits(hitsJson, 10, page, queueName)
-
-	if pagedHits.Pages == 0 {
-		pagedHits.Start = 0
-		page = 0
-	} else if page > pagedHits.Pages {
-		page = pagedHits.Pages
-		pagedHits = newPagedHits(hitsJson, 10, page, queueName)
-	}
-
-	task.PopulateHasLog(pagedHits.Hits)
 
 	output := &joblistOutputType{
 		QueueName: queueName,
 		ListType:  listType,
 		Query:     query,
-		Page:      int64(page),
-		Pages:     int64(pagedHits.Pages),
-		Jobs:      pagedHits.Hits,
-		Start:     int64(pagedHits.Start),
-		End:       int64(pagedHits.End),
-		Length:    int64(len(hitsJson)),
-
-		URL: req.URL,
+		Page:      page,
+		PerPage:   joblistPerPage(req),
+		URL:       req.URL,
 	}
+
+	output.searchQueueAndPopulateResults()
 
 	err = templates.ExecuteTemplate(rep, "joblist", output)
 	return
 }
 
-func newPagedHits(hits []string, pageSize int, pageWanted int, queueName string) *PagedHits {
-	if pageWanted < 1 {
-		pageWanted = 1
+func (output *joblistOutputType) searchQueueAndPopulateResults() (err error) {
+	jsonResults := searchQueue(output.Query, output.QueueName, output.ListType)
+
+	output.Length = int64(len(jsonResults))
+	output.pageCalculate()
+
+	if output.Length == 0 {
+		return
 	}
 
-	start := 1
-	end := pageSize
+	start := output.Start - 1
+	end := output.End
 
-	totalHits := len(hits)
-	totalPages := int(math.Ceil(float64(totalHits) / float64(pageSize)))
-
-	maxStart := (pageWanted - 1) * pageSize
-	maxEnd := (pageWanted * pageSize) - 1
-
-	if maxStart > totalHits {
-		start = totalHits
-	} else {
-		start = maxStart
-	}
-
-	if (maxEnd + 1) > totalHits {
-		end = totalHits
-	} else {
-		end = maxEnd + 1
-	}
-
-	hitsTask := []*task.Task{}
-	for _, taskJson := range hits[start:end] {
-		t, err := task.NewFromJson(taskJson, queueName)
+	output.Jobs = []*task.Task{}
+	for _, json := range jsonResults[start:end] {
+		t, err := task.NewFromJson(json, output.QueueName)
 		if err != nil {
-			log.Printf("Couldn't construct task.Task from %+v", taskJson)
+			log.Printf("Couldn't construct task.Task from %+v", json)
 			continue
 		}
 
-		hitsTask = append(hitsTask, t)
+		output.Jobs = append(output.Jobs, t)
 	}
 
-	// log.Printf("page %d: start: %d end: %d total pages: %d", pageWanted, start, end, totalPages)
-
-	return &PagedHits{Hits: hitsTask, Start: start + 1, End: end, PageWanted: pageWanted, Pages: totalPages}
+	task.PopulateHasLog(output.Jobs)
+	return
 }
 
-func searchQueryParams(rq string) (query string, queue string, listType string, page int) {
+func searchQueryParams(rq string) (query string, queue string, listType string, page int64) {
 	params, err := url.ParseQuery(rq)
 	if err != nil {
 		log.Printf("Malformed URL query: %s err: %s", rq, err)
@@ -112,15 +72,15 @@ func searchQueryParams(rq string) (query string, queue string, listType string, 
 		listType = "done"
 	}
 
-	page = 1
-	if pg, err := strconv.Atoi(params.Get("page")); err == nil && pg > 1 {
-		page = pg
+	page, _ = strconv.ParseInt(params.Get("page"), 10, 0)
+	if page < 1 {
+		page = 1
 	}
 
 	return query, queue, listType, page
 }
 
-func searchQueueForCommand(query, queueName, listType string) []string {
+func searchQueue(query, queueName, listType string) []string {
 	r := myredis.Get()
 	queueKey := fmt.Sprintf("%s:queue:%s:%s", redisHeader, queueName, listType)
 
