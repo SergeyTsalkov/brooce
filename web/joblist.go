@@ -164,24 +164,18 @@ func (output *joblistOutputType) pageCalculate() {
 
 	output.Pages = int64(math.Ceil(float64(output.Length) / float64(output.PerPage)))
 
-	if output.Length == 0 {
+	if output.Page > output.Pages {
+		output.Page = output.Pages
+	}
+
+	if output.Pages == 0 {
 		output.Start = 0
 		output.End = 0
-		output.Page = 0
 		return
 	}
 
-	for {
-		output.Start = (output.Page-1)*output.PerPage + 1
-		output.End = output.Page * output.PerPage
-
-		if output.Start > output.Length {
-			output.Page = output.Pages
-			continue
-		}
-
-		break
-	}
+	output.Start = (output.Page-1)*output.PerPage + 1
+	output.End = output.Page * output.PerPage
 
 	if output.End > output.Length {
 		output.End = output.Length
