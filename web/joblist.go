@@ -131,6 +131,9 @@ func (output *joblistOutputType) listJobs() (err error) {
 
 	var jobs []string
 	jobs, err = redisClient.LRange(redisKey, rangeStart, rangeEnd).Result()
+	if err != nil {
+		return err
+	}
 
 	output.Jobs = make([]*task.Task, len(jobs))
 
