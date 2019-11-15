@@ -32,7 +32,7 @@ Brooce uses redis as its database. Redis can be accessed from any programming la
 This is simplest, and will get you running immediately.
 ```shell
 sudo apt-get install redis-server
-wget https://github.com/SergeyTsalkov/brooce/releases/download/v1.3.0/brooce
+wget https://github.com/SergeyTsalkov/brooce/releases/download/v1.4.0/brooce
 chmod 755 brooce
 ./brooce
 ```
@@ -128,9 +128,12 @@ So far, we've treated jobs as strings, but they can also be json hashes with add
   * **noredislogonsuccess** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits successfully.
   * **noredislogonfail** (bool, default false) - Log the job stdout/stderr output, but delete it if the job exits with a non-zero exit code.
   * **redislogexpireafter** (int, default 604800) - How many seconds to retain job stdout/stderr output in redis for. Defaults to 1 week if omitted.
+  * **redislogfailedexpireafter** (int, default 0) - If set above 0, this value replaces redislogexpireafter for failed jobs.
   * **drop** (bool, default false) - Don't send the job to the done or failed list after it finishes. Jobs that finish running will just vanish.
   * **droponsuccess** (bool, default false) - If the job exits successfully, don't send it to the done list. Instead, it will just vanish.
   * **droponfail** (bool, default false) - If the job exits with a non-zero exit code, don't send it to the failed list. Instead, it will just vanish.
+  * **redislistdoneexpireafter** (int, default 0) - If set above 0, jobs will expire from the done list above this many seconds. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
+  * **redislistfailedexpireafter** (int, default 0) - If set above 0, jobs will expire from the failed list above this many seconds. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
   * **requeuedelayed** (int, default 60) - A job that has been bumped to the delayed queue because it couldn't acquire a lock, will be moved back to the pending queue after this many seconds. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
   * **requeuefailed** (int, default 0) - If set above 0, failed jobs will be moved back to the pending queue after this many seconds. This allows for indefinite retrying. For limited or job-specific retrying, see the maxtries option. This option can't be set on individual jobs, but only in global_job_options and per-queue job_options.
 

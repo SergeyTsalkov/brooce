@@ -40,6 +40,7 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
       "job_options": {}
     }
   ],
+  "basepath": "",
   "path": ""
 }
 ```
@@ -105,6 +106,9 @@ You can set per-queue job options in the `job_options` hash, as shown below. Per
 }
 ```
 
+### `basepath`
+If you're running brooce's web server behind a proxy and exposing it as a folder (e.g. yourdomain.com/brooce/), you can set this to the directory path (e.g. `/brooce`).
+
 ### `path`
-Add a given string to the brooce worker's PATH for running commands. For example, if you specify `"/home/mydir/bin"`, then now you can run a job as `mytask` instead of `/home/mydir/bin/mytask`.
+Add a given string to the brooce worker's PATH for running commands. For example, if you specify `/home/mydir/bin`, then now you can run a job as `mytask` instead of `/home/mydir/bin/mytask`.
  
