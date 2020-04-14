@@ -121,6 +121,9 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
 
 # Job Options
 So far, we've treated jobs as strings, but they can also be json hashes with additional parameters. Here are all possible parameters, along with their json data type and the default value if omitted.
+  * **id** (string, default value will auto increment) - Defines a job ID.
+  * **locks** (array of strings, default []) - Configure locks to manage concurrent jobs. Read below for more information on concurrent jobs and locking.
+  * **command** (string, default false) - Define command to run.
   * **timeout** (int, default 3600) - Number of seconds that a job will be allowed to run for before it is killed. The timeout can't be disabled, but can be set to a very large number.
   * **maxtries** (int, default 1) - If set to a number greater than 1, failed jobs will be sent to the delayed queue instead of the failed queue until they've failed that many times.
   * **killondelay** (bool, default false) - If true, jobs that can't acquire a lock they need will be killed off rather than delayed and retried.
