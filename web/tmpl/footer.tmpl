@@ -1,0 +1,36 @@
+{{ define "footer" }}
+</div> <!-- container -->
+</body>
+
+{{ if . }}
+{{ if eq . "joblist" }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js" integrity="sha256-9Nt2r+tJnSd2A2CRUvnjgsD+ES1ExvjbjBNqidm9doI=" crossorigin="anonymous"></script>
+  <script>
+    $(document).keydown(function(evt) {
+      var target = null
+      if (evt.which == 37) target = $('a.prev-link')
+      else if (evt.which == 39) target = $('a.next-link')
+      else return
+
+      if (target && target.length > 0) {
+        window.location.href = target.attr('href')
+      }
+    })
+
+    $('a.setresults-link').click(function(evt) {
+      evt.preventDefault()
+      var perpage = prompt("How may results per page? (1-100, default 10)")
+      Cookies.set('perpage', parseInt(perpage))
+      location.reload()
+    })
+  </script>
+{{ end }}
+{{ end }}
+
+<!--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+-->
+
+</html>
+{{ end }}

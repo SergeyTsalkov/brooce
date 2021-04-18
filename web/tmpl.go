@@ -1,25 +1,19 @@
-package tpl
+package web
 
 import (
+	"brooce/config"
+	"brooce/util"
+	"embed"
 	"html/template"
 	"log"
 	"strings"
 	"time"
-
-	"brooce/config"
-	"brooce/util"
 )
 
-var tplList = []string{
-	headerTpl,
-	footerTpl,
-	mainPageTpl,
-	jobListTpl,
-	showLogTpl,
-	cronPageTpl,
-}
+//go:embed tmpl
+var templateContent embed.FS
 
-func Get() *template.Template {
+func makeTemplate() *template.Template {
 	tpl := template.New("")
 
 	tpl.Funcs(template.FuncMap{
@@ -72,11 +66,9 @@ func Get() *template.Template {
 		},
 	})
 
-	for _, tplString := range tplList {
-		_, err := tpl.Parse(tplString)
-		if err != nil {
-			log.Fatalln(err)
-		}
+	_, err := tpl.ParseFS(templateContent, "tmpl/*.tmpl")
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	return tpl

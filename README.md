@@ -38,7 +38,7 @@ chmod 755 brooce
 ```
 
 ## Option 2: Build From Source
-You must have Go 1.11 or newer installed.
+You must have Go 1.16 or newer installed.
 ```shell
 sudo apt-get install redis-server
 git clone https://github.com/SergeyTsalkov/brooce.git

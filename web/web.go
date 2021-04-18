@@ -13,7 +13,6 @@ import (
 
 	"brooce/config"
 	myredis "brooce/redis"
-	"brooce/web/tpl"
 )
 
 var redisClient = myredis.Get()
@@ -21,7 +20,7 @@ var redisHeader = config.Config.ClusterName
 var redisLogHeader = config.Config.ClusterLogName
 
 var reqHandler = http.NewServeMux()
-var templates = tpl.Get()
+var templates = makeTemplate()
 
 var serv = &http.Server{
 	Addr:         config.Config.Web.Addr,
