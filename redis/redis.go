@@ -44,17 +44,28 @@ func Get() *redis.Client {
 	return redisClient
 }
 
-func FlushList(src, dst string) (err error) {
+// in the past, this function would just keep running RPOPLPUSH until it got an error back
+// this works until the list gets long: then you can get into a race where the delayed list
+// is being both flushed and repopulated (by a worker thread) forever
+func FlushList(src, dst string) error {
 	redisClient := Get()
-	for err == nil {
+	length, err := redisClient.LLen(src).Result()
+	if err != nil {
+		return err
+	}
+
+	for i := int64(0); i < length; i++ {
 		_, err = redisClient.RPopLPush(src, dst).Result()
+		if err != nil {
+			break
+		}
 	}
 
 	if err == redis.Nil {
 		err = nil
 	}
 
-	return
+	return err
 }
 
 func ScanKeys(match string) (keys []string, err error) {
