@@ -193,6 +193,11 @@ func initDefaultConfig() {
 			log.Printf("You didn't specify a web username/password, so we generated these: %s/%s", Config.Web.Username, Config.Web.Password)
 		}
 
+		if Config.Web.BasePath != "" {
+			Config.Web.BasePath = strings.Trim(Config.Web.BasePath, "/")
+			Config.Web.BasePath = "/" + Config.Web.BasePath
+		}
+
 		Config.Web.CertFile = cleanpath(Config.Web.CertFile)
 		Config.Web.KeyFile = cleanpath(Config.Web.KeyFile)
 	}
