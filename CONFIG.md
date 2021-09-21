@@ -25,6 +25,7 @@ The first time brooce runs, it will create a `~/.brooce` dir in your home direct
   },
   "redis": {
     "host": "localhost:6379",
+    "socket": "",
     "password": "",
     "db": 0
   },
@@ -74,6 +75,9 @@ By default, job stdout/stderr is only logged to redis for review through the web
 
 ### `redis.host` / `redis.password`
 The hostname and password to access your redis server. Defaults to localhost and no-password.
+
+### `redis.socket`
+If specified, connect through a unix sock file instead of a hostname. Example: `/var/run/redis/redis-server.sock`
 
 ### `redis.db`
 The db which will be used by brooce on your redis server. Defaults to 0.

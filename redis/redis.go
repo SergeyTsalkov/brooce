@@ -19,8 +19,16 @@ func Get() *redis.Client {
 	once.Do(func() {
 		threads := len(config.Threads) + 10
 
+		network := "tcp"
+		addr := config.Config.Redis.Host
+		if config.Config.Redis.Socket != "" {
+			network = "unix"
+			addr = config.Config.Redis.Socket
+		}
+
 		redisClient = redis.NewClient(&redis.Options{
-			Addr:         config.Config.Redis.Host,
+			Network:      network,
+			Addr:         addr,
 			Password:     config.Config.Redis.Password,
 			MaxRetries:   10,
 			PoolSize:     threads,
@@ -31,14 +39,12 @@ func Get() *redis.Client {
 			DB:           config.Config.Redis.DB,
 		})
 
-		for {
-			err := redisClient.Ping().Err()
-			if err == nil {
-				break
-			}
-			log.Println("Can't reach redis at", config.Config.Redis.Host, "-- are your redis addr and password right?", err)
-			time.Sleep(5 * time.Second)
+		err := redisClient.Ping().Err()
+		if err != nil {
+			log.Fatalln("Can't reach redis at", addr, "-- are your redis addr and password right?", err)
 		}
+
+		log.Println("Connected to redis at", addr)
 	})
 
 	return redisClient

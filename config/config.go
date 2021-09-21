@@ -41,6 +41,7 @@ type ConfigType struct {
 
 	Redis struct {
 		Host     string `json:"host"`
+		Socket   string `json:"socket"`
 		Password string `json:"password"`
 		DB       int    `json:"db"`
 	} `json:"redis"`
